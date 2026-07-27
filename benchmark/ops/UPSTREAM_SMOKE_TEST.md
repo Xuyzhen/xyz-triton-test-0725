@@ -40,7 +40,7 @@ original input state exactly once.
 A benchmark can also be invoked directly:
 
 ```bash
-python3 benchmark_mrv2_upstream__eagle_prepare_next_token_padded_kernel.py \
+python3 x_benchmark_mrv2_upstream__eagle_prepare_next_token_padded_kernel.py \
   --device npu:0 --warmup 0 --repeat 1
 ```
 
@@ -91,7 +91,7 @@ warnings do not fail a script that exits successfully.
 After a smoke-test pass, performance can be sampled directly:
 
 ```bash
-python3 benchmark_mrv2_upstream__temperature_kernel.py \
+python3 x_benchmark_mrv2_upstream__topk_topp_kernel.py \
   --device npu:0 --warmup 20 --repeat 100
 ```
 

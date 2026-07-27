@@ -15,7 +15,7 @@ import time
 from typing import Any
 
 
-SCRIPT_PREFIX = "benchmark_mrv2_upstream"
+SCRIPT_PREFIX = "x_benchmark_mrv2_upstream"
 VERSION_PACKAGES = ("torch", "torch-npu", "triton", "vllm", "vllm-ascend")
 
 

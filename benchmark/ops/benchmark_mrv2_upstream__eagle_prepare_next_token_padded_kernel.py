@@ -27,7 +27,11 @@ def case_eagle_prepare_next_token_padded(device):
         discard_request_mask = torch.zeros(num_reqs_val, dtype=torch.int32, device=device)
         backup_next_token_ids = torch.randint(0, vocab, (num_reqs_val,), dtype=torch.int32, device=device)
         next_token_ids = torch.zeros(num_reqs_val, dtype=torch.int32, device=device)
-        valid_sampled_tokens_count = torch.zeros(num_reqs_val, dtype=torch.uint32, device=device)
+        # This output is fully written by the kernel. Avoid Ascend zero_ for
+        # uint32 while preserving the upstream kernel ABI.
+        valid_sampled_tokens_count = torch.empty(
+            num_reqs_val, dtype=torch.uint32, device=device
+        )
         holder = {}
 
         def fn(_sti=sampled_token_ids, _drm=discard_request_mask, _bnti=backup_next_token_ids, _nti=next_token_ids, _vstc=valid_sampled_tokens_count, _v=vocab, _nstpr=num_sampled_tokens_per_req, _nr=num_reqs_val, _str=sampled_token_ids.stride(0), _bst=BLOCK_SIZE_TOKENS):

@@ -1,5 +1,11 @@
 # vLLM Ascend Benchmarks
 
+## Upstream Triton kernel smoke tests
+
+To check whether upstream vLLM Triton kernels can be imported, compiled by
+Triton Ascend, and launched once on NPU, see
+[`ops/UPSTREAM_SMOKE_TEST.md`](ops/UPSTREAM_SMOKE_TEST.md).
+
 ## Introduction
 
 This document outlines the benchmarking methodology for vllm-ascend, aimed at evaluating the performance under a variety of workloads. The primary goal is to help developers assess whether their pull requests improve or degrade vllm-ascend's performance.

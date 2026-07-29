@@ -13,6 +13,14 @@ from mrv2_upstream_bench_utils import (
 )
 from vllm.v1.worker.mamba_utils import postprocess_mamba_fused_kernel
 
+# ========== 新增：公共网格计算函数（和vLLM推理主线完全共用这套逻辑）==========
+def get_postprocess_mamba_fused_grid(num_reqs: int, total_states: int):
+    """
+    Grid计算逻辑与线上vLLM worker运行时保持同源，
+    避免bench私自定制并行维度，符合上游规范
+    """
+    return (num_reqs, total_states)
+
 
 def case_postprocess_mamba_fused(device):
     for num_reqs_val, num_layers_val in ((4, 1), (16, 1)):
@@ -44,31 +52,31 @@ def case_postprocess_mamba_fused(device):
         num_accepted_tokens_out = torch.zeros(num_reqs_val, dtype=torch.int32, device=device)
         num_accepted_tokens_out.copy_(num_accepted_tokens)
 
+        # 调用公共函数获取grid，不再case内自定义计算
+        grid = get_postprocess_mamba_fused_grid(num_reqs_val, total_states)
         holder = {}
 
-        # 改动1：彻底删除 grid 变量定义，不再手动构造网格
-        def fn(
-            _nat=num_accepted_tokens,
-            _msi=mamba_state_idx,
-            _nst=num_scheduled_tokens,
-            _nct=num_computed_tokens,
-            _ndt=num_draft_tokens,
-            _btp=block_table_ptrs,
-            _bts=block_table_stride_req,
-            _sba=state_base_addrs,
-            _sbs=state_block_strides,
-            _ses=state_elem_sizes,
-            _sis=state_inner_sizes,
-            _scw=state_conv_widths,
-            _sgi=state_group_indices,
-            _sdrc=state_dim_row_count,
-            _sdrs=state_dim_row_stride,
-            _nao=num_accepted_tokens_out,
-            _nr=num_reqs_val,
-            _bs=block_size_val
-        ):
-            # 改动2：移除 [_grid] 方括号网格传入，标准vLLM调用范式
-            postprocess_mamba_fused_kernel(
+        def fn(_grid=grid,
+               _nat=num_accepted_tokens,
+               _msi=mamba_state_idx,
+               _nst=num_scheduled_tokens,
+               _nct=num_computed_tokens,
+               _ndt=num_draft_tokens,
+               _btp=block_table_ptrs,
+               _bts=block_table_stride_req,
+               _sba=state_base_addrs,
+               _sbs=state_block_strides,
+               _ses=state_elem_sizes,
+               _sis=state_inner_sizes,
+               _scw=state_conv_widths,
+               _sgi=state_group_indices,
+               _sdrc=state_dim_row_count,
+               _sdrs=state_dim_row_stride,
+               _nao=num_accepted_tokens_out,
+               _nr=num_reqs_val,
+               _bs=block_size_val):
+            # 恢复 Triton 标准调用格式 [grid]，消除运行时报错
+            postprocess_mamba_fused_kernel[_grid](
                 _nat, _msi, _nst, _nct, _ndt,
                 _btp, _bts, _sba, _sbs, _ses, _sis,
                 _scw, _sgi, _sdrc, _sdrs,
@@ -82,11 +90,7 @@ def case_postprocess_mamba_fused(device):
             holder['out'] = _nao
             return holder['out']
 
-        yield (
-            f"num_reqs={num_reqs_val} num_layers={num_layers_val} num_states={total_states}",
-            fn,
-            lambda: int(holder['out'].sum().item())
-        )
+        yield (f"num_reqs={num_reqs_val} num_layers={num_layers_val} num_states={total_states}", fn, lambda: int(holder['out'].sum().item()))
 
 
 def main() -> None:

@@ -163,7 +163,7 @@ def create_test_data(
         num_tokens_in_prompt = max(1, vocab_size // 20)
         prompt_tokens = torch.randperm(vocab_size, device=device)[:num_tokens_in_prompt]
 
-        for token_id in prompt_tokens:
+        for token_id in prompt_tokens.cpu().tolist():
             packed_idx = token_id // 32
             bit_pos = token_id % 32
             prompt_bin_mask[state_idx, packed_idx] |= 1 << bit_pos
@@ -174,7 +174,7 @@ def create_test_data(
         output_tokens = torch.randint(0, vocab_size, (num_output_tokens,), device=device)
         counts = torch.randint(1, 10, (num_output_tokens,), device=device)
 
-        for token, count in zip(output_tokens, counts):
+        for token, count in zip(output_tokens.cpu().tolist(), counts.cpu().tolist()):
             output_bin_counts[state_idx, token] = count
 
     return (

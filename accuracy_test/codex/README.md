@@ -273,3 +273,14 @@ bash run_existing_accuracy_tests.sh -k "bincount or penalties"
 cd accuracy_test/codex
 bash run_all_accuracy_tests.sh
 ```
+
+## Confirmed A3 accuracy findings
+
+| Date | Operator | Test input | Expected | Actual | Classification | Test |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-08-04 | _compute_global_lse / legacy _compute_global_logsumexp | All valid block maxima are -inf; all local sumexp values are 0 | -inf | NaN | Confirmed numerical correctness issue after successful kernel execution | existing_accuracy_tests/from_vllm/test_compute_global_logsumexp.py::TestComputeGlobalLogsumexp::test_all_neg_inf_blocks |
+| 2026-08-04 | _fill_logprob_token_ids_kernel | Mixed requests: request 0 has custom IDs; other requests use NUM_TOPK=3 or 5 | Non-custom rows contain their top-k token IDs | Every top-k column in non-custom rows remains incorrect/unwritten | Confirmed correctness issue in the installed vLLM; fixed upstream by commit d7af6b34d8 (#41761) | existing_accuracy_tests/from_vllm/test_fill_logprob_token_ids_kernel.py::TestFillLogprobTokenIdsKernel::test_custom_token_ids |
+
+The failure is intentionally kept as FAILED. It must not be converted to SKIP
+or XFAIL: the kernel executed and returned a value that differs from the
+mathematically valid reference result.

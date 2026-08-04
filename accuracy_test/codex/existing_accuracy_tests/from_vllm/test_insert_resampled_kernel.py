@@ -108,9 +108,18 @@ class TestInsertResampledKernel:
 
         sampled = torch.zeros(num_reqs, num_spec_steps + 1, dtype=torch.int64, device=self.device)
         num_sampled = torch.zeros(num_reqs, dtype=torch.int64, device=self.device)
-        cu_num_logits = torch.arange(num_reqs + 1, device=self.device, dtype=torch.int64) * (num_spec_steps + 1)
-        expanded_idx_mapping = torch.arange(num_logits, device=self.device, dtype=torch.int64)
-        temp = torch.full((max_num_reqs,), 1.0, dtype=torch.float32, device=self.device)
+        cu_num_logits = (
+            torch.arange(num_reqs + 1, device=self.device, dtype=torch.int32)
+            * (num_spec_steps + 1)
+        )
+        expanded_idx_mapping = torch.arange(
+            num_reqs, device=self.device, dtype=torch.int32
+        ).repeat_interleave(num_spec_steps + 1)
+        temp = torch.full(
+            (max_num_reqs,), 1.0, dtype=torch.float32, device=self.device
+        )
+        sampled_before = sampled.clone()
+        num_sampled_before = num_sampled.clone()
 
         # Create resampled outputs: each block has a token id and a max value
         resampled_local_argmax = torch.randint(0, vocab_size, (num_reqs, resample_num_blocks), dtype=torch.int64, device=self.device)
@@ -133,8 +142,8 @@ class TestInsertResampledKernel:
         torch.npu.synchronize()
 
         ref_sampled, ref_num_sampled = _insert_resampled_ref(
-            sampled.cpu(),
-            torch.zeros(num_reqs, dtype=torch.int64),
+            sampled_before.cpu(),
+            num_sampled_before.cpu(),
             resampled_local_argmax.cpu(),
             resampled_local_max.cpu(),
             resample_num_blocks,
@@ -157,18 +166,40 @@ class TestInsertResampledKernel:
 
         sampled = -torch.ones(num_reqs, num_spec_steps + 1, dtype=torch.int64, device=self.device)
         num_sampled = torch.zeros(num_reqs, dtype=torch.int64, device=self.device)
-        cu_num_logits = torch.arange(num_reqs + 1, device=self.device, dtype=torch.int64) * (num_spec_steps + 1)
-        expanded_idx_mapping = torch.arange(num_logits, device=self.device, dtype=torch.int64)
-        temp = torch.zeros(num_reqs, dtype=torch.float32, device=self.device)  # greedy
+        cu_num_logits = (
+            torch.arange(num_reqs + 1, device=self.device, dtype=torch.int32)
+            * (num_spec_steps + 1)
+        )
+        expanded_idx_mapping = torch.arange(
+            num_reqs, device=self.device, dtype=torch.int32
+        ).repeat_interleave(num_spec_steps + 1)
+        temp = torch.zeros(
+            num_reqs, dtype=torch.float32, device=self.device
+        )  # greedy
+
+        # Triton compiles the loads after the runtime early return, so valid
+        # typed pointers are required even though this case must not read them.
+        dummy_argmax = torch.zeros(
+            num_reqs,
+            resample_num_blocks,
+            dtype=torch.int64,
+            device=self.device,
+        )
+        dummy_max = torch.zeros(
+            num_reqs,
+            resample_num_blocks,
+            dtype=torch.float32,
+            device=self.device,
+        )
 
         _insert_resampled_kernel[(num_reqs,)](
             sampled,
             sampled.stride(0),
             num_sampled,
-            None,
-            0,
-            None,
-            0,
+            dummy_argmax,
+            dummy_argmax.stride(0),
+            dummy_max,
+            dummy_max.stride(0),
             resample_num_blocks,
             cu_num_logits,
             expanded_idx_mapping,
@@ -192,8 +223,12 @@ class TestInsertResampledKernel:
 
         sampled = -torch.ones(num_reqs, num_spec_steps + 1, dtype=torch.int64, device=self.device)
         num_sampled = torch.tensor([num_spec_steps], dtype=torch.int64, device=self.device)  # points to bonus token
-        cu_num_logits = torch.tensor([0, num_logits], device=self.device, dtype=torch.int64)
-        expanded_idx_mapping = torch.arange(num_logits, device=self.device, dtype=torch.int64)
+        cu_num_logits = torch.tensor(
+            [0, num_logits], device=self.device, dtype=torch.int32
+        )
+        expanded_idx_mapping = torch.zeros(
+            num_logits, device=self.device, dtype=torch.int32
+        )
         temp = torch.zeros(num_reqs, dtype=torch.float32, device=self.device)  # greedy
 
         resampled_local_argmax = torch.tensor([[42, 99]], dtype=torch.int64, device=self.device)

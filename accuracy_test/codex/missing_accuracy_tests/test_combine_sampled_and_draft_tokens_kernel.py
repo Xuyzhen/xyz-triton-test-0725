@@ -20,9 +20,11 @@ Kernel signature:
         cu_num_logits_ptr,        # [num_reqs + 1] int64
         logits_indices_ptr,       # [total_num_logits] int64
         BLOCK_SIZE: tl.constexpr,
-        NUM_NEW_SAMPLED_TOKENS: tl.constexpr,
+        NUM_NEW_SAMPLED_TOKENS: tl.constexpr = 1,
     )
 """
+
+import types
 
 import torch
 import pytest
@@ -30,6 +32,31 @@ import pytest
 from vllm.triton_utils import tl, triton
 from vllm.v1.worker.gpu.input_batch import _combine_sampled_and_draft_tokens_kernel
 from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton
+
+
+def _make_a3_compatible_kernel():
+    """Re-JIT the exact upstream code with all constexpr args required.
+
+    Ascend Triton drops defaulted constexpr parameters from its binder, so
+    passing NUM_NEW_SAMPLED_TOKENS to the original JITFunction fails before
+    compilation. The cloned function shares the upstream code object and
+    globals; only Python's default-argument metadata is removed.
+    """
+    upstream_fn = _combine_sampled_and_draft_tokens_kernel.fn
+    test_fn = types.FunctionType(
+        upstream_fn.__code__,
+        upstream_fn.__globals__,
+        upstream_fn.__name__,
+        None,
+        upstream_fn.__closure__,
+    )
+    test_fn.__annotations__ = dict(upstream_fn.__annotations__)
+    test_fn.__module__ = upstream_fn.__module__
+    test_fn.__qualname__ = upstream_fn.__qualname__
+    return triton.jit(test_fn)
+
+
+_a3_combine_sampled_and_draft_tokens_kernel = _make_a3_compatible_kernel()
 
 
 def _combine_sampled_and_draft_tokens_ref(
@@ -127,7 +154,7 @@ class TestCombineSampledAndDraftTokensKernel:
 
         BLOCK_SIZE = triton.next_power_of_2(num_spec_steps + num_new_sampled_tokens)
 
-        _combine_sampled_and_draft_tokens_kernel[(num_reqs,)](
+        _a3_combine_sampled_and_draft_tokens_kernel[(num_reqs,)](
             input_ids,
             idx_mapping,
             last_sampled_tokens,
@@ -190,7 +217,7 @@ class TestCombineSampledAndDraftTokensKernel:
 
         BLOCK_SIZE = triton.next_power_of_2(num_spec_steps + num_new_sampled_tokens)
 
-        _combine_sampled_and_draft_tokens_kernel[(num_reqs,)](
+        _a3_combine_sampled_and_draft_tokens_kernel[(num_reqs,)](
             input_ids,
             idx_mapping,
             last_sampled_tokens,

@@ -75,7 +75,7 @@ def _launch_resample(
     kwargs = {
         "BLOCK_SIZE": block_size,
         "HAS_DRAFT_LOGITS": has_draft_logits,
-        "USE_FP64": True,
+        "USE_FP64": False,
     }
     if _HAS_BLOCK_VERIFICATION:
         kwargs["USE_BLOCK_VERIFICATION"] = use_block_verification
@@ -110,7 +110,7 @@ def _resample_ref(
     BLOCK_SIZE = 1024
 
     resampled_local_argmax = torch.zeros(num_reqs, resample_num_blocks, dtype=torch.int64)
-    resampled_local_max = torch.zeros(num_reqs, resample_num_blocks, dtype=torch.float64)
+    resampled_local_max = torch.zeros(num_reqs, resample_num_blocks, dtype=torch.float32)
 
     for req_idx in range(num_reqs):
         resample_idx = int(rejected_step[req_idx].item())
@@ -242,7 +242,7 @@ class TestResampleKernel:
         )
 
         resampled_local_argmax = torch.zeros(num_reqs, resample_num_blocks, dtype=torch.int64, device=self.device)
-        resampled_local_max = torch.zeros(num_reqs, resample_num_blocks, dtype=torch.float64, device=self.device)
+        resampled_local_max = torch.zeros(num_reqs, resample_num_blocks, dtype=torch.float32, device=self.device)
 
         draft_logits_arg = (
             draft_logits
@@ -345,7 +345,7 @@ class TestResampleKernel:
             draft_logits = torch.randn(max_num_reqs, num_spec_steps, vocab_size, dtype=torch.float32, device=self.device)
 
         resampled_local_argmax = -torch.ones(num_reqs, resample_num_blocks, dtype=torch.int64, device=self.device)
-        resampled_local_max = -torch.ones(num_reqs, resample_num_blocks, dtype=torch.float64, device=self.device)
+        resampled_local_max = -torch.ones(num_reqs, resample_num_blocks, dtype=torch.float32, device=self.device)
 
         draft_logits_arg = (
             draft_logits
@@ -394,7 +394,7 @@ class TestResampleKernel:
         )
         torch.testing.assert_close(
             resampled_local_max.cpu(),
-            -torch.ones(num_reqs, resample_num_blocks, dtype=torch.float64),
+            -torch.ones(num_reqs, resample_num_blocks, dtype=torch.float32),
             rtol=0,
             atol=0,
         )
@@ -425,7 +425,7 @@ class TestResampleKernel:
         draft_rejected_lse = torch.zeros(1, dtype=torch.float32, device=self.device)
 
         resampled_local_argmax = -torch.ones(num_reqs, resample_num_blocks, dtype=torch.int64, device=self.device)
-        resampled_local_max = -torch.ones(num_reqs, resample_num_blocks, dtype=torch.float64, device=self.device)
+        resampled_local_max = -torch.ones(num_reqs, resample_num_blocks, dtype=torch.float32, device=self.device)
 
         draft_logits_arg = torch.empty(
             1, 1, 1, dtype=torch.float32, device=self.device

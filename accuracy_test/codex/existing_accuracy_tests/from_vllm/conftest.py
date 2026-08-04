@@ -23,6 +23,8 @@ _BACKEND_COMPATIBILITY_PATTERNS = (
     "cannot find compiler",
     "compilation failed",
     "failed to compile",
+    "failed to run bishengir pipeline",
+    "failed to run bishenghir pipeline",
     "invalid device function",
     "no kernel image is available",
     "not implemented for npu",

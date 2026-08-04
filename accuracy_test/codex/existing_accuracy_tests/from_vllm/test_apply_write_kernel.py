@@ -34,6 +34,37 @@ from vllm.v1.worker.gpu.buffer_utils import _apply_write_kernel
 from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton
 
 
+_KERNEL_ARG_NAMES = set(_apply_write_kernel.arg_names)
+_HAS_MULTI_GROUP = {
+    "write_group_ids_ptr",
+    "MULTI_GROUP",
+}.issubset(_KERNEL_ARG_NAMES)
+
+
+def _launch_single_group(
+    grid,
+    output,
+    write_indices,
+    write_starts,
+    contents,
+    cu_lens,
+):
+    """Launch either the pre-fusion or fused-capable vLLM kernel signature."""
+    args = [
+        output,
+        output.stride(0),
+        write_indices,
+        write_starts,
+        contents,
+        cu_lens,
+    ]
+    kwargs = {"BLOCK_SIZE": 4}
+    if _HAS_MULTI_GROUP:
+        args.append(None)
+        kwargs["MULTI_GROUP"] = False
+    _apply_write_kernel[grid](*args, **kwargs)
+
+
 def _apply_write_ref(
     output,                # 2D tensor [num_rows, row_stride]
     output_stride,         # stride(0) of output
@@ -88,23 +119,29 @@ class TestApplyWriteKernel:
 
         output = torch.zeros(num_rows, num_cols, dtype=torch.int32, device=self.device)
 
-        write_indices = torch.arange(num_writes, dtype=torch.int32, device=self.device, pin_memory=True)
-        write_starts = torch.zeros(num_writes, dtype=torch.int32, device=self.device, pin_memory=True)
-        contents = torch.arange(num_writes * num_cols, dtype=torch.int32, device=self.device)
+        write_indices = torch.arange(
+            num_writes, dtype=torch.int32, device=self.device
+        )
+        write_starts = torch.zeros(
+            num_writes, dtype=torch.int32, device=self.device
+        )
+        contents = torch.arange(
+            num_writes * num_cols, dtype=torch.int32, device=self.device
+        )
+        cu_lens = (
+            torch.arange(
+                1, num_writes + 1, dtype=torch.int32, device=self.device
+            )
+            * num_cols
+        )
 
-        cu_lens = torch.arange(1, num_writes + 1, dtype=torch.int32) * num_cols
-        cu_lens = cu_lens.to(device=self.device, pin_memory=True)
-
-        _apply_write_kernel[(num_writes,)](
+        _launch_single_group(
+            (num_writes,),
             output,
-            output.stride(0),
-            write_indices.gpu if hasattr(write_indices, 'gpu') else write_indices,
-            write_starts.gpu if hasattr(write_starts, 'gpu') else write_starts,
+            write_indices,
+            write_starts,
             contents,
-            cu_lens.gpu if hasattr(cu_lens, 'gpu') else cu_lens,
-            None,
-            BLOCK_SIZE=4,
-            MULTI_GROUP=False,
+            cu_lens,
         )
         torch.npu.synchronize()
 
@@ -122,6 +159,12 @@ class TestApplyWriteKernel:
     @pytest.mark.parametrize("num_writes_per_group", [1, 2])
     def test_multi_group(self, num_groups, num_writes_per_group):
         """Test multi-group fused write."""
+        if not _HAS_MULTI_GROUP:
+            pytest.skip(
+                "installed vLLM predates fused multi-group _apply_write_kernel; "
+                "precision was not tested"
+            )
+
         num_rows = num_writes_per_group
         num_cols = 16
 
@@ -139,10 +182,15 @@ class TestApplyWriteKernel:
 
         total_writes = num_groups * num_writes_per_group
         group_ids = torch.repeat_interleave(
-            torch.arange(num_groups, device=self.device), num_writes_per_group
+            torch.arange(num_groups, dtype=torch.int32, device=self.device),
+            num_writes_per_group,
         )
-        write_indices = torch.zeros(total_writes, dtype=torch.int32, device=self.device, pin_memory=True)
-        write_starts = torch.zeros(total_writes, dtype=torch.int32, device=self.device, pin_memory=True)
+        write_indices = torch.arange(
+            num_writes_per_group, dtype=torch.int32, device=self.device
+        ).repeat(num_groups)
+        write_starts = torch.zeros(
+            total_writes, dtype=torch.int32, device=self.device
+        )
 
         # Each write gets a unique value
         contents_list = []
@@ -152,15 +200,20 @@ class TestApplyWriteKernel:
                 contents_list.extend([val] * num_cols)
 
         contents = torch.tensor(contents_list, dtype=torch.int32, device=self.device)
-        cu_lens = torch.arange(1, total_writes + 1, dtype=torch.int32, device=self.device, pin_memory=True) * num_cols
+        cu_lens = (
+            torch.arange(
+                1, total_writes + 1, dtype=torch.int32, device=self.device
+            )
+            * num_cols
+        )
 
         _apply_write_kernel[(total_writes,)](
             output_ptrs,
             output_strides,
-            write_indices.gpu if hasattr(write_indices, 'gpu') else write_indices,
-            write_starts.gpu if hasattr(write_starts, 'gpu') else write_starts,
+            write_indices,
+            write_starts,
             contents,
-            cu_lens.gpu if hasattr(cu_lens, 'gpu') else cu_lens,
+            cu_lens,
             group_ids,
             BLOCK_SIZE=4,
             MULTI_GROUP=True,

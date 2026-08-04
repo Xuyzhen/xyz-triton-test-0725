@@ -62,6 +62,16 @@ from vllm.triton_utils import tl, triton
 from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton
 
 import pytest
+try:
+    from vllm_ascend.worker.v2.spec_decode.dflash.speculator import (
+        _prepare_dflash_inputs_kernel_ascend,
+    )
+except (ImportError, ModuleNotFoundError) as exc:
+    pytest.skip(
+        "installed vLLM-Ascend has no worker-v2 DFlash patch; "
+        f"precision was not tested: {exc}",
+        allow_module_level=True,
+    )
 
 PAD_SLOT_ID = -1
 
@@ -189,7 +199,6 @@ class TestPrepareDFlashInputsKernelAscendPatch:
     @pytest.mark.parametrize("SAMPLE_FROM_ANCHOR", [False, True])
     def test_prepare_dflash_inputs(self, num_reqs, SAMPLE_FROM_ANCHOR):
         """Compare NPU DFlash inputs with CPU reference."""
-        from vllm_ascend.worker.v2.spec_decode.dflash.speculator import _prepare_dflash_inputs_kernel_ascend
 
         max_num_reqs = 4
         num_query_per_req = 3

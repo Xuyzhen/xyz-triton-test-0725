@@ -47,19 +47,23 @@ def _exception_chain_text(exc: BaseException) -> str:
     return " | ".join(messages)
 
 
-@pytest.fixture(autouse=True)
-def classify_backend_compatibility_failure():
-    """Turn known backend limitations into XFAIL, not accuracy failures."""
-    try:
-        yield
-    except _AUTHORING_ERRORS:
-        raise
-    except Exception as exc:
-        details = _exception_chain_text(exc)
-        lowered = details.lower()
-        if any(pattern in lowered for pattern in _BACKEND_COMPATIBILITY_PATTERNS):
-            pytest.xfail(
-                "Backend compatibility failure; precision is unknown: " + details
-            )
-        raise
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
+def pytest_runtest_makereport(item, call):
+    """Report known backend limitations as XFAIL, not accuracy failures."""
+    outcome = yield
+    report = outcome.get_result()
+    if call.when != "call" or call.excinfo is None:
+        return
+
+    exc = call.excinfo.value
+    if isinstance(exc, _AUTHORING_ERRORS):
+        return
+
+    details = _exception_chain_text(exc)
+    lowered = details.lower()
+    if any(pattern in lowered for pattern in _BACKEND_COMPATIBILITY_PATTERNS):
+        report.outcome = "skipped"
+        report.wasxfail = (
+            "Backend compatibility failure; precision is unknown: " + details
+        )
 

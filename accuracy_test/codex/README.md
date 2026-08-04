@@ -246,3 +246,30 @@ bash run_existing_accuracy_tests.sh -k "bincount or penalties"
 | `missing_accuracy_tests/run_all.sh` | 运行全部缺失后补写测试 |
 
 以上 7 个脚本均通过 Bash `-n` 语法检查。Windows 当前环境没有 pytest/NPU 运行栈，实际测试执行需在 Ascend A3 环境完成。
+
+## 三类 UT 的结果判定策略
+
+以下策略同时应用于：
+
+1. `existing_accuracy_tests/from_vllm/`：vLLM 已有 UT 的 A3 独立版本。
+2. `existing_accuracy_tests/from_vllm_ascend/`：vLLM-Ascend 已有 UT 的独立搬运。
+3. `missing_accuracy_tests/`：上下游没有现成 UT 后补写的测试。
+
+每类目录均包含独立 `conftest.py`，不修改 vLLM 或 vLLM-Ascend 项目源码。
+
+| pytest 结果 | 含义 |
+| --- | --- |
+| `PASSED` | kernel 输出与参考结果在测试容差内一致 |
+| `FAILED`，且失败来自 `assert` / `torch.testing.assert_close` | 可能存在精度或功能正确性问题，需要检查实际差值 |
+| `XFAIL` | 已知 NPU/Triton binder、编译器或设备能力限制；没有得到可比较输出，精度未知 |
+| `SKIPPED` | 参数组合无效，或执行可能挂起等不能安全运行的已知场景 |
+| Python `NameError` / `TypeError` / `AttributeError` / `IndexError` 等 | 测试代码问题，继续记为 `FAILED`，不会被兼容性策略隐藏 |
+
+当前 `_combine_sampled_and_draft_tokens_kernel` 的 `NUM_NEW_SAMPLED_TOKENS=0` 属于默认 constexpr 无法被 Ascend Triton runtime binder 覆盖，因此报告为 `XFAIL`；默认值 `1` 仍直接运行项目原始 kernel 并做精度比较。
+
+一键脚本现在默认使用 pytest `-ra` 输出 XFAIL/SKIP 原因。总入口会运行完三类测试后再返回整体状态，不会因第一类出现精度失败而跳过后续测试：
+
+```bash
+cd accuracy_test/codex
+bash run_all_accuracy_tests.sh
+```

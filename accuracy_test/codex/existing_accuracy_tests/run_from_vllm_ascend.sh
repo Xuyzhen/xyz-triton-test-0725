@@ -2,4 +2,4 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-exec python -m pytest -sv "${SCRIPT_DIR}/from_vllm_ascend" "$@"
+exec python -m pytest -sv -ra "${SCRIPT_DIR}/from_vllm_ascend" "$@"

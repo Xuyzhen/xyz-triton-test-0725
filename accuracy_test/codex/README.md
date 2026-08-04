@@ -131,3 +131,118 @@ pytest -sv accuracy_test/codex/missing_accuracy_tests
 ```
 
 本地 Windows 环境仅完成 Python AST 语法检查（14 个文件全部通过）；实际 NPU kernel 执行需要在 Ascend A3 环境完成。
+
+## 已有精度 UT 的独立搬运
+
+现有测试统一放在 `accuracy_test/codex/existing_accuracy_tests/`，与上一节补写的完全缺失测试分开管理。每个文件头均包含 `Accuracy UT source`、`Kernel source` 和 `Coverage` 注释。
+
+### 从 vLLM-Ascend 搬运
+
+目录：`existing_accuracy_tests/from_vllm_ascend/`。以下 10 个文件保留 vLLM-Ascend 官方 A3/NPU 测试主体，仅增加来源注释。
+
+| 覆盖算子 | 原精度 UT | 独立测试文件 |
+| --- | --- | --- |
+| `_bad_words_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_bad_words.py` | `test_bad_words.py` |
+| `_temperature_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_temperature.py` | `test_temperature.py` |
+| `_gumbel_sample_kernel` | `vllm-ascend-xyz/tests/ut/sample/a2/test_gumbel_sampling.py` | `test_gumbel_sampling.py` |
+| `_topk_log_softmax_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_log_softmax.py` | `test_log_softmax.py` |
+| `_topk_log_softmax_kernel`、`_ranks_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_compute_topk_logprobs.py` | `test_compute_topk_logprobs.py` |
+| `_min_p_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_min_p.py` | `test_min_p.py` |
+| `_penalties_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_penality.py` | `test_penality.py` |
+| `_bincount_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_bincount.py` | `test_bincount.py`（保留原 skip） |
+| `_compute_slot_mappings_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_compute_slot_mapping.py` | `test_compute_slot_mapping.py` |
+| `_post_update_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_post_update.py` | `test_post_update.py` |
+
+### 从 vLLM 搬运并适配 A3
+
+目录：`existing_accuracy_tests/from_vllm/`。上游原测试中的 CUDA 硬编码和仓库级 fixture 不适合直接在 A3 单文件运行，因此保留其参考算法、边界条件和覆盖目标，并整理为直接 launch NPU kernel 的独立版本。
+
+| 覆盖算子/helper | 原精度 UT | 独立 A3 测试文件 |
+| --- | --- | --- |
+| `_bias_kernel` | `vllm/tests/v1/sample/test_sampler.py` | `test_bias_kernel.py` |
+| `tl_rand64` | `vllm/tests/v1/worker/test_gpu_gumbel_sample.py` | `test_tl_rand64.py` |
+| `gumbel_block_argmax` | `vllm/tests/v1/worker/test_gpu_gumbel_sample.py` | `test_gumbel_block_argmax.py` |
+| `_fill_logprob_token_ids_kernel` | `vllm/tests/v1/sample/test_logprobs.py` | `test_fill_logprob_token_ids_kernel.py` |
+| `_prompt_logprobs_token_ids_kernel` | `vllm/tests/v1/sample/test_logprobs.py` | `test_prompt_logprobs_token_ids_kernel.py` |
+| `_compute_block_max_and_sumexp` | `vllm/tests/v1/spec_decode/test_rejection_sampler_utils.py` | `test_compute_block_max_and_sumexp.py` |
+| `_compute_global_lse` | `vllm/tests/v1/spec_decode/test_rejection_sampler_utils.py` | `test_compute_global_logsumexp.py` |
+| `_compute_block_stats_kernel` | `vllm/tests/v1/spec_decode/test_rejection_sampler_utils.py` | `test_compute_block_stats_kernel.py` |
+| `_rejection_kernel` | `vllm/tests/v1/spec_decode/test_rejection_sampler_utils.py` | `test_rejection_kernel.py` |
+| `_resample_kernel` | `vllm/tests/v1/spec_decode/test_rejection_sampler_utils.py` | `test_resample_kernel.py` |
+| `_insert_resampled_kernel` | `vllm/tests/v1/spec_decode/test_rejection_sampler_utils.py` | `test_insert_resampled_kernel.py` |
+| `_flatten_sampled_kernel` | `vllm/tests/v1/spec_decode/test_rejection_sampler_utils.py` | `test_flatten_sampled_kernel.py` |
+| `_gather_block_tables_kernel` | `vllm/tests/v1/worker/test_gpu_block_table.py` | `test_gather_block_tables_kernel.py` |
+| `_apply_write_kernel` | `vllm/tests/v1/worker/test_gpu_block_table.py` | `test_apply_write_kernel.py` |
+| `_load_ptr` | `vllm/tests/v1/worker/test_gpu_block_table.py` | `test_load_ptr.py` |
+| `_topk_topp_kernel` | `vllm/tests/v1/sample/test_topk_topp_sampler.py` | `test_topk_topp_kernel.py` |
+| `_update_min_larger_stats` | `vllm/tests/v1/sample/test_topk_topp_sampler.py` | `test_update_min_larger_stats.py` |
+| `_selective_scan_update_kernel` | `vllm/tests/kernels/mamba/test_mamba_ssm.py` | `test_selective_scan_update_kernel.py` |
+| `_scatter_num_accepted_kernel` | `vllm/tests/kernels/mamba/test_mamba_ssm.py` | `test_scatter_num_accepted_kernel.py` |
+| `_prepare_dflash_inputs_kernel` | `vllm/tests/v1/spec_decode/test_dflash_lookahead.py` | `test_prepare_dflash_inputs_kernel.py` |
+
+### 执行方式
+
+```bash
+# 全部已有测试的独立版本
+pytest -sv accuracy_test/codex/existing_accuracy_tests
+
+# 分来源执行
+pytest -sv accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend
+pytest -sv accuracy_test/codex/existing_accuracy_tests/from_vllm
+```
+
+本地 Windows 环境对 30 个文件完成了 Python AST 语法检查；实际收集和 kernel 执行仍需安装 pytest、vLLM、vLLM-Ascend、PyTorch NPU 和 Ascend Triton 的 A3 环境。
+
+## 独立 UT 完成状态与一键脚本
+
+### 完成状态
+
+- 当前共有 **48 个独立 pytest 文件**：`missing_accuracy_tests/` 18 个，`existing_accuracy_tests/` 30 个。
+- 前文“已补充 A3 精度 UT”的 14 个文件之外，又补充了 4 个 Ascend 改名/重写实现的独立测试：
+
+| Ascend 实现 | 对应新增文件 |
+| --- | --- |
+| `_prepare_dflash_inputs_kernel_ascend` | `missing_accuracy_tests/test_prepare_dflash_inputs_kernel_ascend_patch.py` |
+| `_npu_gumbel_block_argmax` | `missing_accuracy_tests/test_npu_gumbel_block_argmax_patch.py` |
+| `_probabilistic_rejection_kernel` | `missing_accuracy_tests/test_probabilistic_rejection_kernel_patch.py` |
+| Ascend `_resample_kernel` | `missing_accuracy_tests/test_resample_kernel_patch.py` |
+
+除以下 6 个在当前两仓源码中均不存在的名称外，用户清单中其余源码可定位的算子，以及识别出的 Ascend 改名/替代实现，均已有独立测试文件：
+
+- `tl_rand32`
+- `_compute_global_residual_mass`
+- `_compute_global_target_argmax`
+- `_compute_global_logprobs_and_logsumexp`
+- `_compute_cumulative_log_p_kernel`
+- `_compute_local_residual_mass_kernel`
+
+### codex 目录入口
+
+| 脚本 | 用途 |
+| --- | --- |
+| `run_all_accuracy_tests.sh` | 依次运行已有测试搬运集和完全缺失补写集 |
+| `run_existing_accuracy_tests.sh` | 仅运行已有测试搬运/适配集 |
+| `run_missing_accuracy_tests.sh` | 仅运行完全缺失后补写的测试集 |
+
+```bash
+cd accuracy_test/codex
+bash run_all_accuracy_tests.sh
+```
+
+所有脚本都会透传额外 pytest 参数，例如：
+
+```bash
+bash run_all_accuracy_tests.sh --tb=short -x
+bash run_existing_accuracy_tests.sh -k "bincount or penalties"
+```
+
+### 对应测试目录入口
+
+| 脚本 | 用途 |
+| --- | --- |
+| `existing_accuracy_tests/run_all.sh` | 运行全部搬运/适配测试 |
+| `existing_accuracy_tests/run_from_vllm_ascend.sh` | 仅运行来自 vLLM-Ascend 的测试 |
+| `existing_accuracy_tests/run_from_vllm.sh` | 仅运行来自 vLLM 的 A3 独立适配测试 |
+| `missing_accuracy_tests/run_all.sh` | 运行全部缺失后补写测试 |
+
+以上 7 个脚本均通过 Bash `-n` 语法检查。Windows 当前环境没有 pytest/NPU 运行栈，实际测试执行需在 Ascend A3 环境完成。

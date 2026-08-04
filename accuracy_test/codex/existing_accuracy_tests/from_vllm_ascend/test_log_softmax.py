@@ -59,12 +59,9 @@ def test_topk_log_softmax_kernel(batch_size, vocab_size, num_logprobs):
     # Compute reference values using PyTorch
     torch_logprobs = torch.log_softmax(logits, dim=-1)
 
-    # Extract logprobs for each batch and token_id
-    ref_output = torch.zeros_like(triton_output)
-    for i in range(batch_size):
-        for j in range(num_logprobs):
-            token_id = token_ids[i, j]
-            ref_output[i, j] = torch_logprobs[i, token_id]
+    # Avoid inheriting the Triton output's NPU internal format. That inheritance
+    # warns when torch_npu is configured with allow_internal_format=False.
+    ref_output = torch.gather(torch_logprobs, dim=1, index=token_ids)
 
     # ========== Verify results ==========
     assert torch.allclose(triton_output, ref_output, rtol=1e-3, atol=1e-3), (

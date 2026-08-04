@@ -4,7 +4,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 status=0
 
-python -m pytest -sv -ra --continue-on-collection-errors "${SCRIPT_DIR}/from_vllm_ascend" "$@" || status=1
-python -m pytest -sv -ra --continue-on-collection-errors "${SCRIPT_DIR}/from_vllm" "$@" || status=1
+bash "${SCRIPT_DIR}/run_from_vllm_ascend.sh" "$@" || status=1
+bash "${SCRIPT_DIR}/run_from_vllm.sh" "$@" || status=1
 
 exit "${status}"

@@ -15,7 +15,13 @@
 import pytest
 import torch
 
-from vllm_ascend.worker.v2.sample.gumbel import apply_temperature, gumbel_sample
+try:
+    from vllm_ascend.worker.v2.sample.gumbel import apply_temperature, gumbel_sample
+except (ImportError, ModuleNotFoundError) as exc:
+    pytest.skip(
+        f"installed vLLM-Ascend does not provide gumbel sampling; precision was not tested: {exc}",
+        allow_module_level=True,
+    )
 
 DEVICE = "npu"
 

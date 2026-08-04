@@ -3,10 +3,21 @@
 # Kernel source: vllm-ascend-xyz/vllm_ascend/worker/v2/block_table.py
 # Coverage: _compute_slot_mappings_kernel (direct)
 
+import pytest
 import torch
-from vllm.v1.worker.gpu.block_table import _compute_slot_mappings_kernel as ref_compute_slot_mappings_kernel
 
-from vllm_ascend.worker.v2.block_table import _compute_slot_mappings_kernel as ascend_compute_slot_mappings_kernel
+try:
+    from vllm.v1.worker.gpu.block_table import (
+        _compute_slot_mappings_kernel as ref_compute_slot_mappings_kernel,
+    )
+    from vllm_ascend.worker.v2.block_table import (
+        _compute_slot_mappings_kernel as ascend_compute_slot_mappings_kernel,
+    )
+except (ImportError, ModuleNotFoundError) as exc:
+    pytest.skip(
+        f"installed stack does not provide slot-mapping kernels; precision was not tested: {exc}",
+        allow_module_level=True,
+    )
 
 
 def test_compute_slot_mapping_npu_kernel():

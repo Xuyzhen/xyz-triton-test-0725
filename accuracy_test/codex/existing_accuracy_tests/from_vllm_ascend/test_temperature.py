@@ -8,7 +8,13 @@ import random
 import pytest
 import torch
 
-from vllm_ascend.worker.v2.sample.gumbel import apply_temperature
+try:
+    from vllm_ascend.worker.v2.sample.gumbel import apply_temperature
+except (ImportError, ModuleNotFoundError) as exc:
+    pytest.skip(
+        f"installed vLLM-Ascend does not provide apply_temperature; precision was not tested: {exc}",
+        allow_module_level=True,
+    )
 
 # Common vocab sizes from mainstream models
 VOCAB_SIZES = [

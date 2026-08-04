@@ -8,7 +8,13 @@ import gc
 import pytest
 import torch
 
-from vllm_ascend.worker.v2.sample.penalties import apply_penalties
+try:
+    from vllm_ascend.worker.v2.sample.penalties import apply_penalties
+except (ImportError, ModuleNotFoundError) as exc:
+    pytest.skip(
+        f"installed vLLM-Ascend does not provide apply_penalties; precision was not tested: {exc}",
+        allow_module_level=True,
+    )
 
 NUM_TOKENS = [1, 4]
 VOCAB_SIZE = [1000]

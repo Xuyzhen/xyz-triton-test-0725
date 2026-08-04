@@ -11,12 +11,18 @@ import pytest
 import torch
 
 try:
+    from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton
     from vllm_ascend.worker.v2.sample.bad_words import apply_bad_words
 except (ImportError, ModuleNotFoundError) as exc:
     pytest.skip(
         f"installed vLLM-Ascend does not provide apply_bad_words; precision was not tested: {exc}",
         allow_module_level=True,
     )
+
+@pytest.fixture(scope="module", autouse=True)
+def initialize_triton_device_properties():
+    """Initialize NPU core counts required by the public wrapper."""
+    init_device_properties_triton()
 
 # Test cases for different input shapes
 BAD_WORDS_TEST_CASES = [

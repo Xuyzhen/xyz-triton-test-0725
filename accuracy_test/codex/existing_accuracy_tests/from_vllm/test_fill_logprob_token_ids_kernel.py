@@ -16,7 +16,7 @@ Kernel signature:
         out_valid_mask_ptr,          # [batch_size, 1 + num_cols] validity mask
         out_valid_mask_stride,       # stride(0) of valid_mask
         sampled_token_ids_ptr,       # [batch_size] sampled token IDs
-        topk_indices_ptr,            # [batch_size, NUM_TOPK] top-k indices
+        topk_indices_ptr,            # int32 [batch_size, NUM_TOPK] top-k indices
         topk_indices_stride,         # stride(0) of topk_indices
         expanded_idx_mapping_ptr,    # [batch_size] -> req_state_idx
         num_per_req_token_ids_ptr,   # [max_num_reqs] count of custom tokens
@@ -96,8 +96,19 @@ class TestFillLogprobTokenIdsKernel:
         NUM_TOPK = topk
 
         sampled_token_ids = torch.randint(0, 1000, (batch_size,), dtype=torch.int64, device=self.device)
-        topk_indices = torch.randint(0, 1000, (batch_size, max(NUM_TOPK, 1)), dtype=torch.int64, device=self.device)
-        expanded_idx_mapping = torch.randint(0, num_reqs, (batch_size,), dtype=torch.int32, device=self.device)
+        # Production converts top-k IDs to int32 before launching this kernel.
+        topk_indices = torch.randint(
+            0,
+            1000,
+            (batch_size, max(NUM_TOPK, 1)),
+            dtype=torch.int32,
+            device=self.device,
+        )
+        # Deterministically include request 0, which owns the custom token IDs.
+        expanded_idx_mapping = (
+            torch.arange(batch_size, dtype=torch.int32, device=self.device)
+            % num_reqs
+        )
 
         # Some requests get custom token IDs, others don't
         num_per_req_token_ids = torch.zeros(num_reqs, dtype=torch.int32, device=self.device)
@@ -148,7 +159,9 @@ class TestFillLogprobTokenIdsKernel:
         NUM_TOPK = 0
         PADDED_COLS = 8
         sampled_token_ids = torch.tensor([42, 77], dtype=torch.int64, device=self.device)
-        topk_indices = torch.zeros(batch_size, 1, dtype=torch.int64, device=self.device)
+        topk_indices = torch.zeros(
+            batch_size, 1, dtype=torch.int32, device=self.device
+        )
         expanded_idx_mapping = torch.tensor([0, 1], dtype=torch.int32, device=self.device)
         num_per_req_token_ids = torch.zeros(2, dtype=torch.int32, device=self.device)
         per_req_token_ids = torch.zeros(2, MAX_LOGPROB_TOKEN_IDS, dtype=torch.int32, device=self.device)

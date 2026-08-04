@@ -37,12 +37,22 @@ Applies temperature scaling (if enabled), optionally stores processed logits,
 adds Gumbel noise, and returns (value, idx) = argmax over the block.
 """
 
+import pytest
 import torch
 
 from vllm.triton_utils import tl, triton
 from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton
 
-import pytest
+try:
+    from vllm_ascend.worker.v2.spec_decode.rejection_sampler_utils import (
+        _npu_gumbel_block_argmax,
+    )
+except (ImportError, ModuleNotFoundError) as exc:
+    pytest.skip(
+        "installed vLLM-Ascend does not provide _npu_gumbel_block_argmax; "
+        f"precision was not tested: {exc}",
+        allow_module_level=True,
+    )
 
 
 @triton.jit
@@ -64,8 +74,6 @@ def _npu_gumbel_block_argmax_wrapper(
     APPLY_TEMPERATURE: tl.constexpr,
 ):
     """Wrapper to test _npu_gumbel_block_argmax on a single block."""
-    from vllm_ascend.worker.v2.spec_decode.rejection_sampler_utils import _npu_gumbel_block_argmax
-
     block = block_start + tl.arange(0, BLOCK_SIZE)
     mask = block < vocab_size
     logits = tl.load(

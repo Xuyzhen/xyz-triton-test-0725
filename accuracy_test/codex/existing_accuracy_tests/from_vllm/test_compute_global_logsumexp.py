@@ -30,15 +30,32 @@ and other functions in rejection_sampler_utils.py.
 We test it indirectly by writing a small wrapper kernel that calls it.
 """
 
+import pytest
 import torch
 
 from vllm.triton_utils import tl, triton
 from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton
 
-import pytest
+try:
+    from vllm.v1.worker.gpu.spec_decode.rejection_sampler_utils import (
+        _compute_global_lse as _compute_global_lse_helper,
+    )
+    _HELPER_NAME = "_compute_global_lse"
+except ImportError:
+    try:
+        from vllm.v1.worker.gpu.spec_decode.rejection_sampler_utils import (
+            _compute_global_logsumexp as _compute_global_lse_helper,
+        )
+        _HELPER_NAME = "_compute_global_logsumexp"
+    except ImportError as exc:
+        pytest.skip(
+            "installed vLLM does not provide a global logsumexp helper; "
+            f"precision was not tested: {exc}",
+            allow_module_level=True,
+        )
 
 
-# Define a minimal wrapper kernel that calls _compute_global_logsumexp
+# Define a minimal wrapper kernel that calls the installed helper name.
 @triton.jit
 def _global_logsumexp_wrapper(
     local_max_ptr,
@@ -50,11 +67,8 @@ def _global_logsumexp_wrapper(
     vocab_num_blocks,
     PADDED_VOCAB_NUM_BLOCKS: tl.constexpr,
 ):
-    """Minimal wrapper that calls _compute_global_logsumexp and stores the result."""
-    from vllm.v1.worker.gpu.spec_decode.rejection_sampler_utils import (
-        _compute_global_logsumexp,
-    )
-    result = _compute_global_logsumexp(
+    """Call the installed vLLM global-LSE helper and store its result."""
+    result = _compute_global_lse_helper(
         local_max_ptr,
         local_max_stride,
         local_sumexp_ptr,

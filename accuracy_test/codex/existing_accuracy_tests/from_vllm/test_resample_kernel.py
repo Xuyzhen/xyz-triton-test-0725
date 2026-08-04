@@ -51,6 +51,37 @@ from vllm.v1.worker.gpu.spec_decode.rejection_sampler_utils import (
 from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton
 
 
+_KERNEL_ARG_NAMES = set(_resample_kernel.arg_names)
+_HAS_BLOCK_VERIFICATION = {
+    "cumulative_log_p_ptr",
+    "USE_BLOCK_VERIFICATION",
+}.issubset(_KERNEL_ARG_NAMES)
+
+
+def _launch_resample(
+    grid,
+    args_before_optional,
+    cumulative_log_p,
+    vocab_size,
+    block_size,
+    has_draft_logits,
+    use_block_verification,
+):
+    """Launch either the legacy or block-verification kernel signature."""
+    args = list(args_before_optional)
+    if _HAS_BLOCK_VERIFICATION:
+        args.append(cumulative_log_p)
+    args.append(vocab_size)
+    kwargs = {
+        "BLOCK_SIZE": block_size,
+        "HAS_DRAFT_LOGITS": has_draft_logits,
+        "USE_FP64": True,
+    }
+    if _HAS_BLOCK_VERIFICATION:
+        kwargs["USE_BLOCK_VERIFICATION"] = use_block_verification
+    _resample_kernel[grid](*args, **kwargs)
+
+
 def _resample_ref(
     target_logits,          # [num_logits, V]
     target_rejected_lse,    # [num_reqs]
@@ -126,12 +157,13 @@ def _resample_ref(
             residual_logits = target_row.clone()
             residual_logits[rejected_draft_token] = float("-inf")
 
-        # Gumbel-max argmax equivalent: pick token with highest residual_logit + Gumbel noise
-        # Use the seed: deterministic reproducibility.
-        g = torch.Generator()
-        g.manual_seed(int(seed[req_state_idx].item()) + int(pos[resample_token_idx].item()))
-        gumbel_noise = -torch.log(-torch.log(torch.rand(vocab_size, generator=g) + 1e-37) + 1e-37)
-        gumbel_logits = residual_logits + gumbel_noise.to(residual_logits.dtype)
+        # PyTorch and Triton use different PRNG streams. Exact comparison is
+        # valid only for temperature zero, where the kernel adds no noise.
+        if t != 0.0:
+            raise ValueError(
+                "Exact CPU reference is only valid for deterministic temp=0 cases"
+            )
+        gumbel_logits = residual_logits
 
         for block_idx in range(resample_num_blocks):
             block_start = block_idx * BLOCK_SIZE
@@ -166,23 +198,33 @@ class TestResampleKernel:
         RESAMPLE_BLOCK_SIZE = 1024
         resample_num_blocks = triton.cdiv(vocab_size, RESAMPLE_BLOCK_SIZE)
 
-        # Create inputs
-        target_logits = torch.randn(num_logits, vocab_size, dtype=torch.float32, device=self.device)
-        cu_num_logits = torch.arange(num_reqs + 1, device=self.device, dtype=torch.int64) * (num_spec_steps + 1)
-        expanded_idx_mapping = torch.arange(num_logits, device=self.device, dtype=torch.int64)
-        expanded_local_pos = torch.zeros(num_logits, dtype=torch.int32, device=self.device)
-        for i, (s, e) in enumerate(zip(cu_num_logits[:-1], cu_num_logits[1:])):
-            for j in range(int(e) - int(s)):
-                expanded_local_pos[int(s) + j] = j
+        # Use bonus positions with temp=0 so no Gumbel noise is added. This
+        # permits an exact CPU comparison without assuming identical PRNGs.
+        target_logits = torch.randn(
+            num_logits, vocab_size, dtype=torch.float32, device=self.device
+        )
+        cu_num_logits = (
+            torch.arange(num_reqs + 1, device=self.device, dtype=torch.int32)
+            * (num_spec_steps + 1)
+        )
+        expanded_idx_mapping = torch.arange(
+            num_reqs, device=self.device, dtype=torch.int32
+        ).repeat_interleave(num_spec_steps + 1)
 
         # draught sampled tokens (one per logit + 1)
         draft_sampled = torch.randint(0, vocab_size, (num_logits + 1,), dtype=torch.int64, device=self.device)
 
-        temp = torch.full((max_num_reqs,), 1.0, dtype=torch.float32, device=self.device)
-        seed = torch.full((max_num_reqs,), 42, dtype=torch.int32, device=self.device)
+        temp = torch.zeros(
+            max_num_reqs, dtype=torch.float32, device=self.device
+        )
+        seed = torch.full(
+            (max_num_reqs,), 42, dtype=torch.int32, device=self.device
+        )
         pos = torch.arange(num_logits, dtype=torch.int32, device=self.device)
 
-        rejected_step = torch.full((num_reqs,), 1, dtype=torch.int64, device=self.device)
+        rejected_step = torch.full(
+            (num_reqs,), num_spec_steps, dtype=torch.int64, device=self.device
+        )
         target_rejected_lse = torch.zeros(num_reqs, dtype=torch.float32, device=self.device)
         draft_rejected_lse = torch.zeros(num_reqs, dtype=torch.float32, device=self.device)
 
@@ -190,38 +232,50 @@ class TestResampleKernel:
         if has_draft_logits:
             draft_logits = torch.randn(max_num_reqs, num_spec_steps, vocab_size, dtype=torch.float32, device=self.device)
 
-        cumulative_log_p = None
-        if use_block_verification:
-            cumulative_log_p = torch.zeros(num_logits, dtype=torch.float32, device=self.device)
+        if use_block_verification and not _HAS_BLOCK_VERIFICATION:
+            pytest.skip(
+                "installed vLLM predates block-verification _resample_kernel; "
+                "precision was not tested"
+            )
+        cumulative_log_p = torch.zeros(
+            num_logits, dtype=torch.float32, device=self.device
+        )
 
         resampled_local_argmax = torch.zeros(num_reqs, resample_num_blocks, dtype=torch.int64, device=self.device)
         resampled_local_max = torch.zeros(num_reqs, resample_num_blocks, dtype=torch.float64, device=self.device)
 
-        _resample_kernel[(num_reqs, resample_num_blocks)](
-            resampled_local_argmax,
-            resampled_local_argmax.stride(0),
-            resampled_local_max,
-            resampled_local_max.stride(0),
-            target_logits,
-            target_logits.stride(0),
-            target_rejected_lse,
-            draft_logits,
-            draft_logits.stride(0) if draft_logits is not None else 0,
-            draft_logits.stride(1) if draft_logits is not None else 0,
-            draft_rejected_lse,
-            rejected_step,
-            cu_num_logits,
-            expanded_idx_mapping,
-            draft_sampled,
-            temp,
-            seed,
-            pos,
+        draft_logits_arg = (
+            draft_logits
+            if draft_logits is not None
+            else torch.empty(1, 1, 1, dtype=torch.float32, device=self.device)
+        )
+        _launch_resample(
+            (num_reqs, resample_num_blocks),
+            [
+                resampled_local_argmax,
+                resampled_local_argmax.stride(0),
+                resampled_local_max,
+                resampled_local_max.stride(0),
+                target_logits,
+                target_logits.stride(0),
+                target_rejected_lse,
+                draft_logits_arg,
+                draft_logits.stride(0) if draft_logits is not None else 0,
+                draft_logits.stride(1) if draft_logits is not None else 0,
+                draft_rejected_lse,
+                rejected_step,
+                cu_num_logits,
+                expanded_idx_mapping,
+                draft_sampled,
+                temp,
+                seed,
+                pos,
+            ],
             cumulative_log_p,
             vocab_size,
-            BLOCK_SIZE=RESAMPLE_BLOCK_SIZE,
-            HAS_DRAFT_LOGITS=has_draft_logits,
-            USE_FP64=True,
-            USE_BLOCK_VERIFICATION=use_block_verification,
+            RESAMPLE_BLOCK_SIZE,
+            has_draft_logits,
+            use_block_verification,
         )
         torch.npu.synchronize()
 
@@ -238,7 +292,7 @@ class TestResampleKernel:
             temp.cpu(),
             seed.cpu(),
             pos.cpu(),
-            cumulative_log_p.cpu() if cumulative_log_p is not None else None,
+            cumulative_log_p.cpu(),
             vocab_size,
             has_draft_logits=has_draft_logits,
             use_block_verification=use_block_verification,
@@ -249,7 +303,14 @@ class TestResampleKernel:
         torch.testing.assert_close(
             resampled_local_argmax.cpu().to(torch.int64),
             ref_argmax.to(torch.int64),
-            rtol=0, atol=0,
+            rtol=0,
+            atol=0,
+        )
+        torch.testing.assert_close(
+            resampled_local_max.cpu(),
+            ref_max,
+            rtol=1e-5,
+            atol=1e-5,
         )
 
     @pytest.mark.parametrize("has_draft_logits", [False, True])
@@ -264,8 +325,13 @@ class TestResampleKernel:
         resample_num_blocks = triton.cdiv(vocab_size, BLOCK_SIZE)
 
         target_logits = torch.randn(num_logits, vocab_size, dtype=torch.float32, device=self.device)
-        cu_num_logits = torch.arange(num_reqs + 1, device=self.device, dtype=torch.int64) * (num_spec_steps + 1)
-        expanded_idx_mapping = torch.arange(num_logits, device=self.device, dtype=torch.int64)
+        cu_num_logits = (
+            torch.arange(num_reqs + 1, device=self.device, dtype=torch.int32)
+            * (num_spec_steps + 1)
+        )
+        expanded_idx_mapping = torch.arange(
+            num_reqs, device=self.device, dtype=torch.int32
+        ).repeat_interleave(num_spec_steps + 1)
         draft_sampled = torch.randint(0, vocab_size, (num_logits + 1,), dtype=torch.int64, device=self.device)
         temp = torch.zeros(max_num_reqs, dtype=torch.float32, device=self.device)
         seed = torch.full((max_num_reqs,), 42, dtype=torch.int32, device=self.device)
@@ -281,31 +347,41 @@ class TestResampleKernel:
         resampled_local_argmax = -torch.ones(num_reqs, resample_num_blocks, dtype=torch.int64, device=self.device)
         resampled_local_max = -torch.ones(num_reqs, resample_num_blocks, dtype=torch.float64, device=self.device)
 
-        _resample_kernel[(num_reqs, resample_num_blocks)](
-            resampled_local_argmax,
-            resampled_local_argmax.stride(0),
-            resampled_local_max,
-            resampled_local_max.stride(0),
-            target_logits,
-            target_logits.stride(0),
-            target_rejected_lse,
-            draft_logits,
-            draft_logits.stride(0) if draft_logits is not None else 0,
-            draft_logits.stride(1) if draft_logits is not None else 0,
-            draft_rejected_lse,
-            rejected_step,
-            cu_num_logits,
-            expanded_idx_mapping,
-            draft_sampled,
-            temp,
-            seed,
-            pos,
-            None,
+        draft_logits_arg = (
+            draft_logits
+            if draft_logits is not None
+            else torch.empty(1, 1, 1, dtype=torch.float32, device=self.device)
+        )
+        cumulative_log_p = torch.zeros(
+            num_logits, dtype=torch.float32, device=self.device
+        )
+        _launch_resample(
+            (num_reqs, resample_num_blocks),
+            [
+                resampled_local_argmax,
+                resampled_local_argmax.stride(0),
+                resampled_local_max,
+                resampled_local_max.stride(0),
+                target_logits,
+                target_logits.stride(0),
+                target_rejected_lse,
+                draft_logits_arg,
+                draft_logits.stride(0) if draft_logits is not None else 0,
+                draft_logits.stride(1) if draft_logits is not None else 0,
+                draft_rejected_lse,
+                rejected_step,
+                cu_num_logits,
+                expanded_idx_mapping,
+                draft_sampled,
+                temp,
+                seed,
+                pos,
+            ],
+            cumulative_log_p,
             vocab_size,
-            BLOCK_SIZE=BLOCK_SIZE,
-            HAS_DRAFT_LOGITS=has_draft_logits,
-            USE_FP64=True,
-            USE_BLOCK_VERIFICATION=False,
+            BLOCK_SIZE,
+            has_draft_logits,
+            False,
         )
         torch.npu.synchronize()
 
@@ -313,7 +389,14 @@ class TestResampleKernel:
         torch.testing.assert_close(
             resampled_local_argmax.cpu(),
             -torch.ones(num_reqs, resample_num_blocks, dtype=torch.int64),
-            rtol=0, atol=0,
+            rtol=0,
+            atol=0,
+        )
+        torch.testing.assert_close(
+            resampled_local_max.cpu(),
+            -torch.ones(num_reqs, resample_num_blocks, dtype=torch.float64),
+            rtol=0,
+            atol=0,
         )
 
     def test_bonus_token(self):
@@ -326,8 +409,12 @@ class TestResampleKernel:
         resample_num_blocks = triton.cdiv(vocab_size, BLOCK_SIZE)
 
         target_logits = torch.randn(num_logits, vocab_size, dtype=torch.float32, device=self.device)
-        cu_num_logits = torch.tensor([0, num_logits], device=self.device, dtype=torch.int64)
-        expanded_idx_mapping = torch.arange(num_logits, device=self.device, dtype=torch.int64)
+        cu_num_logits = torch.tensor(
+            [0, num_logits], device=self.device, dtype=torch.int32
+        )
+        expanded_idx_mapping = torch.zeros(
+            num_logits, device=self.device, dtype=torch.int32
+        )
         draft_sampled = torch.randint(0, vocab_size, (num_logits + 1,), dtype=torch.int64, device=self.device)
         # Bonus token: rejected_step points to end_idx - 1 = last token
         rejected_step = torch.tensor([num_spec_steps], device=self.device, dtype=torch.int64)
@@ -340,32 +427,48 @@ class TestResampleKernel:
         resampled_local_argmax = -torch.ones(num_reqs, resample_num_blocks, dtype=torch.int64, device=self.device)
         resampled_local_max = -torch.ones(num_reqs, resample_num_blocks, dtype=torch.float64, device=self.device)
 
-        _resample_kernel[(num_reqs, resample_num_blocks)](
-            resampled_local_argmax,
-            resampled_local_argmax.stride(0),
-            resampled_local_max,
-            resampled_local_max.stride(0),
-            target_logits,
-            target_logits.stride(0),
-            target_rejected_lse,
-            None,
-            0, 0,
-            draft_rejected_lse,
-            rejected_step,
-            cu_num_logits,
-            expanded_idx_mapping,
-            draft_sampled,
-            temp,
-            seed,
-            pos,
-            None,
+        draft_logits_arg = torch.empty(
+            1, 1, 1, dtype=torch.float32, device=self.device
+        )
+        cumulative_log_p = torch.zeros(
+            num_logits, dtype=torch.float32, device=self.device
+        )
+        _launch_resample(
+            (num_reqs, resample_num_blocks),
+            [
+                resampled_local_argmax,
+                resampled_local_argmax.stride(0),
+                resampled_local_max,
+                resampled_local_max.stride(0),
+                target_logits,
+                target_logits.stride(0),
+                target_rejected_lse,
+                draft_logits_arg,
+                0,
+                0,
+                draft_rejected_lse,
+                rejected_step,
+                cu_num_logits,
+                expanded_idx_mapping,
+                draft_sampled,
+                temp,
+                seed,
+                pos,
+            ],
+            cumulative_log_p,
             vocab_size,
-            BLOCK_SIZE=BLOCK_SIZE,
-            HAS_DRAFT_LOGITS=False,
-            USE_FP64=True,
-            USE_BLOCK_VERIFICATION=False,
+            BLOCK_SIZE,
+            False,
+            False,
         )
         torch.npu.synchronize()
 
-        # For bonus tokens, resampled values should be stored (not -1).
-        assert torch.all(resampled_local_argmax.cpu() >= 0), "Bonus token should produce valid argmax values"
+        # With temp=0 there is no Gumbel noise, so the result is exact.
+        expected_token = int(torch.argmax(target_logits[-1]).item())
+        assert resampled_local_argmax.cpu().item() == expected_token
+        torch.testing.assert_close(
+            resampled_local_max.cpu().item(),
+            target_logits[-1, expected_token].cpu().item(),
+            rtol=1e-5,
+            atol=1e-5,
+        )

@@ -20,7 +20,7 @@ Kernel signature:
         cu_num_logits_ptr,        # [num_reqs + 1] int64
         logits_indices_ptr,       # [total_num_logits] int64
         BLOCK_SIZE: tl.constexpr,
-        NUM_NEW_SAMPLED_TOKENS: tl.constexpr = 1,
+        NUM_NEW_SAMPLED_TOKENS: tl.constexpr,
     )
 """
 
@@ -70,8 +70,7 @@ def _combine_sampled_and_draft_tokens_ref(
         if seq_len <= plen:
             continue
 
-        first_logit_seq_pos = seq_len - num_logits
-        if num_new_sampled_tokens > 0 and first_logit_seq_pos >= plen:
+        if num_new_sampled_tokens > 0:
             last_token = int(last_sampled_tokens[req_state_idx].item())
             out_input_ids[logits_start] = last_token
 
@@ -118,7 +117,11 @@ class TestCombineSampledAndDraftTokensKernel:
             dtype=torch.int64, device=self.device
         )
         query_start_loc = torch.arange(
-            0, total_logits + 1, dtype=torch.int32, device=self.device
+            0,
+            total_logits + 1,
+            num_new_sampled_tokens + num_spec_steps,
+            dtype=torch.int32,
+            device=self.device,
         )
         logits_indices = torch.zeros(total_logits, dtype=torch.int64, device=self.device)
 
@@ -177,7 +180,11 @@ class TestCombineSampledAndDraftTokensKernel:
             dtype=torch.int64, device=self.device
         )
         query_start_loc = torch.arange(
-            0, total_logits + 1, dtype=torch.int32, device=self.device
+            0,
+            total_logits + 1,
+            num_new_sampled_tokens + num_spec_steps,
+            dtype=torch.int32,
+            device=self.device,
         )
         logits_indices = torch.zeros(total_logits, dtype=torch.int64, device=self.device)
 

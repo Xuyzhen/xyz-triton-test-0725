@@ -30,7 +30,7 @@ import torch
 import pytest
 
 from vllm.triton_utils import tl, triton
-from vllm.v1.worker.gpu.buffer_utils import _apply_write_kernel, _load_ptr
+from vllm.v1.worker.gpu.buffer_utils import _apply_write_kernel
 from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton
 
 

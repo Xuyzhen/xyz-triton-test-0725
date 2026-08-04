@@ -54,16 +54,22 @@ and block verification modes.
 """
 
 import torch
+import pytest
 
 from vllm.triton_utils import tl, triton
-from vllm.v1.worker.gpu.spec_decode.rejection_sampler_utils import (
-    _compute_local_logits_stats_kernel,
-    _compute_cumulative_log_p_kernel,
-    _rejection_kernel,
-)
+try:
+    from vllm.v1.worker.gpu.spec_decode.rejection_sampler_utils import (
+        _compute_local_logits_stats_kernel,
+        _compute_cumulative_log_p_kernel,
+        _rejection_kernel,
+    )
+except ImportError as exc:
+    pytest.skip(
+        "installed vLLM does not provide the rejection-sampler kernels required "
+        f"by this test; precision was not tested: {exc}",
+        allow_module_level=True,
+    )
 from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton
-
-import pytest
 
 torch.manual_seed(42)
 

@@ -32,7 +32,7 @@ import pytest
 
 from vllm.triton_utils import tl, triton
 from vllm.v1.worker.gpu.block_table import _gather_block_tables_kernel
-from vllm.v1.worker.gpu.buffer_utils import _load_ptr
+
 from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton
 
 

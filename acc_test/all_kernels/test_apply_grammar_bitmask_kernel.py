@@ -148,22 +148,22 @@ class TestApplyGrammarBitmaskKernel:
         assert torch.all(logits[0] == float("-inf")).item(), \
             "All logits should be -inf when bitmask is all zeros"
 
-    def test_multiple_bitmasks_same_logits_row(self):
-        """Multiple bitmasks can target different logits rows."""
+    def test_multiple_bitmasks_different_logits_rows(self):
+        """Multiple bitmasks target different logits rows (no overlap)."""
         vocab_size = 64
         num_logits = 2
         num_bitmasks = 2
 
         logits = torch.randn(num_logits, vocab_size, dtype=torch.float32, device=self.device)
-        logits_indices = torch.tensor([0, 0], dtype=torch.int32, device=self.device)
+        logits_indices = torch.tensor([0, 1], dtype=torch.int32, device=self.device)
 
         padded_vocab_words = triton.cdiv(vocab_size, 32)
         bitmask = torch.full((num_bitmasks, padded_vocab_words), -1, dtype=torch.int32, device=self.device)
-        # Block odd positions in first bitmask
+        # Block odd positions in first bitmask (applied to logits row 0)
         for v in range(1, vocab_size, 2):
             w, b = v // 32, v % 32
             bitmask[0, w] &= ~(1 << b)
-        # Block even positions in second bitmask
+        # Block even positions in second bitmask (applied to logits row 1)
         for v in range(0, vocab_size, 2):
             w, b = v // 32, v % 32
             bitmask[1, w] &= ~(1 << b)
@@ -187,3 +187,44 @@ class TestApplyGrammarBitmaskKernel:
         )
 
         torch.testing.assert_close(logits.cpu(), expected, rtol=0, atol=0)
+
+
+    def test_multiple_bitmasks_same_logits_row(self):
+        """Two bitmasks on the same logits row: each blocks non-overlapping tokens.
+
+        Bitmask 0 blocks odd positions, bitmask 1 blocks even positions.
+        After both apply, all tokens in the row should be -inf.
+        """
+        vocab_size = 64
+        num_logits = 2
+        num_bitmasks = 2
+
+        logits = torch.randn(num_logits, vocab_size, dtype=torch.float32, device=self.device)
+        logits_indices = torch.tensor([0, 0], dtype=torch.int32, device=self.device)
+
+        padded_vocab_words = triton.cdiv(vocab_size, 32)
+        bitmask = torch.full((num_bitmasks, padded_vocab_words), -1, dtype=torch.int32, device=self.device)
+        # Block odd positions in first bitmask
+        for v in range(1, vocab_size, 2):
+            w, b = v // 32, v % 32
+            bitmask[0, w] &= ~(1 << b)
+        # Block even positions in second bitmask
+        for v in range(0, vocab_size, 2):
+            w, b = v // 32, v % 32
+            bitmask[1, w] &= ~(1 << b)
+
+        num_blocks = triton.cdiv(vocab_size, self.BLOCK_SIZE)
+        _apply_grammar_bitmask_kernel[(num_bitmasks, num_blocks)](
+            logits,
+            logits.stride(0),
+            logits_indices,
+            bitmask,
+            bitmask.stride(0),
+            vocab_size,
+            BLOCK_SIZE=self.BLOCK_SIZE,
+        )
+        torch.npu.synchronize()
+
+        # With both bitmasks applied, every token is blocked → logits should all be -inf
+        assert torch.all(logits[0] == float("-inf")).item(), \
+            "All logits should be -inf when both bitmasks cover all tokens"

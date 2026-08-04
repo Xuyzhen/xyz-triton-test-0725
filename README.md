@@ -184,3 +184,118 @@ Similarly, let's take `Qwen2.5-VL-7B-Instruct` benchmark as an example:
   --load-format dummy --num-iters-warmup 5 --num-iters 15
   ```
 # xyz-triton-test-0725
+
+## TRITON Kernel 列表（原文格式）
+
+```
+_num_nans_kernel （wrapper）
+_prepare_rope_positions_kernel (wrapper)
+_scatter_num_accepted_kernel (launch kernel)
+_bad_words_kernel
+_temperature_kernel
+tl_rand64
+tl_rand32 (bench helper)
+gumbel_block_argmax (bench helper)
+_gumbel_sample_kernel
+_bias_kernel
+_topk_log_softmax_kernel
+_ranks_kernel
+_fill_logprob_token_ids_kernel  (launch kernel)
+_min_p_kernel
+_penalties_kernel
+_bincount_kernel
+_prompt_logprobs_token_ids_kernel
+_prepare_prefill_inputs_kernel （ar）
+_prepare_decode_inputs_kernel (wrapper)
+_update_draft_inputs_kernel (wrapper)
+_prepare_dflash_inputs_kernel (wrapper)
+"_compute_block_max_and_sumexp (bench helper)
+_compute_max_and_sumexp"
+"_compute_global_lse(bench helper)
+_compute_global_logsumexp"
+"_compute_block_stats_kernel   (launch kernel)
+(_compute_local_logits_stats_kernel)"
+_compute_global_residual_mass (bench helper)
+_compute_global_target_argmax (bench helper)
+_compute_global_logprobs_and_logsumexp  (bench helper)
+_compute_cumulative_log_p_kernel (launch kernel)
+_compute_local_residual_mass_kernel(launch kernel)
+_rejection_kernel  (launch kernel)
+_resample_kernel  (launch kernel)
+_insert_resampled_kernel  (launch kernel)
+_flatten_sampled_kernel
+_gather_block_tables_kernel
+_compute_slot_mappings_kernel
+_apply_write_kernel
+_load_ptr (bench helper)
+_dcp_local_seq_lens_kernel
+_prepare_prefill_inputs_kernel
+_prepare_pos_seq_lens_kernel
+_combine_sampled_and_draft_tokens_kernel
+_get_num_sampled_and_rejected_kernel
+_post_update_kernel
+_post_update_num_computed_tokens_kernel (wrapper)
+_expand_idx_mapping_kernel
+_apply_grammar_bitmask_kernel
+_zero_kv_blocks_kernel
+_topk_topp_kernel
+_update_min_larger_stats
+_selective_scan_update_kernel
+```
+
+## TRITON Kernel 列表（精简 — 去括号注释）
+
+```
+_num_nans_kernel
+_prepare_rope_positions_kernel
+_scatter_num_accepted_kernel
+_bad_words_kernel
+_temperature_kernel
+tl_rand64
+tl_rand32
+gumbel_block_argmax
+_gumbel_sample_kernel
+_bias_kernel
+_topk_log_softmax_kernel
+_ranks_kernel
+_fill_logprob_token_ids_kernel
+_min_p_kernel
+_penalties_kernel
+_bincount_kernel
+_prompt_logprobs_token_ids_kernel
+_prepare_prefill_inputs_kernel
+_prepare_decode_inputs_kernel
+_update_draft_inputs_kernel
+_prepare_dflash_inputs_kernel
+_compute_block_max_and_sumexp
+_compute_max_and_sumexp
+_compute_global_logsumexp
+_compute_block_stats_kernel
+_compute_local_logits_stats_kernel
+_compute_global_residual_mass
+_compute_global_target_argmax
+_compute_global_logprobs_and_logsumexp
+_compute_cumulative_log_p_kernel
+_compute_local_residual_mass_kernel
+_rejection_kernel
+_resample_kernel
+_insert_resampled_kernel
+_flatten_sampled_kernel
+_gather_block_tables_kernel
+_compute_slot_mappings_kernel
+_apply_write_kernel
+_load_ptr
+_dcp_local_seq_lens_kernel
+_prepare_prefill_inputs_kernel
+_prepare_pos_seq_lens_kernel
+_combine_sampled_and_draft_tokens_kernel
+_get_num_sampled_and_rejected_kernel
+_post_update_kernel
+_post_update_num_computed_tokens_kernel
+_expand_idx_mapping_kernel
+_apply_grammar_bitmask_kernel
+_zero_kv_blocks_kernel
+_topk_topp_kernel
+_update_min_larger_stats
+_selective_scan_update_kernel
+```

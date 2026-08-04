@@ -119,10 +119,10 @@ def _setup_bad_words_test(
     # num_bad_words per request
     num_bad_words = torch.zeros(max_num_reqs, dtype=torch.int32)
 
-    # req 0: bad word = [42, 7] (two tokens), and [99] (single token)
+    # req 0: bad word = [42, 7] (two tokens), and [vocab_size - 1] (single token)
     # The bad word [42, 7] matches the output at prompt_len+0, prompt_len+1
     bad_word_token_ids[0, 0:2] = torch.tensor([42, 7])
-    bad_word_token_ids[0, 2] = torch.tensor([99])  # single token bad word
+    bad_word_token_ids[0, 2] = torch.tensor([vocab_size - 1])  # single token bad word
     bad_word_offsets[0, 0] = 0
     bad_word_offsets[0, 1] = 2
     bad_word_offsets[0, 2] = 3

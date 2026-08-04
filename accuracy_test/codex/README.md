@@ -274,6 +274,28 @@ cd accuracy_test/codex
 bash run_all_accuracy_tests.sh
 ```
 
+## vLLM failing-test Ascend patch mapping (2026-08-04)
+
+The following patch files are stored in `existing_accuracy_tests/from_vllm/` as requested. A `_patch.py` suffix means the test exercises the vLLM-Ascend rename, replacement, or re-export path rather than the original vLLM entry point.
+
+| Original vLLM test/operator | vLLM-Ascend mapping | Ascend source or existing UT | Exported standalone patch UT | Coverage type |
+| --- | --- | --- | --- | --- |
+| `test_apply_write_kernel.py` / `_apply_write_kernel` | No implementation, rename, patch, or UT found in the current vLLM-Ascend tree | None | None; not fabricated | No Ascend counterpart |
+| `test_compute_block_max_and_sumexp.py` / `_compute_block_max_and_sumexp` (legacy `_compute_max_and_sumexp`) | Inline helper is reached through Ascend alias `_compute_block_stats_kernel` | `vllm_ascend/worker/v2/spec_decode/rejection_sampler_utils.py:25` | `test_compute_block_max_and_sumexp_patch.py` | Indirect through parent kernel |
+| `test_compute_block_stats_kernel.py` / `_compute_block_stats_kernel` (legacy `_compute_local_logits_stats_kernel`) | Imported from vLLM and renamed `_compute_block_stats_kernel` | `vllm_ascend/worker/v2/spec_decode/rejection_sampler_utils.py:25` | `test_compute_block_stats_kernel_patch.py` | Direct alias launch |
+| `test_compute_global_logsumexp.py` / `_compute_global_lse` (legacy `_compute_global_logsumexp`) | Imported from vLLM and renamed `_compute_global_lse` | `vllm_ascend/worker/v2/spec_decode/rejection_sampler_utils.py:22` | `test_compute_global_logsumexp_patch.py` | Direct helper wrapper through Ascend alias |
+| `test_fill_logprob_token_ids_kernel.py` / `_fill_logprob_token_ids_kernel` | Replaced by tensor assembly in `compute_topk_logprobs`; custom token IDs are currently unsupported | `vllm_ascend/worker/v2/sample/logprob.py:119`; `tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_compute_topk_logprobs.py` | `test_fill_logprob_token_ids_kernel_patch.py` | Public replacement path |
+| `test_gumbel_block_argmax.py` / `gumbel_block_argmax` | Renamed/reimplemented as `_npu_gumbel_block_argmax` | `vllm_ascend/worker/v2/spec_decode/rejection_sampler_utils.py:34` | `test_gumbel_block_argmax_patch.py` | Direct helper wrapper |
+| `test_insert_resampled_kernel.py` / `_insert_resampled_kernel` | Re-exported directly from vLLM by the Ascend rejection sampler | `vllm_ascend/worker/v2/spec_decode/rejection_sampler_utils.py:28` | `test_insert_resampled_kernel_patch.py` | Direct compatibility launch through Ascend import |
+| `test_prepare_dflash_inputs_kernel.py` / `_prepare_dflash_inputs_kernel` | Reimplemented as `_prepare_dflash_inputs_kernel_ascend` and monkey-patched back to the vLLM name | `vllm_ascend/worker/v2/spec_decode/dflash/speculator.py:153`; `vllm_ascend/patch/worker/patch_v2/patch_triton.py:37` | `test_prepare_dflash_inputs_kernel_patch.py` | Direct Ascend implementation |
+| `test_resample_kernel.py` / `_resample_kernel` | Ascend-specific implementation using `_npu_gumbel_block_argmax` and FP32 local maxima | `vllm_ascend/worker/v2/spec_decode/rejection_sampler_utils.py:82` | `test_resample_kernel_patch.py` | Direct Ascend implementation |
+| `test_tl_rand64.py` / `tl_rand64` | FP64 helper is unsupported; production Gumbel paths use `tl.rand` FP32 | `vllm_ascend/worker/v2/sample/gumbel.py:154`; `tests/ut/sample/a2/test_gumbel_sampling.py` | `test_tl_rand64_patch.py` | FP32 replacement contract plus production wrapper |
+
+Notes:
+
+- The local vLLM and vLLM-Ascend trees are API-version skewed around rejection sampling. The Ascend code imports the legacy names `_compute_global_logsumexp` and `_compute_local_logits_stats_kernel`; the patch tests intentionally import the aliases exposed by the installed `vllm_ascend` package.
+- `_apply_write_kernel` has no Ascend counterpart in this checkout. Creating a file named `test_apply_write_kernel_patch.py` would falsely imply an implementation exists, so no such file is generated.
+- `test_tl_rand64_patch.py` does not claim FP64 bit-level equivalence. It validates the actual A3-compatible FP32 random-uniform replacement and the production Gumbel wrapper.
 ## Confirmed A3 accuracy findings
 
 | Date | Operator | Test input | Expected | Actual | Classification | Test |

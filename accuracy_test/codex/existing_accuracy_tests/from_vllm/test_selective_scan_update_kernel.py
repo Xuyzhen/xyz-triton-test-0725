@@ -101,30 +101,26 @@ def _selective_scan_update_cpu(
             s = state_out[b, h]  # (dim, dstate)
             xi = x[b, h]  # (dim,)
             dti = dt[b, h]  # (dim,)
-
-            if dt_softplus:
-                dti = torch.where(dti <= 20.0, torch.log(torch.exp(dti) + 1), dti)
+            B_g = B[b, g]  # (dstate,)
+            C_g = C[b, g]  # (dstate,)
 
             if tie_hdim:
-                dt_val = dti[0].item()
+                dt_val = dti[0]
                 if dt_bias is not None:
-                    dt_val += dt_bias[h, 0].item()
+                    dt_val = dt_val + dt_bias[h, 0]
                 if dt_softplus:
-                    dt_val = max(dt_val, 0.0)
-                dA = torch.exp(A[h, 0, 0].item() * dt_val)
-                dB = B[b, g] * dt_val  # (dstate,)
+                    dt_val = torch.nn.functional.softplus(dt_val)
+                dA = torch.exp(A[h, 0, 0] * dt_val)
+                dB = B_g * dt_val  # (dstate,)
                 for d in range(dim):
                     s[d] = s[d] * dA + dB * xi[d]
-                yi = torch.sum(s * C[b, g], dim=-1)  # (dim,)
             else:
-                dt_bias_i = dt_bias[h] if dt_bias is not None else 0
-                dti = dti + dt_bias_i
+                if dt_bias is not None:
+                    dti = dti + dt_bias[h]
                 if dt_softplus:
-                    dti = torch.where(dti <= 20.0, torch.log(torch.exp(dti) + 1), dti)
+                    dti = torch.nn.functional.softplus(dti)
 
                 A_h = A[h]  # (dim, dstate)
-                B_g = B[b, g]  # (dstate,)
-                C_g = C[b, g]  # (dstate,)
 
                 dA = torch.exp(A_h * dti[:, None])  # (dim, dstate)
                 dB = B_g[None, :] * dti[:, None]  # (dim, dstate)
@@ -164,6 +160,7 @@ class TestSelectiveScanUpdateKernel:
         ngroups = 1
 
         state = torch.randn(batch, nheads, dim, dstate, dtype=torch.float32, device=self.device)
+        state_before = state.clone()
         x = torch.randn(batch, nheads, dim, dtype=torch.float32, device=self.device)
         dt = torch.randn(batch, nheads, dim, dtype=torch.float32, device=self.device)
         dt_bias = torch.randn(nheads, dim, dtype=torch.float32, device=self.device)
@@ -222,7 +219,7 @@ class TestSelectiveScanUpdateKernel:
         torch.npu.synchronize()
 
         expected_state, expected_out = _selective_scan_update_cpu(
-            state.cpu(), x.cpu(), dt.cpu(), dt_bias.cpu(),
+            state_before.cpu(), x.cpu(), dt.cpu(), dt_bias.cpu(),
             A.cpu(), B.cpu(), C.cpu(), D=D.cpu(), z=z.cpu(),
             dt_softplus=True, tie_hdim=False,
         )
@@ -241,6 +238,7 @@ class TestSelectiveScanUpdateKernel:
         ngroups = 1
 
         state = torch.randn(batch, nheads, dim, dstate, dtype=torch.float32, device=self.device)
+        state_before = state.clone()
         x = torch.randn(batch, nheads, dim, dtype=torch.float32, device=self.device)
         dt = torch.randn(batch, nheads, dim, dtype=torch.float32, device=self.device)
         dt_bias = torch.randn(nheads, dim, dtype=torch.float32, device=self.device)
@@ -296,7 +294,7 @@ class TestSelectiveScanUpdateKernel:
         torch.npu.synchronize()
 
         expected_state, expected_out = _selective_scan_update_cpu(
-            state.cpu(), x.cpu(), dt.cpu(), dt_bias.cpu(),
+            state_before.cpu(), x.cpu(), dt.cpu(), dt_bias.cpu(),
             A.cpu(), B.cpu(), C.cpu(), D=None, z=None,
             dt_softplus=True, tie_hdim=False,
         )
@@ -318,6 +316,7 @@ class TestSelectiveScanUpdateKernel:
         ngroups = 1
 
         state = torch.randn(batch, nheads, dim, dstate, dtype=torch.float32, device=self.device)
+        state_before = state.clone()
         x = torch.randn(batch, nheads, dim, dtype=torch.float32, device=self.device)
         dt = torch.randn(batch, nheads, dim, dtype=torch.float32, device=self.device)
         dt_bias = torch.randn(nheads, dim, dtype=torch.float32, device=self.device)
@@ -374,7 +373,7 @@ class TestSelectiveScanUpdateKernel:
         torch.npu.synchronize()
 
         expected_state, expected_out = _selective_scan_update_cpu(
-            state.cpu(), x.cpu(), dt.cpu(), dt_bias.cpu(),
+            state_before.cpu(), x.cpu(), dt.cpu(), dt_bias.cpu(),
             A.cpu(), B.cpu(), C.cpu(), D=D.cpu(), z=None,
             dt_softplus=True, tie_hdim=False,
         )
@@ -397,14 +396,15 @@ class TestSelectiveScanUpdateKernel:
         ngroups = 1
 
         state = torch.randn(batch, nheads, dim, dstate, dtype=torch.float32, device=self.device)
+        state_before = state.clone()
         x = torch.randn(batch, nheads, dim, dtype=torch.float32, device=self.device)
         # TIE_HDIM requires scalar dt and dt_bias across dim: stride(-1) == 0
         dt_scalar = torch.randn(1, 1, 1, dtype=torch.float32, device=self.device)
-        dt = dt_scalar.expand(batch, nheads, dim).contiguous()
+        dt = dt_scalar.expand(batch, nheads, dim)
         dt_bias_scalar = torch.randn(1, 1, dtype=torch.float32, device=self.device)
-        dt_bias = dt_bias_scalar.expand(nheads, dim).contiguous()
+        dt_bias = dt_bias_scalar.expand(nheads, dim)
         A_scalar = torch.randn(1, 1, 1, dtype=torch.float32, device=self.device)
-        A = A_scalar.expand(nheads, dim, dstate).contiguous()
+        A = A_scalar.expand(nheads, dim, dstate)
         B = torch.randn(batch, ngroups, dstate, dtype=torch.float32, device=self.device)
         C = torch.randn(batch, ngroups, dstate, dtype=torch.float32, device=self.device)
         D = torch.randn(nheads, dim, dtype=torch.float32, device=self.device)
@@ -457,7 +457,7 @@ class TestSelectiveScanUpdateKernel:
         torch.npu.synchronize()
 
         expected_state, expected_out = _selective_scan_update_cpu(
-            state.cpu(), x.cpu(), dt.cpu(), dt_bias.cpu(),
+            state_before.cpu(), x.cpu(), dt.cpu(), dt_bias.cpu(),
             A.cpu(), B.cpu(), C.cpu(), D=D.cpu(), z=None,
             dt_softplus=True, tie_hdim=True,
         )
@@ -476,6 +476,7 @@ class TestSelectiveScanUpdateKernel:
         ngroups = 1
 
         state = torch.randn(batch, nheads, dim, dstate, dtype=torch.float32, device=self.device)
+        state_before = state.clone()
         x = torch.randn(batch, nheads, dim, dtype=torch.float32, device=self.device)
         dt = torch.randn(batch, nheads, dim, dtype=torch.float32, device=self.device)
         dt_bias = torch.randn(nheads, dim, dtype=torch.float32, device=self.device)
@@ -531,7 +532,7 @@ class TestSelectiveScanUpdateKernel:
         torch.npu.synchronize()
 
         expected_state, expected_out = _selective_scan_update_cpu(
-            state.cpu(), x.cpu(), dt.cpu(), dt_bias.cpu(),
+            state_before.cpu(), x.cpu(), dt.cpu(), dt_bias.cpu(),
             A.cpu(), B.cpu(), C.cpu(), D=None, z=None,
             dt_softplus=False, tie_hdim=False,
         )

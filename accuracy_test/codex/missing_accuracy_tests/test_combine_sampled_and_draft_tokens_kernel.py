@@ -94,11 +94,6 @@ class TestCombineSampledAndDraftTokensKernel:
     @pytest.mark.parametrize("num_new_sampled_tokens", [0, 1])
     def test_combine_basic(self, num_reqs, num_spec_steps, num_new_sampled_tokens):
         """Test basic combine of sampled and draft tokens."""
-        if num_new_sampled_tokens == 0:
-            pytest.xfail(
-                "Ascend Triton cannot bind the defaulted "
-                "NUM_NEW_SAMPLED_TOKENS constexpr; precision is unknown"
-            )
         vocab_size = 100
         max_num_reqs = num_reqs
         num_draft_tokens = num_spec_steps
@@ -144,6 +139,7 @@ class TestCombineSampledAndDraftTokensKernel:
             cu_num_logits,
             logits_indices,
             BLOCK_SIZE=BLOCK_SIZE,
+            NUM_NEW_SAMPLED_TOKENS=num_new_sampled_tokens,
         )
         torch.npu.synchronize()
 
@@ -206,6 +202,7 @@ class TestCombineSampledAndDraftTokensKernel:
             cu_num_logits,
             logits_indices,
             BLOCK_SIZE=BLOCK_SIZE,
+            NUM_NEW_SAMPLED_TOKENS=num_new_sampled_tokens,
         )
         torch.npu.synchronize()
 

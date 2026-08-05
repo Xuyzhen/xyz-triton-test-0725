@@ -148,6 +148,39 @@ def _non_greedy_accept_cpu_ref(
 # ---------------------------------------------------------------------------
 
 
+def _load_rejection_kernels():
+    """Load matching vLLM/vLLM-Ascend helpers across helper renames."""
+    from vllm.v1.worker.gpu.spec_decode import rejection_sampler_utils as vllm_utils
+
+    block_stats = getattr(vllm_utils, "_compute_block_stats_kernel", None)
+    if block_stats is None:
+        block_stats = getattr(vllm_utils, "_compute_local_logits_stats_kernel", None)
+    global_lse = getattr(vllm_utils, "_compute_global_lse", None)
+    if global_lse is None:
+        global_lse = getattr(vllm_utils, "_compute_global_logsumexp", None)
+
+    if block_stats is None or global_lse is None:
+        raise ImportError(
+            "Unsupported vLLM rejection_sampler_utils API at "
+            f"{vllm_utils.__file__}: expected a block-stats kernel and global-LSE helper"
+        )
+
+    # vLLM-Ascend releases import one naming generation at module import time.
+    # Add test-process-only aliases so either generation can import successfully.
+    for name in ("_compute_block_stats_kernel", "_compute_local_logits_stats_kernel"):
+        if not hasattr(vllm_utils, name):
+            setattr(vllm_utils, name, block_stats)
+    for name in ("_compute_global_lse", "_compute_global_logsumexp"):
+        if not hasattr(vllm_utils, name):
+            setattr(vllm_utils, name, global_lse)
+
+    from vllm_ascend.worker.v2.spec_decode.rejection_sampler_utils import (
+        _probabilistic_rejection_kernel,
+    )
+
+    return block_stats, _probabilistic_rejection_kernel
+
+
 class TestProbabilisticRejectionKernelPatch:
 
     @pytest.fixture(autouse=True)
@@ -170,11 +203,8 @@ class TestProbabilisticRejectionKernelPatch:
         VOCAB_BLOCK_SIZE: int = 8192,
     ) -> tuple:
         """Run _probabilistic_rejection_kernel and return (sampled, rejected_steps)."""
-        from vllm.v1.worker.gpu.spec_decode.rejection_sampler_utils import (
-            _compute_local_logits_stats_kernel as _compute_block_stats_kernel,
-        )
-        from vllm_ascend.worker.v2.spec_decode.rejection_sampler_utils import (
-            _probabilistic_rejection_kernel,
+        _compute_block_stats_kernel, _probabilistic_rejection_kernel = (
+            _load_rejection_kernels()
         )
 
         device = self.device
@@ -375,11 +405,8 @@ class TestProbabilisticRejectionKernelPatch:
         )
 
         # Build multi-req stats manually for CPU reference
-        from vllm.v1.worker.gpu.spec_decode.rejection_sampler_utils import (
-            _compute_local_logits_stats_kernel as _compute_block_stats_kernel,
-        )
-        from vllm_ascend.worker.v2.spec_decode.rejection_sampler_utils import (
-            _probabilistic_rejection_kernel,
+        _compute_block_stats_kernel, _probabilistic_rejection_kernel = (
+            _load_rejection_kernels()
         )
 
         # Re-run with proper cu_num_logits and idx_mapping for multi-req
@@ -563,11 +590,8 @@ class TestProbabilisticRejectionKernelPatch:
 
     def test_mixed_greedy_and_non_greedy(self):
         """One greedy and one non-greedy request handled correctly."""
-        from vllm.v1.worker.gpu.spec_decode.rejection_sampler_utils import (
-            _compute_local_logits_stats_kernel as _compute_block_stats_kernel,
-        )
-        from vllm_ascend.worker.v2.spec_decode.rejection_sampler_utils import (
-            _probabilistic_rejection_kernel,
+        _compute_block_stats_kernel, _probabilistic_rejection_kernel = (
+            _load_rejection_kernels()
         )
 
         num_reqs = 2

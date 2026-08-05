@@ -103,9 +103,9 @@ class TestUpdateDraftInputsKernel:
                 expected_input_ids[req_idx] = dt
                 expected_input_hidden[req_idx] = hidden_states.cpu()[req_idx]
                 if advance_pos:
-                    old_pos = positions[req_idx].item()
+                    old_pos = expected_positions[req_idx].item()
                     expected_positions[req_idx] = min(old_pos + 1, max_model_len - 1)
-                    old_seq = seq_lens[req_idx].item()
+                    old_seq = expected_seq_lens[req_idx].item()
                     expected_seq_lens[req_idx] = min(old_seq + 1, max_model_len)
 
         torch.testing.assert_close(output_draft_tokens.cpu(), expected_output_draft, rtol=0, atol=0)

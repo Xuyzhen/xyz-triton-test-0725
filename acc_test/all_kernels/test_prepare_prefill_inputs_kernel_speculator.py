@@ -15,7 +15,7 @@ different signature from the input_batch.py version. It handles:
 
 Kernel signature:
     _prepare_prefill_inputs_kernel(
-        last_token_indices_ptr,         # int32 [num_reqs]
+        last_token_indices_ptr,         # int32 [max_num_reqs]
         draft_current_step_ptr,         # int32 scalar
         draft_input_ids_ptr,            # int32 [max_num_tokens]
         draft_positions_ptr,            # int32 [max_num_tokens]
@@ -158,8 +158,8 @@ class TestPreparePrefillInputsKernelSpeculator:
         next_prefill_tokens = torch.full((max_num_reqs,), 888, dtype=torch.int32,
                                          device=self.device)
 
-        last_token_indices = torch.zeros(num_reqs, dtype=torch.int32,
-                                         device=self.device)
+        last_token_indices = torch.full((max_num_reqs,), -1, dtype=torch.int32,
+                                        device=self.device)
         draft_current_step = torch.zeros(1, dtype=torch.int32,
                                          device=self.device)
         draft_input_ids = torch.zeros(max_num_tokens, dtype=torch.int32,
@@ -194,7 +194,7 @@ class TestPreparePrefillInputsKernelSpeculator:
 
         (lte_ref, di_ref, dp_ref, dql_ref, dsl_ref, dcs_ref
          ) = _prepare_prefill_inputs_speculator_ref(
-            last_token_indices.cpu(),
+            torch.full((max_num_reqs,), -1, dtype=torch.int32),
             torch.zeros(max_num_tokens, dtype=torch.int32),
             torch.zeros(max_num_tokens, dtype=torch.int32),
             torch.zeros(max_num_reqs + 1, dtype=torch.int32),
@@ -253,8 +253,8 @@ class TestPreparePrefillInputsKernelSpeculator:
                                            dtype=torch.int32,
                                            device=self.device)
 
-        last_token_indices = torch.zeros(num_reqs, dtype=torch.int32,
-                                         device=self.device)
+        last_token_indices = torch.full((max_num_reqs,), -1, dtype=torch.int32,
+                                        device=self.device)
         draft_current_step = torch.zeros(1, dtype=torch.int32,
                                          device=self.device)
         draft_input_ids = torch.zeros(max_num_tokens, dtype=torch.int32,
@@ -332,8 +332,8 @@ class TestPreparePrefillInputsKernelSpeculator:
         next_prefill_tokens = torch.full((max_num_reqs,), 444, dtype=torch.int32,
                                          device=self.device)
 
-        last_token_indices = torch.zeros(num_reqs, dtype=torch.int32,
-                                         device=self.device)
+        last_token_indices = torch.full((max_num_reqs,), -1, dtype=torch.int32,
+                                        device=self.device)
         draft_current_step = torch.zeros(1, dtype=torch.int32,
                                          device=self.device)
         draft_input_ids = torch.zeros(max_num_tokens, dtype=torch.int32,
@@ -368,7 +368,7 @@ class TestPreparePrefillInputsKernelSpeculator:
 
         (lte_ref, di_ref, dp_ref, dql_ref, dsl_ref, dcs_ref
          ) = _prepare_prefill_inputs_speculator_ref(
-            torch.zeros(num_reqs, dtype=torch.int32),
+            torch.full((max_num_reqs,), -1, dtype=torch.int32),
             torch.zeros(max_num_tokens, dtype=torch.int32),
             torch.zeros(max_num_tokens, dtype=torch.int32),
             torch.zeros(max_num_reqs + 1, dtype=torch.int32),
@@ -422,8 +422,8 @@ class TestPreparePrefillInputsKernelSpeculator:
         next_prefill_tokens = torch.full((max_num_reqs,), 222, dtype=torch.int32,
                                          device=self.device)
 
-        last_token_indices = torch.zeros(num_reqs, dtype=torch.int32,
-                                         device=self.device)
+        last_token_indices = torch.full((max_num_reqs,), -1, dtype=torch.int32,
+                                        device=self.device)
         draft_current_step = torch.ones(1, dtype=torch.int32,
                                         device=self.device)
         draft_input_ids = torch.full((max_num_tokens,), -1, dtype=torch.int32,

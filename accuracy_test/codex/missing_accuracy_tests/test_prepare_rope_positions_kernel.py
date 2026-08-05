@@ -49,6 +49,10 @@ def _prepare_rope_positions_ref(
     NUM_DIMS: int,
 ):
     """CPU reference for _prepare_rope_positions_kernel."""
+    # Triton pointer arithmetic is over flat storage. PyTorch's one-index
+    # access on a 2-D tensor selects a row, so use flat views explicitly.
+    positions_flat = positions.reshape(-1)
+    prefill_positions_flat = prefill_positions.reshape(-1)
     num_reqs = idx_mapping.shape[0]
     for batch_idx in range(num_reqs):
         req_state_idx = idx_mapping[batch_idx].item()
@@ -69,14 +73,14 @@ def _prepare_rope_positions_ref(
 
                 for k in range(NUM_DIMS):
                     if is_prefill:
-                        pos = prefill_positions[
+                        pos = prefill_positions_flat[
                             req_state_idx * prefill_positions_stride0
                             + k * prefill_positions_stride1
                             + orig_pos
                         ].item()
                     else:
                         pos = orig_pos + delta
-                    positions[k * positions_stride + query_start + block] = pos
+                    positions_flat[k * positions_stride + query_start + block] = pos
 
 
 class TestPrepareRopePositionsKernel:
@@ -104,13 +108,15 @@ class TestPrepareRopePositionsKernel:
         query_start_loc = torch.arange(num_reqs + 1, dtype=torch.int32, device=self.device)
         prefill_lens = torch.full((num_reqs,), 20, dtype=torch.int32, device=self.device)
         num_computed_tokens = torch.zeros(num_reqs, dtype=torch.int32, device=self.device)
+        prefill_positions_stride0 = num_dims * max_model_len
+        prefill_positions_stride1 = max_model_len
 
         _prepare_rope_positions_kernel[(num_reqs,)](
             positions,
             positions.stride(0),
             prefill_positions,
-            prefill_positions.stride(0),
-            prefill_positions.stride(1),
+            prefill_positions_stride0,
+            prefill_positions_stride1,
             prefill_delta,
             idx_mapping,
             query_start_loc,
@@ -127,8 +133,8 @@ class TestPrepareRopePositionsKernel:
             expected,
             expected.stride(0),
             prefill_positions,
-            prefill_positions.stride(0),
-            prefill_positions.stride(1),
+            prefill_positions_stride0,
+            prefill_positions_stride1,
             prefill_delta,
             idx_mapping,
             query_start_loc,
@@ -163,13 +169,15 @@ class TestPrepareRopePositionsKernel:
         query_start_loc = torch.arange(num_reqs + 1, dtype=torch.int32, device=self.device)
         prefill_lens = torch.full((num_reqs,), 20, dtype=torch.int32, device=self.device)
         num_computed_tokens = torch.full((num_reqs,), 25, dtype=torch.int32, device=self.device)
+        prefill_positions_stride0 = num_dims * max_model_len
+        prefill_positions_stride1 = max_model_len
 
         _prepare_rope_positions_kernel[(num_reqs,)](
             positions,
             positions.stride(0),
             prefill_positions,
-            prefill_positions.stride(0),
-            prefill_positions.stride(1),
+            prefill_positions_stride0,
+            prefill_positions_stride1,
             delta_vals,
             idx_mapping,
             query_start_loc,
@@ -185,8 +193,8 @@ class TestPrepareRopePositionsKernel:
             expected,
             expected.stride(0),
             prefill_positions,
-            prefill_positions.stride(0),
-            prefill_positions.stride(1),
+            prefill_positions_stride0,
+            prefill_positions_stride1,
             delta_vals,
             idx_mapping,
             query_start_loc,
@@ -222,13 +230,15 @@ class TestPrepareRopePositionsKernel:
         # Requests 0,2 in prefill; 1,3 in decode
         prefill_lens = torch.tensor([10, 10, 15, 15], dtype=torch.int32, device=self.device)
         num_computed_tokens = torch.tensor([0, 12, 5, 20], dtype=torch.int32, device=self.device)
+        prefill_positions_stride0 = num_dims * max_model_len
+        prefill_positions_stride1 = max_model_len
 
         _prepare_rope_positions_kernel[(num_reqs,)](
             positions,
             positions.stride(0),
             prefill_positions,
-            prefill_positions.stride(0),
-            prefill_positions.stride(1),
+            prefill_positions_stride0,
+            prefill_positions_stride1,
             delta_vals,
             idx_mapping,
             query_start_loc,
@@ -244,8 +254,8 @@ class TestPrepareRopePositionsKernel:
             expected,
             expected.stride(0),
             prefill_positions,
-            prefill_positions.stride(0),
-            prefill_positions.stride(1),
+            prefill_positions_stride0,
+            prefill_positions_stride1,
             delta_vals,
             idx_mapping,
             query_start_loc,

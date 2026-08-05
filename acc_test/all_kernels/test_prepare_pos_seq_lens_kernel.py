@@ -140,10 +140,9 @@ class TestPreparePosSeqLensKernel:
         assert torch.all(seq_lens[num_reqs:].cpu() == 0)
 
     def test_event_driven(self):
-        """When all query_lens are 0 (event-driven), only padding runs."""
+        """Zero query lengths preserve active seq_lens and still pad unused rows."""
         num_reqs = 2
         max_num_reqs = 8
-        tokens_per_req = 0
         num_tokens = 0  # no tokens at all
 
         idx_mapping = torch.arange(num_reqs, dtype=torch.int32, device=self.device)
@@ -166,5 +165,8 @@ class TestPreparePosSeqLensKernel:
         )
         torch.npu.synchronize()
 
-        # Padded entries should be 0
-        assert torch.all(seq_lens.cpu() == 0)
+        assert pos.numel() == 0
+        # Active requests retain their already-computed sequence length.
+        assert torch.all(seq_lens[:num_reqs].cpu() == 10)
+        # Only unused CUDA graph rows are padding.
+        assert torch.all(seq_lens[num_reqs:].cpu() == 0)

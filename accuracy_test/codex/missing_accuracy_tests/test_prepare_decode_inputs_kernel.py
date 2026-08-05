@@ -90,7 +90,7 @@ class TestPrepareDecodeInputsKernel:
             dt = draft_tokens[req_idx, 0].item()
             expected_input_ids[req_idx] = dt
             if advance_pos:
-                old_pos = positions[req_idx].item()
+                old_pos = expected_positions[req_idx].item()
                 expected_positions[req_idx] = min(old_pos + 1, max_model_len - 1)
                 tsl = target_seq_lens[req_idx].item()
                 nr = num_rejected[req_idx].item()

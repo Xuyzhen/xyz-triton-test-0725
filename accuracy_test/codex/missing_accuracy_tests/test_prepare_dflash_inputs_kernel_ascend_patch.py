@@ -84,6 +84,42 @@ if _prepare_dflash_inputs_kernel_ascend is None:
 PAD_SLOT_ID = -1
 
 
+def _dflash_environment_diagnostics():
+    """Describe installed packages without importing unrelated modules."""
+    import importlib.metadata
+    from pathlib import Path
+
+    import vllm
+    import vllm_ascend
+
+    def package_version(distribution, module):
+        try:
+            return importlib.metadata.version(distribution)
+        except importlib.metadata.PackageNotFoundError:
+            return getattr(module, "__version__", "unknown")
+
+    ascend_root = Path(vllm_ascend.__file__).resolve().parent
+    candidates = []
+    for path in ascend_root.rglob("*.py"):
+        relative = path.relative_to(ascend_root)
+        relative_text = str(relative).replace("\\", "/")
+        if "dflash" in relative_text.lower() or (
+            "spec_decode" in relative.parts and path.name == "utils.py"
+        ):
+            candidates.append(relative_text)
+
+    return "\n".join(
+        [
+            f"vllm={package_version('vllm', vllm)} ({vllm.__file__})",
+            "vllm-ascend="
+            f"{package_version('vllm-ascend', vllm_ascend)} "
+            f"({vllm_ascend.__file__})",
+            "candidate files=" + (", ".join(sorted(candidates)) or "<none>"),
+            "import errors=" + "; ".join(_dflash_import_errors),
+        ]
+    )
+
+
 def _prepare_dflash_inputs_ref(
     # Outputs
     out_input_ids,
@@ -349,10 +385,11 @@ class TestPrepareDFlashInputsKernelAscendPatch:
 
         if _prepare_dflash_inputs_kernel_ascend is None:
             if _modern_dflash_inputs_kernel is None:
-                pytest.skip(
-                    "installed vLLM-Ascend exposes neither supported DFlash "
-                    "kernel; precision was not tested: "
-                    + "; ".join(_dflash_import_errors)
+                pytest.fail(
+                    "DFlash environment compatibility failure; this is not "
+                    "a precision failure and no kernel was tested.\n"
+                    + _dflash_environment_diagnostics(),
+                    pytrace=False,
                 )
             self._test_modern_dflash_inputs(num_reqs, SAMPLE_FROM_ANCHOR)
             return

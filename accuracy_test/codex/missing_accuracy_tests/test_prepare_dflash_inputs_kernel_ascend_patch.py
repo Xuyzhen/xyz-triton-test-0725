@@ -61,16 +61,25 @@ from vllm.triton_utils import tl, triton
 from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton
 
 import pytest
+
+_prepare_dflash_inputs_kernel_ascend = None
+_modern_dflash_inputs_kernel = None
+_dflash_import_errors = []
 try:
     from vllm_ascend.worker.v2.spec_decode.dflash.speculator import (
         _prepare_dflash_inputs_kernel_ascend,
     )
 except (ImportError, ModuleNotFoundError) as exc:
-    pytest.skip(
-        "installed vLLM-Ascend has no worker-v2 DFlash patch; "
-        f"precision was not tested: {exc}",
-        allow_module_level=True,
-    )
+    _dflash_import_errors.append(f"legacy worker-v2: {exc}")
+
+if _prepare_dflash_inputs_kernel_ascend is None:
+    try:
+        from vllm_ascend.ops.triton.spec_decode.utils import (
+            copy_and_expand_dflash_and_dspark_inputs_kernel_single_grid
+            as _modern_dflash_inputs_kernel,
+        )
+    except (ImportError, ModuleNotFoundError) as exc:
+        _dflash_import_errors.append(f"modern spec-decode utils: {exc}")
 
 PAD_SLOT_ID = -1
 
@@ -186,6 +195,82 @@ def _prepare_dflash_inputs_ref(
             out_query_slot_mapping[i] = PAD_SLOT_ID
 
 
+def _modern_dflash_inputs_ref(
+    next_token_ids,
+    target_positions,
+    context_slot_mapping,
+    block_table,
+    query_start_loc,
+    seq_lens,
+    num_rejected,
+    parallel_drafting_token_id,
+    block_size,
+    num_query_per_req,
+    num_speculative_steps,
+    sample_from_anchor,
+):
+    """Independent CPU reference for the modern Ascend DFlash kernel."""
+    num_reqs = next_token_ids.shape[0]
+    num_context = target_positions.numel()
+    num_queries = num_reqs * num_query_per_req
+    out_input_ids = torch.full((num_queries,), -999, dtype=torch.int32)
+    out_context_positions = torch.full((num_context,), -999, dtype=torch.int32)
+    out_query_positions = torch.full((num_queries,), -999, dtype=torch.int32)
+    out_context_slots = torch.full((num_context,), -999, dtype=torch.int64)
+    out_query_slots = torch.full((num_queries,), -999, dtype=torch.int64)
+    out_sample_indices = torch.full(
+        (num_reqs * num_speculative_steps,), -999, dtype=torch.int32
+    )
+
+    for req_idx in range(num_reqs):
+        ctx_start = int(query_start_loc[req_idx])
+        ctx_end = int(query_start_loc[req_idx + 1])
+        rejected = int(num_rejected[req_idx])
+        valid_ctx_end = ctx_end - rejected
+        effective_seq_len = int(seq_lens[req_idx]) - rejected
+
+        out_context_positions[ctx_start:ctx_end] = target_positions[
+            ctx_start:ctx_end
+        ]
+        out_context_slots[ctx_start:ctx_end] = context_slot_mapping[
+            ctx_start:ctx_end
+        ]
+        last_pos = int(target_positions[valid_ctx_end - 1])
+
+        for query_offset in range(num_query_per_req):
+            query_idx = req_idx * num_query_per_req + query_offset
+            query_pos = last_pos + 1 + query_offset
+            out_query_positions[query_idx] = query_pos
+            out_input_ids[query_idx] = (
+                int(next_token_ids[req_idx])
+                if query_offset == 0
+                else parallel_drafting_token_id
+            )
+
+            cache_pos = effective_seq_len + query_offset
+            block_num = cache_pos // block_size
+            block_id = int(block_table[req_idx, block_num])
+            out_query_slots[query_idx] = (
+                block_id * block_size + cache_pos % block_size
+            )
+
+            if sample_from_anchor:
+                sample_idx = req_idx * num_speculative_steps + query_offset
+                out_sample_indices[sample_idx] = query_idx
+            elif query_offset > 0:
+                sample_idx = req_idx * num_speculative_steps + query_offset - 1
+                out_sample_indices[sample_idx] = query_idx
+
+    return (
+        out_input_ids,
+        out_context_positions,
+        out_query_positions,
+        out_context_slots,
+        out_query_slots,
+        out_sample_indices,
+    )
+
+
 class TestPrepareDFlashInputsKernelAscendPatch:
 
     @pytest.fixture(autouse=True)
@@ -194,10 +279,83 @@ class TestPrepareDFlashInputsKernelAscendPatch:
         self.device = torch.device("npu")
         self.BLOCK_SIZE = 1024
 
+    def _test_modern_dflash_inputs(self, num_reqs, sample_from_anchor):
+        """Test the installed modern Ascend DFlash input kernel."""
+        num_speculative_steps = 3
+        num_query_per_req = (
+            num_speculative_steps
+            if sample_from_anchor
+            else num_speculative_steps + 1
+        )
+        context_per_req = 4
+        num_context = num_reqs * context_per_req
+        block_size = 64
+        parallel_drafting_token_id = 0
+
+        next_token_ids_cpu = torch.arange(5, 5 + num_reqs, dtype=torch.int32)
+        target_positions_cpu = torch.arange(num_context, dtype=torch.int32)
+        context_slots_cpu = torch.arange(
+            1000, 1000 + num_context, dtype=torch.int64
+        )
+        query_start_loc_cpu = (
+            torch.arange(num_reqs + 1, dtype=torch.int32) * context_per_req
+        )
+        seq_lens_cpu = query_start_loc_cpu[1:].clone()
+        num_rejected_cpu = torch.zeros(num_reqs, dtype=torch.int32)
+        block_table_cpu = torch.arange(
+            100, 100 + num_reqs * 16, dtype=torch.int32
+        ).reshape(num_reqs, 16)
+
+        expected = _modern_dflash_inputs_ref(
+            next_token_ids_cpu, target_positions_cpu, context_slots_cpu,
+            block_table_cpu, query_start_loc_cpu, seq_lens_cpu,
+            num_rejected_cpu, parallel_drafting_token_id, block_size,
+            num_query_per_req, num_speculative_steps, sample_from_anchor,
+        )
+
+        device = self.device
+        next_token_ids = next_token_ids_cpu.to(device)
+        target_positions = target_positions_cpu.to(device)
+        context_slots = context_slots_cpu.to(device)
+        block_table = block_table_cpu.to(device)
+        query_start_loc = query_start_loc_cpu.to(device)
+        seq_lens = seq_lens_cpu.to(device)
+        num_rejected = num_rejected_cpu.to(device)
+        outputs = tuple(t.to(device) for t in expected)
+        for output in outputs:
+            output.fill_(-999)
+
+        launch_kwargs = {"HAS_NUM_REJECTED": True}
+        if sample_from_anchor:
+            launch_kwargs["SAMPLE_FROM_ANCHOR"] = True
+
+        _modern_dflash_inputs_kernel[(1,)](
+            next_token_ids, target_positions, context_slots,
+            outputs[0], outputs[1], outputs[2], outputs[3], outputs[4],
+            outputs[5], block_table, block_table.stride(0),
+            query_start_loc, seq_lens, num_rejected,
+            parallel_drafting_token_id, block_size, num_query_per_req,
+            num_speculative_steps, num_context, num_reqs, **launch_kwargs,
+        )
+        torch.npu.synchronize()
+
+        for actual, reference in zip(outputs, expected):
+            torch.testing.assert_close(actual.cpu(), reference, rtol=0, atol=0)
+
     @pytest.mark.parametrize("num_reqs", [1, 2])
     @pytest.mark.parametrize("SAMPLE_FROM_ANCHOR", [False, True])
     def test_prepare_dflash_inputs(self, num_reqs, SAMPLE_FROM_ANCHOR):
-        """Compare NPU DFlash inputs with CPU reference."""
+        """Compare the installed legacy or modern DFlash kernel with CPU."""
+
+        if _prepare_dflash_inputs_kernel_ascend is None:
+            if _modern_dflash_inputs_kernel is None:
+                pytest.skip(
+                    "installed vLLM-Ascend exposes neither supported DFlash "
+                    "kernel; precision was not tested: "
+                    + "; ".join(_dflash_import_errors)
+                )
+            self._test_modern_dflash_inputs(num_reqs, SAMPLE_FROM_ANCHOR)
+            return
 
         max_num_reqs = 4
         num_query_per_req = 3

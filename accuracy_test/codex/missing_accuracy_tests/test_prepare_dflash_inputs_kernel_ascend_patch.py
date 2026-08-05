@@ -85,7 +85,8 @@ PAD_SLOT_ID = -1
 
 
 def _dflash_environment_diagnostics():
-    """Describe installed packages without importing unrelated modules."""
+    """Describe the installed DFlash implementation and package layout."""
+    import importlib
     import importlib.metadata
     from pathlib import Path
 
@@ -108,14 +109,56 @@ def _dflash_environment_diagnostics():
         ):
             candidates.append(relative_text)
 
+    runtime_details = []
+    modern_module_name = "vllm_ascend.ops.triton.spec_decode.utils"
+    expected_symbol = (
+        "copy_and_expand_dflash_and_dspark_inputs_kernel_single_grid"
+    )
+    try:
+        modern_module = importlib.import_module(modern_module_name)
+        modern_path = Path(modern_module.__file__).resolve()
+        related_exports = sorted(
+            name
+            for name in dir(modern_module)
+            if any(
+                marker in name.lower()
+                for marker in ("dflash", "dspark", "copy_and_expand")
+            )
+        )
+        try:
+            source_contains_symbol = expected_symbol in modern_path.read_text(
+                encoding="utf-8", errors="replace"
+            )
+        except OSError as exc:
+            source_contains_symbol = f"unreadable: {exc}"
+        runtime_details.extend(
+            [
+                f"modern module={modern_path}",
+                "modern related exports="
+                + (", ".join(related_exports) or "<none>"),
+                "modern source contains expected symbol="
+                f"{source_contains_symbol}",
+            ]
+        )
+    except Exception as exc:
+        runtime_details.append(f"modern module inspection failed={exc}")
+
+    try:
+        importlib.import_module("vllm_ascend.spec_decode.dflash_proposer")
+        runtime_details.append("dflash proposer import=ok")
+    except Exception as exc:
+        runtime_details.append(f"dflash proposer import failed={exc}")
+
     return "\n".join(
         [
+            "diagnostic revision=2",
             f"vllm={package_version('vllm', vllm)} ({vllm.__file__})",
             "vllm-ascend="
             f"{package_version('vllm-ascend', vllm_ascend)} "
             f"({vllm_ascend.__file__})",
             "candidate files=" + (", ".join(sorted(candidates)) or "<none>"),
             "import errors=" + "; ".join(_dflash_import_errors),
+            *runtime_details,
         ]
     )
 

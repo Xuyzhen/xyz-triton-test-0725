@@ -32,6 +32,75 @@ from vllm.v1.worker.gpu.input_batch import _combine_sampled_and_draft_tokens_ker
 from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton
 
 
+@triton.jit
+def _combine_sampled_and_draft_tokens_required_constexpr(
+    input_ids_ptr,
+    idx_mapping_ptr,
+    last_sampled_tokens_ptr,
+    query_start_loc_ptr,
+    seq_lens_ptr,
+    prefill_len_ptr,
+    draft_tokens_ptr,
+    draft_tokens_stride,
+    cu_num_logits_ptr,
+    logits_indices_ptr,
+    BLOCK_SIZE: tl.constexpr,
+    NUM_NEW_SAMPLED_TOKENS: tl.constexpr,
+):
+    """Test-only copy of the upstream kernel with no constexpr default."""
+    batch_idx = tl.program_id(0)
+    req_state_idx = tl.load(idx_mapping_ptr + batch_idx)
+
+    cu_num_logits_start = tl.load(cu_num_logits_ptr + batch_idx)
+    cu_num_logits_end = tl.load(cu_num_logits_ptr + batch_idx + 1)
+    num_logits = cu_num_logits_end - cu_num_logits_start
+    num_draft_tokens = num_logits - NUM_NEW_SAMPLED_TOKENS
+
+    block = tl.arange(0, BLOCK_SIZE)
+    query_end = tl.load(query_start_loc_ptr + batch_idx + 1)
+    logits_start = query_end - num_logits
+    tl.store(
+        logits_indices_ptr + cu_num_logits_start + block,
+        logits_start + block,
+        mask=block < num_logits,
+    )
+
+    seq_len = tl.load(seq_lens_ptr + batch_idx)
+    prefill_len = tl.load(prefill_len_ptr + req_state_idx)
+    if seq_len <= prefill_len:
+        return
+
+    if NUM_NEW_SAMPLED_TOKENS > 0:
+        last_token_id = tl.load(last_sampled_tokens_ptr + req_state_idx)
+        tl.store(input_ids_ptr + query_end - num_logits, last_token_id)
+
+    if num_draft_tokens > 0:
+        mask = block < num_draft_tokens
+        draft_tokens = tl.load(
+            draft_tokens_ptr + req_state_idx * draft_tokens_stride + block,
+            mask=mask,
+        )
+        tl.store(
+            input_ids_ptr + query_end - num_draft_tokens + block,
+            draft_tokens,
+            mask=mask,
+        )
+
+
+def _launch_combine_kernel(grid, args, block_size, num_new_sampled_tokens):
+    if num_new_sampled_tokens == 1:
+        _combine_sampled_and_draft_tokens_kernel[grid](
+            *args,
+            BLOCK_SIZE=block_size,
+        )
+    else:
+        _combine_sampled_and_draft_tokens_required_constexpr[grid](
+            *args,
+            BLOCK_SIZE=block_size,
+            NUM_NEW_SAMPLED_TOKENS=num_new_sampled_tokens,
+        )
+
+
 def _combine_sampled_and_draft_tokens_ref(
     input_ids,                # [num_tokens] int32
     idx_mapping,              # [num_reqs]
@@ -127,19 +196,15 @@ class TestCombineSampledAndDraftTokensKernel:
 
         BLOCK_SIZE = triton.next_power_of_2(num_spec_steps + num_new_sampled_tokens)
 
-        _combine_sampled_and_draft_tokens_kernel[(num_reqs,)](
-            input_ids,
-            idx_mapping,
-            last_sampled_tokens,
-            query_start_loc,
-            seq_lens,
-            prefill_len,
-            draft_tokens,
-            draft_tokens.stride(0),
-            cu_num_logits,
-            logits_indices,
-            BLOCK_SIZE=BLOCK_SIZE,
-            NUM_NEW_SAMPLED_TOKENS=num_new_sampled_tokens,
+        _launch_combine_kernel(
+            (num_reqs,),
+            (
+                input_ids, idx_mapping, last_sampled_tokens, query_start_loc,
+                seq_lens, prefill_len, draft_tokens, draft_tokens.stride(0),
+                cu_num_logits, logits_indices,
+            ),
+            BLOCK_SIZE,
+            num_new_sampled_tokens,
         )
         torch.npu.synchronize()
 
@@ -190,19 +255,15 @@ class TestCombineSampledAndDraftTokensKernel:
 
         BLOCK_SIZE = triton.next_power_of_2(num_spec_steps + num_new_sampled_tokens)
 
-        _combine_sampled_and_draft_tokens_kernel[(num_reqs,)](
-            input_ids,
-            idx_mapping,
-            last_sampled_tokens,
-            query_start_loc,
-            seq_lens,
-            prefill_len,
-            draft_tokens,
-            draft_tokens.stride(0),
-            cu_num_logits,
-            logits_indices,
-            BLOCK_SIZE=BLOCK_SIZE,
-            NUM_NEW_SAMPLED_TOKENS=num_new_sampled_tokens,
+        _launch_combine_kernel(
+            (num_reqs,),
+            (
+                input_ids, idx_mapping, last_sampled_tokens, query_start_loc,
+                seq_lens, prefill_len, draft_tokens, draft_tokens.stride(0),
+                cu_num_logits, logits_indices,
+            ),
+            BLOCK_SIZE,
+            num_new_sampled_tokens,
         )
         torch.npu.synchronize()
 

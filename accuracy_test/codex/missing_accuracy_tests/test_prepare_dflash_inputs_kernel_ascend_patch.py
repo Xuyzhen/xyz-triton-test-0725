@@ -64,6 +64,7 @@ import pytest
 
 _prepare_dflash_inputs_kernel_ascend = None
 _modern_dflash_inputs_kernel = None
+_modern_dflash_supports_sample_from_anchor = False
 _dflash_import_errors = []
 try:
     from vllm_ascend.worker.v2.spec_decode.dflash.speculator import (
@@ -74,12 +75,38 @@ except (ImportError, ModuleNotFoundError) as exc:
 
 if _prepare_dflash_inputs_kernel_ascend is None:
     try:
-        from vllm_ascend.ops.triton.spec_decode.utils import (
-            copy_and_expand_dflash_and_dspark_inputs_kernel_single_grid
-            as _modern_dflash_inputs_kernel,
+        from vllm_ascend.ops.triton.spec_decode import utils as _dflash_utils
+
+        _modern_dflash_inputs_kernel = getattr(
+            _dflash_utils,
+            "copy_and_expand_dflash_and_dspark_inputs_kernel_single_grid",
+            None,
         )
+        if _modern_dflash_inputs_kernel is not None:
+            _modern_dflash_supports_sample_from_anchor = True
+        else:
+            _modern_dflash_inputs_kernel = getattr(
+                _dflash_utils,
+                "copy_and_expand_dflash_inputs_kernel_single_grid",
+                None,
+            )
+        if _modern_dflash_inputs_kernel is None:
+            raise ImportError(
+                "neither the combined DFlash/DSpark kernel nor the legacy "
+                "DFlash kernel is exported"
+            )
     except (ImportError, ModuleNotFoundError) as exc:
         _dflash_import_errors.append(f"modern spec-decode utils: {exc}")
+
+_sample_from_anchor_values = [False, True]
+if (
+    _prepare_dflash_inputs_kernel_ascend is None
+    and _modern_dflash_inputs_kernel is not None
+    and not _modern_dflash_supports_sample_from_anchor
+):
+    # The legacy single-grid kernel implements DFlash only. Anchor sampling was
+    # added later when the kernel was extended for DSpark.
+    _sample_from_anchor_values = [False]
 
 PAD_SLOT_ID = -1
 
@@ -405,7 +432,7 @@ class TestPrepareDFlashInputsKernelAscendPatch:
             output.fill_(-999)
 
         launch_kwargs = {"HAS_NUM_REJECTED": True}
-        if sample_from_anchor:
+        if sample_from_anchor and _modern_dflash_supports_sample_from_anchor:
             launch_kwargs["SAMPLE_FROM_ANCHOR"] = True
 
         _modern_dflash_inputs_kernel[(1,)](
@@ -422,7 +449,7 @@ class TestPrepareDFlashInputsKernelAscendPatch:
             torch.testing.assert_close(actual.cpu(), reference, rtol=0, atol=0)
 
     @pytest.mark.parametrize("num_reqs", [1, 2])
-    @pytest.mark.parametrize("SAMPLE_FROM_ANCHOR", [False, True])
+    @pytest.mark.parametrize("SAMPLE_FROM_ANCHOR", _sample_from_anchor_values)
     def test_prepare_dflash_inputs(self, num_reqs, SAMPLE_FROM_ANCHOR):
         """Compare the installed legacy or modern DFlash kernel with CPU."""
 

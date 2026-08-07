@@ -23,7 +23,7 @@
 | `_fill_logprob_token_ids_kernel`（launch） | 间接：`vllm/tests/v1/sample/test_logprobs.py` | 当前 Ascend `compute_topk_logprobs` 未调用该 kernel | 仅 vLLM 集成覆盖 |
 | `_min_p_kernel` | 间接：`vllm/tests/v1/sample/test_sampler.py` | 间接：`vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_min_p.py:41` | Ascend 有针对性 wrapper UT |
 | `_penalties_kernel` | 间接：`vllm/tests/v1/sample/test_sampler.py`；`test_logprobs.py:1075` | 间接：`vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_penality.py` | Ascend 有针对性 wrapper UT |
-| `_bincount_kernel` | 未找到直接 UT | **直接**：`vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_bincount.py:40`；当前 skip | Ascend 已有但默认不执行 |
+| `_bincount_kernel` | 未找到直接 UT | **直接**：`vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_bincount.py:40`；历史 `atomic_or` skip 已解除 | 当前 A3 环境精度通过 |
 | `_prompt_logprobs_token_ids_kernel` | 间接：`vllm/tests/v1/sample/test_logprobs.py:1192` 等 | 未找到本地同名实现；patch 使用 Ascend `compute_topk_logprobs` | 无直接 kernel UT |
 | `_prepare_prefill_inputs_kernel`（input batch/AR） | 未找到 | 未找到本地同名 UT，上游复用 | 无针对性 UT |
 | `_prepare_decode_inputs_kernel`（wrapper） | 未找到 | 未找到同名适配/UT | 无针对性 UT |
@@ -71,7 +71,7 @@
 
 ## 已有测试的限制
 
-- `test_bincount.py:39` 被 skip：`atomic_or operator hangs in current npu_ir version`。
+- `test_bincount.py` 原有 `atomic_or operator hangs in current npu_ir version` skip 已于 2026-08-07 解除；独立原子探针和原始规模精度 UT 均通过。
 - `test_compute_token_logprobs.py` 的四组测试被 skip：`UB overflow`。
 - Ascend `test_rejection_sample.py` 测试 `vllm_ascend.ops.triton.reject_sample` 中的另一套 kernel，不能直接算作 worker v2 `_resample_kernel` / `_probabilistic_rejection_kernel` 的 UT。
 - 两仓存在 API 版本错位：Ascend 导入的 `_compute_global_logsumexp`、`_compute_local_logits_stats_kernel` 在当前 vLLM 源码中分别显示为 `_compute_global_lse`、`_compute_block_stats_kernel`。
@@ -149,7 +149,7 @@ pytest -sv accuracy_test/codex/missing_accuracy_tests
 | `_topk_log_softmax_kernel`、`_ranks_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_compute_topk_logprobs.py` | `test_compute_topk_logprobs.py` |
 | `_min_p_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_min_p.py` | `test_min_p.py` |
 | `_penalties_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_penality.py` | `test_penality.py` |
-| `_bincount_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_bincount.py` | `test_bincount.py`（保留原 skip） |
+| `_bincount_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_bincount.py` | `test_bincount.py`（已解除过期的 `atomic_or` skip） |
 | `_compute_slot_mappings_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_compute_slot_mapping.py` | `test_compute_slot_mapping.py` |
 | `_post_update_kernel` | `vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_post_update.py` | `test_post_update.py` |
 
@@ -301,6 +301,7 @@ Notes:
 
 | Date | Operator | Test input | Expected | Actual | Classification | Test |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-08-07 | `_bincount_kernel` | 原 vLLM-Ascend 大规模用例：64 requests、40960 token buffer、151936 vocab、`BLOCK_SIZE=1024` | prompt bitmask 与 output token counts 和 PyTorch reference 完全一致 | 两项均完全一致；1 passed in 19.12s | Confirmed accuracy pass; historical `atomic_or` hang was not reproduced in the installed A3/npu_ir stack | `existing_accuracy_tests/from_vllm_ascend/test_bincount.py::test_bincount_kernel` |
 | 2026-08-04 | _compute_global_lse / legacy _compute_global_logsumexp | All valid block maxima are -inf; all local sumexp values are 0 | -inf | NaN | Confirmed numerical correctness issue after successful kernel execution; reproduced through the vLLM-Ascend alias | existing_accuracy_tests/from_vllm/test_compute_global_logsumexp.py::TestComputeGlobalLogsumexp::test_all_neg_inf_blocks; existing_accuracy_tests/from_vllm/test_compute_global_logsumexp_patch.py::TestComputeGlobalLogsumexp::test_all_neg_inf_blocks |
 | 2026-08-04 | _fill_logprob_token_ids_kernel | Mixed requests: request 0 has custom IDs; other requests use NUM_TOPK=3 or 5 | Non-custom rows contain their top-k token IDs | Every top-k column in non-custom rows remains incorrect/unwritten | Confirmed correctness issue in the installed vLLM; fixed upstream by commit d7af6b34d8 (#41761) | existing_accuracy_tests/from_vllm/test_fill_logprob_token_ids_kernel.py::TestFillLogprobTokenIdsKernel::test_custom_token_ids |
 

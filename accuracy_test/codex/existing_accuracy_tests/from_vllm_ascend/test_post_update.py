@@ -4,17 +4,32 @@
 # Coverage: _post_update_kernel via post_update
 
 from typing import Any
+import importlib
+import traceback
 
 import pytest
 import torch
+
+post_update_gpu = None
+post_update_npu = None
+_post_update_import_error = None
+_post_update_import_traceback = None
 try:
+    # Complete DeviceOperator initialization before input_batch imports
+    # attention_v1, which imports DeviceOperator at module scope. Some installed
+    # vLLM-Ascend builds otherwise expose a partially initialized device_op
+    # module and report a circular import.
+    device_op = importlib.import_module("vllm_ascend.device.device_op")
+    if not hasattr(device_op, "DeviceOperator"):
+        raise ImportError(
+            "vllm_ascend.device.device_op initialized without DeviceOperator"
+        )
+
     from vllm.v1.worker.gpu.input_batch import post_update as post_update_gpu
     from vllm_ascend.worker.v2.input_batch import post_update as post_update_npu
-except (ImportError, ModuleNotFoundError) as exc:
-    pytest.skip(
-        f"installed stack does not provide post_update implementations; precision was not tested: {exc}",
-        allow_module_level=True,
-    )
+except Exception as exc:
+    _post_update_import_error = exc
+    _post_update_import_traceback = traceback.format_exc()
 
 
 def generate_test_data(
@@ -71,12 +86,23 @@ def generate_test_data(
     ],
 )
 def test_post_update(num_reqs: int, max_num_reqs: int, vocab_size: int, num_speculative_steps: int):
-    """Test _topk_log_softmax_kernel for computing log probabilities
-    Args:
-        batch_size: Number of sequences in the batch
-        vocab_size: Size of the vocabulary
-        num_logprobs: Number of tokens to compute log probabilities for
-    """
+    """Compare upstream and Ascend post_update mutations exactly."""
+    if _post_update_import_error is not None:
+        pytest.fail(
+            "post_update environment compatibility failure; this is not a "
+            "precision failure and no kernel was tested.\n"
+            f"error={_post_update_import_error}\n"
+            f"traceback:\n{_post_update_import_traceback}",
+            pytrace=False,
+        )
+
+    if post_update_gpu is post_update_npu:
+        pytest.fail(
+            "post_update reference and Ascend implementation resolve to the "
+            "same function after monkey-patching; an independent precision "
+            "comparison is impossible.",
+            pytrace=False,
+        )
     torch.manual_seed(42)
 
     post_update_params = [
@@ -103,13 +129,19 @@ def test_post_update(num_reqs: int, max_num_reqs: int, vocab_size: int, num_spec
     post_update_npu(**kernel_inputs_npu)
     torch.npu.synchronize()
 
-    # ========== Verify results ==========
-    assert torch.allclose(
-        kernel_inputs_gpu["output_bin_counts"], kernel_inputs_npu["output_bin_counts"], rtol=1e-3, atol=1e-3
-    ), (
-        f"Triton output differs from PyTorch reference.\n"
-        f"Max diff: "
-        f"{torch.max(torch.abs(kernel_inputs_gpu['output_bin_counts'] - kernel_inputs_npu['output_bin_counts']))}\n"
-        f"Mean diff: "
-        f"{torch.mean(torch.abs(kernel_inputs_gpu['output_bin_counts'] - kernel_inputs_npu['output_bin_counts']))}"
+    # Every mutated value is int32, so require exact equality with no tolerance.
+    mutated_outputs = (
+        "num_computed_tokens",
+        "last_sampled_tokens",
+        "output_bin_counts",
+        "all_token_ids",
+        "total_len",
     )
+    for name in mutated_outputs:
+        torch.testing.assert_close(
+            kernel_inputs_npu[name],
+            kernel_inputs_gpu[name],
+            rtol=0,
+            atol=0,
+            msg=lambda msg, name=name: f"post_update mismatch for {name}:\n{msg}",
+        )

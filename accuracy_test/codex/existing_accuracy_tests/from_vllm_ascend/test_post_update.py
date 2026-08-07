@@ -15,10 +15,11 @@ post_update_npu = None
 _post_update_import_error = None
 _post_update_import_traceback = None
 try:
-    # Complete DeviceOperator initialization before input_batch imports
-    # attention_v1, which imports DeviceOperator at module scope. Some installed
-    # vLLM-Ascend builds otherwise expose a partially initialized device_op
-    # module and report a circular import.
+    # Bootstrap the parent ops package first. Importing device_op directly can
+    # cycle through ops.__init__ -> fused_moe -> experts_selector -> device_op
+    # before DeviceOperator is bound. Starting from ops registers the parent
+    # package before device_op imports ops.triton children, breaking that cycle.
+    importlib.import_module("vllm_ascend.ops")
     device_op = importlib.import_module("vllm_ascend.device.device_op")
     if not hasattr(device_op, "DeviceOperator"):
         raise ImportError(

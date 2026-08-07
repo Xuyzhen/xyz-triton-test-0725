@@ -46,7 +46,6 @@ def torch_bincount(
             output_bin_counts[req_idx, token] += 1
 
 
-@pytest.mark.skip(reason="atomic_or operator hangs in current npu_ir version")
 def test_bincount_kernel():
     """
     Compute the prompt binary mask and token bincount using the Triton kernel.
@@ -111,6 +110,7 @@ def test_bincount_kernel():
         output_bin_counts.stride(0),
         BLOCK_SIZE=BLOCK_SIZE,
     )
+    torch.npu.synchronize()
 
     torch_bincount(
         expanded_idx_mapping,

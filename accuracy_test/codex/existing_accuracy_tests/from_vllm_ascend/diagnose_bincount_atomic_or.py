@@ -41,6 +41,11 @@ def _load_child_runtime():
 def _run_child(probe: str) -> int:
     torch, tl, triton, init_triton, bincount_kernel = _load_child_runtime()
 
+    # Triton reparses JIT function source against the function's module globals.
+    # The runtime is imported lazily for parent/child isolation, so expose tl
+    # there before defining the nested diagnostic kernels.
+    globals()["tl"] = tl
+
     @triton.jit
     def store_kernel(out_ptr):
         tl.store(out_ptr, 1)

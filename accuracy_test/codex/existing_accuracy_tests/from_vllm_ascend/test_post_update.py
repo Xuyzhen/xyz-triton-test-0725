@@ -1,17 +1,18 @@
 # Standalone Ascend A3 accuracy test.
 # Accuracy UT source: vllm-ascend-xyz/tests/e2e/nightly/single_node/ops/singlecard_ops/triton/test_post_update.py
 # Kernel source: vllm-ascend-xyz/vllm_ascend/worker/v2/input_batch.py
-# Coverage: _post_update_kernel via post_update
+# Coverage: direct comparison of upstream and Ascend _post_update_kernel
 
-from typing import Any
 import importlib
 import traceback
+from typing import Any
 
 import pytest
 import torch
 
-post_update_gpu = None
-post_update_npu = None
+post_update_kernel_upstream = None
+post_update_kernel_npu = None
+get_vectorcore_num = None
 _post_update_import_error = None
 _post_update_import_traceback = None
 try:
@@ -26,8 +27,13 @@ try:
             "vllm_ascend.device.device_op initialized without DeviceOperator"
         )
 
-    from vllm.v1.worker.gpu.input_batch import post_update as post_update_gpu
-    from vllm_ascend.worker.v2.input_batch import post_update as post_update_npu
+    from vllm.v1.worker.gpu.input_batch import (
+        _post_update_kernel as post_update_kernel_upstream,
+    )
+    from vllm_ascend.ops.triton.triton_utils import get_vectorcore_num
+    from vllm_ascend.worker.v2.input_batch import (
+        _post_update_kernel as post_update_kernel_npu,
+    )
 except Exception as exc:
     _post_update_import_error = exc
     _post_update_import_traceback = traceback.format_exc()
@@ -78,6 +84,75 @@ def generate_test_data(
     }
 
 
+def post_update_ref(
+    idx_mapping: torch.Tensor,
+    num_computed_tokens: torch.Tensor,
+    last_sampled_tokens: torch.Tensor,
+    output_bin_counts: torch.Tensor,
+    sampled_tokens: torch.Tensor,
+    num_sampled: torch.Tensor,
+    num_rejected: torch.Tensor,
+    query_start_loc: torch.Tensor,
+    all_token_ids: torch.Tensor,
+    total_len: torch.Tensor,
+) -> None:
+    """Independent serial CPU reference for Ascend post_update."""
+    for row_idx in range(idx_mapping.numel()):
+        req_state_idx = int(idx_mapping[row_idx])
+        old_total_len = int(total_len[req_state_idx])
+        sampled_count = int(num_sampled[row_idx])
+
+        if sampled_count > 0:
+            last_sampled_tokens[req_state_idx] = sampled_tokens[
+                row_idx, sampled_count - 1
+            ]
+            total_len[req_state_idx] = old_total_len + sampled_count
+
+        for sample_idx in range(sampled_count):
+            token_id = int(sampled_tokens[row_idx, sample_idx])
+            output_bin_counts[req_state_idx, token_id] += 1
+            all_token_ids[req_state_idx, old_total_len + sample_idx] = token_id
+
+        query_len = int(query_start_loc[row_idx + 1] - query_start_loc[row_idx])
+        rejected_count = int(num_rejected[row_idx])
+        num_computed_tokens[req_state_idx] += query_len - rejected_count
+
+
+def launch_post_update_kernel(kernel, inputs: dict[str, torch.Tensor], *, ascend: bool) -> None:
+    """Launch an installed kernel using its actual JIT argument names."""
+    num_rows = inputs["idx_mapping"].shape[0]
+    values = {
+        "idx_mapping_ptr": inputs["idx_mapping"],
+        "idx_mapping_stride": inputs["idx_mapping"].stride(0),
+        "num_computed_tokens_ptr": inputs["num_computed_tokens"],
+        "last_sampled_tokens_ptr": inputs["last_sampled_tokens"],
+        "output_bin_counts_ptr": inputs["output_bin_counts"],
+        "output_bin_counts_stride": inputs["output_bin_counts"].stride(0),
+        "sampled_tokens_ptr": inputs["sampled_tokens"],
+        "sampled_tokens_stride": inputs["sampled_tokens"].stride(0),
+        "num_rows": num_rows,
+        "num_sampled_ptr": inputs["num_sampled"],
+        "num_rejected_ptr": inputs["num_rejected"],
+        "query_start_loc_ptr": inputs["query_start_loc"],
+        "all_token_ids_ptr": inputs["all_token_ids"],
+        "all_token_ids_stride": inputs["all_token_ids"].stride(0),
+        "total_len_ptr": inputs["total_len"],
+    }
+    arg_names = tuple(kernel.arg_names)
+    missing = [name for name in arg_names if name not in values]
+    if missing:
+        raise RuntimeError(
+            "unsupported installed post_update kernel signature; "
+            f"missing values for {missing}; arg_names={arg_names}"
+        )
+    kwargs = {name: values[name] for name in arg_names}
+    if ascend:
+        grid = (min(num_rows, get_vectorcore_num()),)
+        kernel[grid](**kwargs)
+    else:
+        kernel[(num_rows,)](**kwargs, num_warps=1)
+
+
 @pytest.mark.parametrize(
     "num_reqs,max_num_reqs,vocab_size,num_speculative_steps",
     [
@@ -87,7 +162,7 @@ def generate_test_data(
     ],
 )
 def test_post_update(num_reqs: int, max_num_reqs: int, vocab_size: int, num_speculative_steps: int):
-    """Compare upstream and Ascend post_update mutations exactly."""
+    """Compare upstream and Ascend kernels, with a CPU correctness oracle."""
     if _post_update_import_error is not None:
         pytest.fail(
             "post_update environment compatibility failure; this is not a "
@@ -97,13 +172,6 @@ def test_post_update(num_reqs: int, max_num_reqs: int, vocab_size: int, num_spec
             pytrace=False,
         )
 
-    if post_update_gpu is post_update_npu:
-        pytest.fail(
-            "post_update reference and Ascend implementation resolve to the "
-            "same function after monkey-patching; an independent precision "
-            "comparison is impossible.",
-            pytrace=False,
-        )
     torch.manual_seed(42)
 
     post_update_params = [
@@ -120,14 +188,18 @@ def test_post_update(num_reqs: int, max_num_reqs: int, vocab_size: int, num_spec
     ]
 
     data = generate_test_data(num_reqs, max_num_reqs, vocab_size, num_speculative_steps, device="npu")
-    kernel_inputs_gpu = {k: data[k].clone() for k in post_update_params}
+    kernel_inputs_upstream = {k: data[k].clone() for k in post_update_params}
     kernel_inputs_npu = {k: data[k].clone() for k in post_update_params}
+    reference_inputs = {k: data[k].cpu().clone() for k in post_update_params}
 
-    # Invoke Triton kernel
-    post_update_gpu(**kernel_inputs_gpu)
+    post_update_ref(**reference_inputs)
+
+    launch_post_update_kernel(
+        post_update_kernel_upstream, kernel_inputs_upstream, ascend=False
+    )
     torch.npu.synchronize()
 
-    post_update_npu(**kernel_inputs_npu)
+    launch_post_update_kernel(post_update_kernel_npu, kernel_inputs_npu, ascend=True)
     torch.npu.synchronize()
 
     # Every mutated value is int32, so require exact equality with no tolerance.
@@ -139,10 +211,24 @@ def test_post_update(num_reqs: int, max_num_reqs: int, vocab_size: int, num_spec
         "total_len",
     )
     for name in mutated_outputs:
+        upstream = kernel_inputs_upstream[name].cpu()
+        ascend_output = kernel_inputs_npu[name].cpu()
+        reference = reference_inputs[name]
         torch.testing.assert_close(
-            kernel_inputs_npu[name],
-            kernel_inputs_gpu[name],
+            upstream,
+            reference,
             rtol=0,
             atol=0,
-            msg=lambda msg, name=name: f"post_update mismatch for {name}:\n{msg}",
+            msg=lambda msg, name=name: (
+                f"upstream post_update mismatch against CPU reference for {name}:\n{msg}"
+            ),
+        )
+        torch.testing.assert_close(
+            ascend_output,
+            upstream,
+            rtol=0,
+            atol=0,
+            msg=lambda msg, name=name: (
+                f"Ascend post_update patch mismatch against upstream for {name}:\n{msg}"
+            ),
         )

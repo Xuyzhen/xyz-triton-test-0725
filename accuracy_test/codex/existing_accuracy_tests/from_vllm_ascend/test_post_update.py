@@ -13,6 +13,7 @@ import torch
 post_update_kernel_upstream = None
 post_update_kernel_npu = None
 get_vectorcore_num = None
+init_device_properties_triton = None
 _post_update_import_error = None
 _post_update_import_traceback = None
 try:
@@ -30,7 +31,10 @@ try:
     from vllm.v1.worker.gpu.input_batch import (
         _post_update_kernel as post_update_kernel_upstream,
     )
-    from vllm_ascend.ops.triton.triton_utils import get_vectorcore_num
+    from vllm_ascend.ops.triton.triton_utils import (
+        get_vectorcore_num,
+        init_device_properties_triton,
+    )
     from vllm_ascend.worker.v2.input_batch import (
         _post_update_kernel as post_update_kernel_npu,
     )
@@ -172,6 +176,7 @@ def test_post_update(num_reqs: int, max_num_reqs: int, vocab_size: int, num_spec
             pytrace=False,
         )
 
+    init_device_properties_triton()
     torch.manual_seed(42)
 
     post_update_params = [

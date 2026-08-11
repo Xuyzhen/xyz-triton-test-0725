@@ -1,0 +1,325 @@
+root@worker-97-4:/home/xuyuzhen/acc_test/acc_test/xyz-triton-test-0725# bash /home/xuyuzhen/acc_test/acc_test/xyz-triton-test-0725/accuracy_test/codex/existing_accuracy_tests/run_from_vllm_ascend.sh
+/usr/local/python3.11.10/lib/python3.11/site-packages/pytest_asyncio/plugin.py:247: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+===================================================================== test session starts =====================================================================
+platform linux -- Python 3.11.10, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.11.10/bin/python
+cachedir: .pytest_cache
+rootdir: /home/xuyuzhen/acc_test/acc_test/xyz-triton-test-0725
+plugins: mock-3.15.1, cov-7.1.0, asyncio-1.3.0, xdist-3.6.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... INFO 08-10 19:16:43 [__init__.py:44] Available plugins for group vllm.platform_plugins:
+INFO 08-10 19:16:43 [__init__.py:46] - ascend -> vllm_ascend:register
+INFO 08-10 19:16:43 [__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+INFO 08-10 19:16:43 [__init__.py:238] Platform plugin ascend is activated
+INFO 08-10 19:16:43 [platform.py:62] Breakable cudagraph is force disabled on Ascend because DeepSeek V4 PIECEWISE cudagraph is not supported yet.
+collected 6 items                                                                                                                                             
+
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_bad_words.py::test_apply_bad_words_different_shapes[small-case] Test passed: tokens=512, requests=16
+PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_bad_words.py::test_apply_bad_words_different_shapes[medium-case] Test passed: tokens=1024, requests=32
+PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_bad_words.py::test_apply_bad_words_different_shapes[large-case] Test passed: tokens=2048, requests=64
+PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_bad_words.py::test_apply_bad_words_no_bad_words No bad words test passed
+PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_bad_words.py::test_apply_bad_words_edge_cases 
+Testing edge case: maximum bad words
+Maximum bad words test passed
+PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_bad_words.py::test_apply_bad_words_token_limit 
+Testing case: total tokens within limit
+Total tokens within limit test passed
+
+Testing case: total tokens exceeding limit
+Total tokens exceeding limit test passed
+PASSED
+
+====================================================================== warnings summary =======================================================================
+../../../../../usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================================================== 6 passed, 14 warnings in 28.39s ===============================================================
+/usr/local/python3.11.10/lib/python3.11/site-packages/pytest_asyncio/plugin.py:247: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+===================================================================== test session starts =====================================================================
+platform linux -- Python 3.11.10, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.11.10/bin/python
+cachedir: .pytest_cache
+rootdir: /home/xuyuzhen/acc_test/acc_test/xyz-triton-test-0725
+plugins: mock-3.15.1, cov-7.1.0, asyncio-1.3.0, xdist-3.6.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item                                                                                                                                              
+
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_bincount.py::test_bincount_kernel PASSED
+
+====================================================================== warnings summary =======================================================================
+../../../../../usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================================================== 1 passed, 14 warnings in 7.82s ================================================================
+/usr/local/python3.11.10/lib/python3.11/site-packages/pytest_asyncio/plugin.py:247: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+===================================================================== test session starts =====================================================================
+platform linux -- Python 3.11.10, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.11.10/bin/python
+cachedir: .pytest_cache
+rootdir: /home/xuyuzhen/acc_test/acc_test/xyz-triton-test-0725
+plugins: mock-3.15.1, cov-7.1.0, asyncio-1.3.0, xdist-3.6.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... INFO 08-10 19:17:27 [__init__.py:44] Available plugins for group vllm.platform_plugins:
+INFO 08-10 19:17:27 [__init__.py:46] - ascend -> vllm_ascend:register
+INFO 08-10 19:17:27 [__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+INFO 08-10 19:17:27 [__init__.py:238] Platform plugin ascend is activated
+INFO 08-10 19:17:27 [platform.py:62] Breakable cudagraph is force disabled on Ascend because DeepSeek V4 PIECEWISE cudagraph is not supported yet.
+collected 1 item                                                                                                                                              
+
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_compute_slot_mapping.py::test_compute_slot_mapping_npu_kernel PASSED
+
+====================================================================== warnings summary =======================================================================
+../../../../../usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================================================== 1 passed, 14 warnings in 12.20s ===============================================================
+/usr/local/python3.11.10/lib/python3.11/site-packages/pytest_asyncio/plugin.py:247: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+===================================================================== test session starts =====================================================================
+platform linux -- Python 3.11.10, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.11.10/bin/python
+cachedir: .pytest_cache
+rootdir: /home/xuyuzhen/acc_test/acc_test/xyz-triton-test-0725
+plugins: mock-3.15.1, cov-7.1.0, asyncio-1.3.0, xdist-3.6.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... INFO 08-10 19:17:44 [__init__.py:44] Available plugins for group vllm.platform_plugins:
+INFO 08-10 19:17:44 [__init__.py:46] - ascend -> vllm_ascend:register
+INFO 08-10 19:17:44 [__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+INFO 08-10 19:17:44 [__init__.py:238] Platform plugin ascend is activated
+INFO 08-10 19:17:44 [platform.py:62] Breakable cudagraph is force disabled on Ascend because DeepSeek V4 PIECEWISE cudagraph is not supported yet.
+collected 4 items                                                                                                                                             
+
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_compute_topk_logprobs.py::test_compute_topk_logprobs[48-1024-5] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_compute_topk_logprobs.py::test_compute_topk_logprobs[96-1024-0] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_compute_topk_logprobs.py::test_compute_topk_logprobs[24-1519-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_compute_topk_logprobs.py::test_compute_topk_logprobs[1-320-10] PASSED
+
+====================================================================== warnings summary =======================================================================
+../../../../../usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================================================== 4 passed, 14 warnings in 13.25s ===============================================================
+/usr/local/python3.11.10/lib/python3.11/site-packages/pytest_asyncio/plugin.py:247: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+===================================================================== test session starts =====================================================================
+platform linux -- Python 3.11.10, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.11.10/bin/python
+cachedir: .pytest_cache
+rootdir: /home/xuyuzhen/acc_test/acc_test/xyz-triton-test-0725
+plugins: mock-3.15.1, cov-7.1.0, asyncio-1.3.0, xdist-3.6.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 30 items                                                                                                                                            
+
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_apply_temperature[1-32000] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_apply_temperature[8-32000] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_apply_temperature[48-102400] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_apply_temperature[64-151936] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_apply_temperature_skip_zero_and_one PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_greedy[1-1-32000] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_greedy[4-4-32000] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_greedy[8-4-32000] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_greedy[16-8-102400] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_greedy_apply_temp_flag_irrelevant PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_deterministic[4-4-32000] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_deterministic[8-4-32000] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_deterministic[16-8-102400] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_different_seeds PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_valid_token_ids[4-4-32000] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_valid_token_ids[8-4-32000] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_valid_token_ids[16-8-102400] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_temperature_affects_distribution PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_mixed_temperature[4-4-32000] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_mixed_temperature[8-4-32000] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_expanded_idx_mapping PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_shared_seed_same_request PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_apply_temperature_true_nonzero PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_apply_temperature_false_nonzero PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_processed_logits_req_state_idx PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_processed_logits_col PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_processed_logits_mixed_temp PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_single_token PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_large_vocab PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_gumbel_sampling.py::TestGumbelSampling::test_gumbel_sample_extreme_temperatures PASSED
+
+====================================================================== warnings summary =======================================================================
+../../../../../usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================================================== 30 passed, 14 warnings in 7.82s ===============================================================
+/usr/local/python3.11.10/lib/python3.11/site-packages/pytest_asyncio/plugin.py:247: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+===================================================================== test session starts =====================================================================
+platform linux -- Python 3.11.10, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.11.10/bin/python
+cachedir: .pytest_cache
+rootdir: /home/xuyuzhen/acc_test/acc_test/xyz-triton-test-0725
+plugins: mock-3.15.1, cov-7.1.0, asyncio-1.3.0, xdist-3.6.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... INFO 08-10 19:18:15 [__init__.py:44] Available plugins for group vllm.platform_plugins:
+INFO 08-10 19:18:15 [__init__.py:46] - ascend -> vllm_ascend:register
+INFO 08-10 19:18:15 [__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+INFO 08-10 19:18:15 [__init__.py:238] Platform plugin ascend is activated
+INFO 08-10 19:18:15 [platform.py:62] Breakable cudagraph is force disabled on Ascend because DeepSeek V4 PIECEWISE cudagraph is not supported yet.
+collected 3 items                                                                                                                                             
+
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_log_softmax.py::test_topk_log_softmax_kernel[48-102400-50] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_log_softmax.py::test_topk_log_softmax_kernel[96-102400-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_log_softmax.py::test_topk_log_softmax_kernel[24-151936-8] PASSED
+
+====================================================================== warnings summary =======================================================================
+../../../../../usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================================================== 3 passed, 14 warnings in 13.40s ===============================================================
+/usr/local/python3.11.10/lib/python3.11/site-packages/pytest_asyncio/plugin.py:247: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+===================================================================== test session starts =====================================================================
+platform linux -- Python 3.11.10, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.11.10/bin/python
+cachedir: .pytest_cache
+rootdir: /home/xuyuzhen/acc_test/acc_test/xyz-triton-test-0725
+plugins: mock-3.15.1, cov-7.1.0, asyncio-1.3.0, xdist-3.6.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... INFO 08-10 19:18:34 [__init__.py:44] Available plugins for group vllm.platform_plugins:
+INFO 08-10 19:18:34 [__init__.py:46] - ascend -> vllm_ascend:register
+INFO 08-10 19:18:34 [__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+INFO 08-10 19:18:34 [__init__.py:238] Platform plugin ascend is activated
+INFO 08-10 19:18:34 [platform.py:62] Breakable cudagraph is force disabled on Ascend because DeepSeek V4 PIECEWISE cudagraph is not supported yet.
+collected 4 items                                                                                                                                             
+
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_min_p.py::test_apply_min_p_kernel[48-102400] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_min_p.py::test_apply_min_p_kernel[96-102400] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_min_p.py::test_apply_min_p_kernel[24-151936] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_min_p.py::test_apply_min_p_kernel[1-32000] PASSED
+
+====================================================================== warnings summary =======================================================================
+../../../../../usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================================================== 4 passed, 14 warnings in 12.86s ===============================================================
+/usr/local/python3.11.10/lib/python3.11/site-packages/pytest_asyncio/plugin.py:247: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+===================================================================== test session starts =====================================================================
+platform linux -- Python 3.11.10, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.11.10/bin/python
+cachedir: .pytest_cache
+rootdir: /home/xuyuzhen/acc_test/acc_test/xyz-triton-test-0725
+plugins: mock-3.15.1, cov-7.1.0, asyncio-1.3.0, xdist-3.6.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 24 items                                                                                                                                            
+
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-0-1-1000-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-0-1-1000-4] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-0-4-1000-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-0-4-1000-4] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-1-1-1000-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-1-1-1000-4] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-1-4-1000-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-1-4-1000-4] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-3-1-1000-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-3-1-1000-4] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-3-4-1000-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-3-4-1000-4] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-0-1-1000-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-0-1-1000-4] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-0-4-1000-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-0-4-1000-4] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-1-1-1000-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-1-1-1000-4] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-1-4-1000-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-1-4-1000-4] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-3-1-1000-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-3-1-1000-4] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-3-4-1000-1] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_penality.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-3-4-1000-4] PASSED
+
+====================================================================== warnings summary =======================================================================
+../../../../../usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================================================== 24 passed, 14 warnings in 12.50s ===============================================================
+/usr/local/python3.11.10/lib/python3.11/site-packages/pytest_asyncio/plugin.py:247: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+===================================================================== test session starts =====================================================================
+platform linux -- Python 3.11.10, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.11.10/bin/python
+cachedir: .pytest_cache
+rootdir: /home/xuyuzhen/acc_test/acc_test/xyz-triton-test-0725
+plugins: mock-3.15.1, cov-7.1.0, asyncio-1.3.0, xdist-3.6.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... INFO 08-10 19:19:09 [__init__.py:44] Available plugins for group vllm.platform_plugins:
+INFO 08-10 19:19:09 [__init__.py:46] - ascend -> vllm_ascend:register
+INFO 08-10 19:19:09 [__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+INFO 08-10 19:19:09 [__init__.py:238] Platform plugin ascend is activated
+INFO 08-10 19:19:09 [platform.py:62] Breakable cudagraph is force disabled on Ascend because DeepSeek V4 PIECEWISE cudagraph is not supported yet.
+collected 3 items                                                                                                                                             
+
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_post_update.py::test_post_update[36-36-200-2] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_post_update.py::test_post_update[48-48-32000-5] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_post_update.py::test_post_update[128-128-32000-5] PASSED
+
+====================================================================== warnings summary =======================================================================
+../../../../../usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================================================== 3 passed, 14 warnings in 13.52s ===============================================================
+/usr/local/python3.11.10/lib/python3.11/site-packages/pytest_asyncio/plugin.py:247: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+===================================================================== test session starts =====================================================================
+platform linux -- Python 3.11.10, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.11.10/bin/python
+cachedir: .pytest_cache
+rootdir: /home/xuyuzhen/acc_test/acc_test/xyz-triton-test-0725
+plugins: mock-3.15.1, cov-7.1.0, asyncio-1.3.0, xdist-3.6.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 5 items                                                                                                                                             
+
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_temperature.py::test_temperature_kernel[60-32000] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_temperature.py::test_temperature_kernel[44-50257] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_temperature.py::test_temperature_kernel[10-65024] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_temperature.py::test_temperature_kernel[9-128256] PASSED
+accuracy_test/codex/existing_accuracy_tests/from_vllm_ascend/test_temperature.py::test_temperature_kernel[14-151936] PASSED
+
+====================================================================== warnings summary =======================================================================
+../../../../../usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================================================== 5 passed, 14 warnings in 8.40s 

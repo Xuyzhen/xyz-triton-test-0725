@@ -60,7 +60,6 @@ ADAPTED_NPU = {
     "prepare_dflash_inputs_kernel",
     "rejection_kernel",
     "resample_kernel",
-    "compute_slot_mappings_kernel",
     "post_update_kernel",
     "apply_grammar_bitmask_kernel",
 }

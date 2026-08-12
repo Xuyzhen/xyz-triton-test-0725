@@ -17,14 +17,22 @@ ADAPTED = {
     "test_prepare_dflash_inputs_kernel.py",
     "test_rejection_kernel.py",
     "test_resample_kernel.py",
-    "test_compute_slot_mappings_kernel.py",
     "test_post_update_kernel.py",
     "test_apply_grammar_bitmask_kernel.py",
 }
+VERSION_ADAPTIVE = {"test_compute_slot_mappings_kernel.py"}
 MAIN_ONLY = {
     "test_compute_cumulative_log_p_kernel.py",
     "test_compute_local_residual_mass_kernel.py",
 }
+
+
+def _has_valid_source(path: Path, text: str) -> bool:
+    return (
+        "accuracy_test/codex/" in text
+        or path.name in MAIN_ONLY
+        or path.name in VERSION_ADAPTIVE
+    )
 
 
 def main() -> None:
@@ -36,18 +44,21 @@ def main() -> None:
 
     for path in gpu:
         text = path.read_text(encoding="utf-8")
-        assert "accuracy_test/codex/" in text or path.name in MAIN_ONLY
+        assert _has_valid_source(path, text)
         assert "torch.npu" not in text
         assert ".npu()" not in text
         assert "vllm_ascend.worker" not in text
 
     for path in npu:
         text = path.read_text(encoding="utf-8")
-        assert "accuracy_test/codex/" in text or path.name in MAIN_ONLY
+        assert _has_valid_source(path, text)
         if path.name in ADAPTED:
             assert "vllm_ascend.worker" in text, (
-                f"adapted NPU test does not resolve an Ascend implementation: {path.name}"
+                "adapted NPU test does not resolve an Ascend implementation: "
+                f"{path.name}"
             )
+        if path.name in VERSION_ADAPTIVE:
+            assert "ascend_adapted" in text and "upstream_reuse" in text
 
     for name in MAIN_ONLY:
         for backend in ("gpu", "npu"):

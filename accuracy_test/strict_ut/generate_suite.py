@@ -303,6 +303,11 @@ def main() -> None:
         residual = OUT / backend / "test_compute_local_residual_mass_kernel.py"
         residual.write_text(RESIDUAL_TEMPLATE.format(backend=backend), encoding="utf-8")
 
+    slot_template = (OUT / "_slot_mapping_template.py").read_text(encoding="utf-8")
+    (OUT / "npu" / "test_compute_slot_mappings_kernel.py").write_text(
+        slot_template, encoding="utf-8"
+    )
+
     expected = set(GPU_SOURCES) | {"compute_local_residual_mass_kernel"}
     if len(expected) != 37:
         raise RuntimeError(f"Expected 37 logical operators, got {len(expected)}")

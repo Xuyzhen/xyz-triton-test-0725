@@ -61,6 +61,12 @@ def main() -> None:
             assert "ascend_adapted" in text and "upstream_reuse" in text
 
     for name in MAIN_ONLY:
+        npu_text = (ROOT / "npu" / name).read_text(encoding="utf-8")
+        assert "pytest.skip" in npu_text
+        assert "vllm.v1.worker.gpu" not in npu_text
+        assert "[(" not in npu_text
+
+    for name in MAIN_ONLY:
         for backend in ("gpu", "npu"):
             text = (ROOT / backend / name).read_text(encoding="utf-8")
             assert "_compute_" in text

@@ -8,7 +8,7 @@ Run from this directory:
 
 ```bash
 python -m pytest -c pytest.ini gpu -m gpu -v
-python -m pytest -c pytest.ini npu -m npu -v
+python run_npu_isolated.py
 ```
 
 On an Ascend host, run the lightweight import smoke test first:
@@ -24,6 +24,15 @@ break unrelated Triton test collection when vLLM and vLLM-Ascend expose
 different `FusedMoE` APIs. A narrow test-only shim provides only the device
 property helpers; target kernels still come from their real
 `vllm_ascend.worker...` modules.
+
+The default NPU runner starts one process per operator module. An Ascend
+vector-core exception poisons the current process device context; isolation
+prevents later tests from failing during unrelated tensor creation. Debug one
+operator directly with:
+
+```bash
+python -m pytest -c pytest.ini npu/test_temperature.py -v --tb=short
+```
 
 GPU tests always target the original vLLM implementation. NPU tests target a
 vLLM-Ascend implementation when one exists, otherwise the upstream kernel

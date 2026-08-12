@@ -3,13 +3,13 @@
 import pytest
 
 
-OPERATOR = "_compute_local_residual_mass_kernel"
+OPERATOR = "{operator}"
 
 
 @pytest.mark.npu_upstream_unwired
 def test_npu_adaptation_status():
     pytest.skip(
-        f"{OPERATOR} has no vLLM-Ascend adaptation in the installed stack; "
+        f"{{OPERATOR}} has no vLLM-Ascend adaptation in the installed stack; "
         "the original kernel is covered by the GPU strict UT and is not "
         "launched on NPU"
     )

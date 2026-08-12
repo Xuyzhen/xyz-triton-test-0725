@@ -303,6 +303,19 @@ def main() -> None:
         residual = OUT / backend / "test_compute_local_residual_mass_kernel.py"
         residual.write_text(RESIDUAL_TEMPLATE.format(backend=backend), encoding="utf-8")
 
+    unadapted_template = (OUT / "_npu_unadapted_template.py").read_text(
+        encoding="utf-8"
+    )
+    for operator in (
+        "_compute_cumulative_log_p_kernel",
+        "_compute_local_residual_mass_kernel",
+    ):
+        filename = f"test{operator}.py"
+        (OUT / "npu" / filename).write_text(
+            unadapted_template.format(operator=operator),
+            encoding="utf-8",
+        )
+
     slot_template = (OUT / "_slot_mapping_template.py").read_text(encoding="utf-8")
     (OUT / "npu" / "test_compute_slot_mappings_kernel.py").write_text(
         slot_template, encoding="utf-8"

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")"
-python -m pytest -c pytest.ini npu -m npu -v --tb=short "$@"
+python run_npu_isolated.py "$@"

@@ -155,7 +155,9 @@ class TestComputeBlockMaxAndSumexp:
                     torch.testing.assert_close(target_local_sumexp[li, bi].item(), expected_sumexp, rtol=1e-5, atol=1e-5)
 
                     # Draft stats for non-greedy
-                    drf_block = drf_cpu[rs, 0, start:end]
+                    # The kernel computes draft statistics after temperature
+                    # scaling, matching the target sampling distribution.
+                    drf_block = drf_cpu[rs, 0, start:end] / temp
                     dmax, dsumexp = _compute_max_and_sumexp_ref(drf_block)
                     torch.testing.assert_close(draft_local_max[li, bi].item(), dmax, rtol=1e-5, atol=1e-5)
                     torch.testing.assert_close(draft_local_sumexp[li, bi].item(), dsumexp, rtol=1e-5, atol=1e-5)

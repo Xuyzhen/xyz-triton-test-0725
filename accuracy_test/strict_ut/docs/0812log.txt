@@ -1,0 +1,1139 @@
+root@host127:/mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725# bash /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut/run_npu.sh
+/mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut/run_npu.sh: line 1:  #!/usr/bin/env: No such file or directory
+
+[1/37] test_apply_grammar_bitmask_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 7 items                                                                    
+
+npu/test_apply_grammar_bitmask_kernel.py::TestApplyGrammarBitmaskKernelPatch::test_basic_bitmask[128] PASSED [ 14%]
+npu/test_apply_grammar_bitmask_kernel.py::TestApplyGrammarBitmaskKernelPatch::test_basic_bitmask[1024] PASSED [ 28%]
+npu/test_apply_grammar_bitmask_kernel.py::TestApplyGrammarBitmaskKernelPatch::test_basic_bitmask[8192] PASSED [ 42%]
+npu/test_apply_grammar_bitmask_kernel.py::TestApplyGrammarBitmaskKernelPatch::test_all_allowed[128] PASSED [ 57%]
+npu/test_apply_grammar_bitmask_kernel.py::TestApplyGrammarBitmaskKernelPatch::test_all_allowed[512] PASSED [ 71%]
+npu/test_apply_grammar_bitmask_kernel.py::TestApplyGrammarBitmaskKernelPatch::test_all_allowed[4096] PASSED [ 85%]
+npu/test_apply_grammar_bitmask_kernel.py::TestApplyGrammarBitmaskKernelPatch::test_all_blocked PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== 7 passed, 14 warnings in 8.20s ===========================
+
+[2/37] test_apply_write_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 10 items                                                                   
+
+npu/test_apply_write_kernel.py::TestApplyWriteKernel::test_single_group[16-1] PASSED [ 10%]
+npu/test_apply_write_kernel.py::TestApplyWriteKernel::test_single_group[16-4] PASSED [ 20%]
+npu/test_apply_write_kernel.py::TestApplyWriteKernel::test_single_group[32-1] PASSED [ 30%]
+npu/test_apply_write_kernel.py::TestApplyWriteKernel::test_single_group[32-4] PASSED [ 40%]
+npu/test_apply_write_kernel.py::TestApplyWriteKernel::test_multi_group[1-1] PASSED [ 50%]
+npu/test_apply_write_kernel.py::TestApplyWriteKernel::test_multi_group[1-2] PASSED [ 60%]
+npu/test_apply_write_kernel.py::TestApplyWriteKernel::test_multi_group[1-4] PASSED [ 70%]
+npu/test_apply_write_kernel.py::TestApplyWriteKernel::test_multi_group[2-1] PASSED [ 80%]
+npu/test_apply_write_kernel.py::TestApplyWriteKernel::test_multi_group[2-2] PASSED [ 90%]
+npu/test_apply_write_kernel.py::TestApplyWriteKernel::test_multi_group[2-4] PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 10 passed, 14 warnings in 7.44s ===========================
+
+[3/37] test_ar_prepare_prefill_inputs_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 11 items                                                                   
+
+npu/test_ar_prepare_prefill_inputs_kernel.py::TestPreparePrefillInputsKernelSpeculator::test_basic_prefill[4-1] PASSED [  9%]
+npu/test_ar_prepare_prefill_inputs_kernel.py::TestPreparePrefillInputsKernelSpeculator::test_basic_prefill[4-2] PASSED [ 18%]
+npu/test_ar_prepare_prefill_inputs_kernel.py::TestPreparePrefillInputsKernelSpeculator::test_basic_prefill[4-4] PASSED [ 27%]
+npu/test_ar_prepare_prefill_inputs_kernel.py::TestPreparePrefillInputsKernelSpeculator::test_basic_prefill[16-1] PASSED [ 36%]
+npu/test_ar_prepare_prefill_inputs_kernel.py::TestPreparePrefillInputsKernelSpeculator::test_basic_prefill[16-2] PASSED [ 45%]
+npu/test_ar_prepare_prefill_inputs_kernel.py::TestPreparePrefillInputsKernelSpeculator::test_basic_prefill[16-4] PASSED [ 54%]
+npu/test_ar_prepare_prefill_inputs_kernel.py::TestPreparePrefillInputsKernelSpeculator::test_chunked_prefill_path[1] PASSED [ 63%]
+npu/test_ar_prepare_prefill_inputs_kernel.py::TestPreparePrefillInputsKernelSpeculator::test_chunked_prefill_path[2] PASSED [ 72%]
+npu/test_ar_prepare_prefill_inputs_kernel.py::TestPreparePrefillInputsKernelSpeculator::test_rejected_tokens_adjustment[1] PASSED [ 81%]
+npu/test_ar_prepare_prefill_inputs_kernel.py::TestPreparePrefillInputsKernelSpeculator::test_rejected_tokens_adjustment[2] PASSED [ 90%]
+npu/test_ar_prepare_prefill_inputs_kernel.py::TestPreparePrefillInputsKernelSpeculator::test_padding_for_cuda_graphs PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 11 passed, 14 warnings in 12.78s ==========================
+
+[4/37] test_bad_words.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 6 items                                                                    
+
+npu/test_bad_words.py::test_apply_bad_words_different_shapes[small-case] PASSED [ 16%]
+npu/test_bad_words.py::test_apply_bad_words_different_shapes[medium-case] PASSED [ 33%]
+npu/test_bad_words.py::test_apply_bad_words_different_shapes[large-case] PASSED [ 50%]
+npu/test_bad_words.py::test_apply_bad_words_no_bad_words PASSED                [ 66%]
+npu/test_bad_words.py::test_apply_bad_words_edge_cases PASSED                  [ 83%]
+npu/test_bad_words.py::test_apply_bad_words_token_limit PASSED                 [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== 6 passed, 14 warnings in 9.89s ===========================
+
+[5/37] test_bias_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 9 items                                                                    
+
+npu/test_bias_kernel.py::TestBiasKernel::test_allowed_token_ids[128-1] PASSED  [ 11%]
+npu/test_bias_kernel.py::TestBiasKernel::test_allowed_token_ids[128-4] PASSED  [ 22%]
+npu/test_bias_kernel.py::TestBiasKernel::test_allowed_token_ids[128-8] PASSED  [ 33%]
+npu/test_bias_kernel.py::TestBiasKernel::test_allowed_token_ids[1024-1] PASSED [ 44%]
+npu/test_bias_kernel.py::TestBiasKernel::test_allowed_token_ids[1024-4] PASSED [ 55%]
+npu/test_bias_kernel.py::TestBiasKernel::test_allowed_token_ids[1024-8] PASSED [ 66%]
+npu/test_bias_kernel.py::TestBiasKernel::test_logit_bias[1] PASSED             [ 77%]
+npu/test_bias_kernel.py::TestBiasKernel::test_logit_bias[4] PASSED             [ 88%]
+npu/test_bias_kernel.py::TestBiasKernel::test_combined PASSED                  [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 9 passed, 14 warnings in 11.51s ===========================
+
+[6/37] test_bincount.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 1 item                                                                     
+
+npu/test_bincount.py::test_bincount_kernel PASSED                              [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== 1 passed, 14 warnings in 7.29s ===========================
+
+[7/37] test_combine_sampled_and_draft_tokens_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 13 items                                                                   
+
+npu/test_combine_sampled_and_draft_tokens_kernel.py::TestCombineSampledAndDraftTokensKernel::test_combine_basic[0-1-1] PASSED [  7%]
+npu/test_combine_sampled_and_draft_tokens_kernel.py::TestCombineSampledAndDraftTokensKernel::test_combine_basic[0-1-2] PASSED [ 15%]
+npu/test_combine_sampled_and_draft_tokens_kernel.py::TestCombineSampledAndDraftTokensKernel::test_combine_basic[0-1-4] PASSED [ 23%]
+npu/test_combine_sampled_and_draft_tokens_kernel.py::TestCombineSampledAndDraftTokensKernel::test_combine_basic[0-3-1] PASSED [ 30%]
+npu/test_combine_sampled_and_draft_tokens_kernel.py::TestCombineSampledAndDraftTokensKernel::test_combine_basic[0-3-2] PASSED [ 38%]
+npu/test_combine_sampled_and_draft_tokens_kernel.py::TestCombineSampledAndDraftTokensKernel::test_combine_basic[0-3-4] PASSED [ 46%]
+npu/test_combine_sampled_and_draft_tokens_kernel.py::TestCombineSampledAndDraftTokensKernel::test_combine_basic[1-1-1] PASSED [ 53%]
+npu/test_combine_sampled_and_draft_tokens_kernel.py::TestCombineSampledAndDraftTokensKernel::test_combine_basic[1-1-2] PASSED [ 61%]
+npu/test_combine_sampled_and_draft_tokens_kernel.py::TestCombineSampledAndDraftTokensKernel::test_combine_basic[1-1-4] PASSED [ 69%]
+npu/test_combine_sampled_and_draft_tokens_kernel.py::TestCombineSampledAndDraftTokensKernel::test_combine_basic[1-3-1] PASSED [ 76%]
+npu/test_combine_sampled_and_draft_tokens_kernel.py::TestCombineSampledAndDraftTokensKernel::test_combine_basic[1-3-2] PASSED [ 84%]
+npu/test_combine_sampled_and_draft_tokens_kernel.py::TestCombineSampledAndDraftTokensKernel::test_combine_basic[1-3-4] PASSED [ 92%]
+npu/test_combine_sampled_and_draft_tokens_kernel.py::TestCombineSampledAndDraftTokensKernel::test_prefill_only PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 13 passed, 14 warnings in 14.38s ==========================
+
+[8/37] test_compute_cumulative_log_p_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 1 item                                                                     
+
+npu/test_compute_cumulative_log_p_kernel.py::test_npu_adaptation_status SKIPPED [100%]
+
+============================== short test summary info ===============================
+SKIPPED [1] npu/test_compute_cumulative_log_p_kernel.py:11: _compute_cumulative_log_p_kernel has no vLLM-Ascend adaptation in the installed stack; the original kernel is covered by the GPU strict UT and is not launched on NPU
+================================= 1 skipped in 0.04s =================================
+
+[9/37] test_compute_local_logits_stats_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 19 items                                                                   
+
+npu/test_compute_local_logits_stats_kernel.py::TestComputeBlockMaxAndSumexp::test_compute_block_max_and_sumexp[2-128-1] PASSED [  5%]
+npu/test_compute_local_logits_stats_kernel.py::TestComputeBlockMaxAndSumexp::test_compute_block_max_and_sumexp[2-128-2] PASSED [ 10%]
+npu/test_compute_local_logits_stats_kernel.py::TestComputeBlockMaxAndSumexp::test_compute_block_max_and_sumexp[2-128-4] FAILED [ 15%]
+
+====================================== FAILURES ======================================
+______ TestComputeBlockMaxAndSumexp.test_compute_block_max_and_sumexp[2-128-4] _______
+npu/test_compute_local_logits_stats_kernel.py:160: in test_compute_block_max_and_sumexp
+    torch.testing.assert_close(draft_local_max[li, bi].item(), dmax, rtol=1e-5, atol=1e-5)
+E   AssertionError: Scalars are not close!
+E   
+E   Expected 2.2333102226257324 but got 2.791637659072876.
+E   Absolute difference: 0.5583274364471436 (up to 1e-05 allowed)
+E   Relative difference: 0.2499999466221538 (up to 1e-05 allowed)
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+npu/test_compute_local_logits_stats_kernel.py::TestComputeBlockMaxAndSumexp::test_compute_block_max_and_sumexp[2-128-1]
+  /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut/npu/test_compute_local_logits_stats_kernel.py:96: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+    expanded_idx_mapping = torch.arange(num_logits, dtype=torch.int64, device=self.device) % max_num_reqs
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================== short test summary info ===============================
+FAILED npu/test_compute_local_logits_stats_kernel.py::TestComputeBlockMaxAndSumexp::test_compute_block_max_and_sumexp[2-128-4] - AssertionError: Scalars are not close!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+===================== 1 failed, 2 passed, 15 warnings in 11.02s ======================
+
+[10/37] test_compute_local_residual_mass_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 1 item                                                                     
+
+npu/test_compute_local_residual_mass_kernel.py::test_npu_adaptation_status SKIPPED [100%]
+
+============================== short test summary info ===============================
+SKIPPED [1] npu/test_compute_local_residual_mass_kernel.py:11: _compute_local_residual_mass_kernel has no vLLM-Ascend adaptation in the installed stack; the original kernel is covered by the GPU strict UT and is not launched on NPU
+================================= 1 skipped in 0.04s =================================
+
+[11/37] test_compute_slot_mappings_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 4 items                                                                    
+
+npu/test_compute_slot_mappings_kernel.py::test_compute_slot_mappings[16-positions0-1-0-1] PASSED [ 25%]
+npu/test_compute_slot_mappings_kernel.py::test_compute_slot_mappings[32-positions1-1-0-1] PASSED [ 50%]
+npu/test_compute_slot_mappings_kernel.py::test_compute_slot_mappings[16-positions2-2-0-2] PASSED [ 75%]
+npu/test_compute_slot_mappings_kernel.py::test_compute_slot_mappings[16-positions3-2-1-2] PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 4 passed, 14 warnings in 18.72s ===========================
+
+[12/37] test_dcp_local_seq_lens_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 50 items                                                                   
+
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-0-2-8-2] PASSED [  2%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-0-2-8-4] PASSED [  4%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-0-2-8-8] PASSED [  6%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-0-2-16-2] PASSED [  8%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-0-2-16-4] PASSED [ 10%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-0-2-16-8] PASSED [ 12%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-0-4-8-2] PASSED [ 14%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-0-4-8-4] PASSED [ 16%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-0-4-8-8] PASSED [ 18%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-0-4-16-2] PASSED [ 20%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-0-4-16-4] PASSED [ 22%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-0-4-16-8] PASSED [ 24%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-1-2-8-2] PASSED [ 26%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-1-2-8-4] PASSED [ 28%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-1-2-8-8] PASSED [ 30%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-1-2-16-2] PASSED [ 32%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-1-2-16-4] PASSED [ 34%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-1-2-16-8] PASSED [ 36%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-1-4-8-2] PASSED [ 38%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-1-4-8-4] PASSED [ 40%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-1-4-8-8] PASSED [ 42%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-1-4-16-2] PASSED [ 44%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-1-4-16-4] PASSED [ 46%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[1-1-4-16-8] PASSED [ 48%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-0-2-8-2] PASSED [ 50%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-0-2-8-4] PASSED [ 52%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-0-2-8-8] PASSED [ 54%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-0-2-16-2] PASSED [ 56%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-0-2-16-4] PASSED [ 58%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-0-2-16-8] PASSED [ 60%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-0-4-8-2] PASSED [ 62%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-0-4-8-4] PASSED [ 64%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-0-4-8-8] PASSED [ 66%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-0-4-16-2] PASSED [ 68%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-0-4-16-4] PASSED [ 70%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-0-4-16-8] PASSED [ 72%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-1-2-8-2] PASSED [ 74%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-1-2-8-4] PASSED [ 76%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-1-2-8-8] PASSED [ 78%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-1-2-16-2] PASSED [ 80%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-1-2-16-4] PASSED [ 82%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-1-2-16-8] PASSED [ 84%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-1-4-8-2] PASSED [ 86%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-1-4-8-4] PASSED [ 88%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-1-4-8-8] PASSED [ 90%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-1-4-16-2] PASSED [ 92%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-1-4-16-4] PASSED [ 94%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_local_seq_lens[2-1-4-16-8] PASSED [ 96%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_dcp_rank_highest PASSED [ 98%]
+npu/test_dcp_local_seq_lens_kernel.py::TestDcpLocalSeqLensKernel::test_zero_seq_lens PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 50 passed, 14 warnings in 8.90s ===========================
+
+[13/37] test_expand_idx_mapping_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 11 items                                                                   
+
+npu/test_expand_idx_mapping_kernel.py::TestExpandIdxMappingKernel::test_basic_expand[1-1] PASSED [  9%]
+npu/test_expand_idx_mapping_kernel.py::TestExpandIdxMappingKernel::test_basic_expand[1-2] PASSED [ 18%]
+npu/test_expand_idx_mapping_kernel.py::TestExpandIdxMappingKernel::test_basic_expand[1-4] PASSED [ 27%]
+npu/test_expand_idx_mapping_kernel.py::TestExpandIdxMappingKernel::test_basic_expand[3-1] PASSED [ 36%]
+npu/test_expand_idx_mapping_kernel.py::TestExpandIdxMappingKernel::test_basic_expand[3-2] PASSED [ 45%]
+npu/test_expand_idx_mapping_kernel.py::TestExpandIdxMappingKernel::test_basic_expand[3-4] PASSED [ 54%]
+npu/test_expand_idx_mapping_kernel.py::TestExpandIdxMappingKernel::test_basic_expand[8-1] PASSED [ 63%]
+npu/test_expand_idx_mapping_kernel.py::TestExpandIdxMappingKernel::test_basic_expand[8-2] PASSED [ 72%]
+npu/test_expand_idx_mapping_kernel.py::TestExpandIdxMappingKernel::test_basic_expand[8-4] PASSED [ 81%]
+npu/test_expand_idx_mapping_kernel.py::TestExpandIdxMappingKernel::test_uneven_tokens PASSED [ 90%]
+npu/test_expand_idx_mapping_kernel.py::TestExpandIdxMappingKernel::test_non_contiguous_idx_mapping PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 11 passed, 14 warnings in 8.65s ===========================
+
+[14/37] test_fill_logprob_token_ids_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 10 items                                                                   
+
+npu/test_fill_logprob_token_ids_kernel.py::TestFillLogprobTokenIdsKernel::test_custom_token_ids[0-1] PASSED [ 10%]
+npu/test_fill_logprob_token_ids_kernel.py::TestFillLogprobTokenIdsKernel::test_custom_token_ids[0-4] PASSED [ 20%]
+npu/test_fill_logprob_token_ids_kernel.py::TestFillLogprobTokenIdsKernel::test_custom_token_ids[0-8] PASSED [ 30%]
+npu/test_fill_logprob_token_ids_kernel.py::TestFillLogprobTokenIdsKernel::test_custom_token_ids[3-1] PASSED [ 40%]
+npu/test_fill_logprob_token_ids_kernel.py::TestFillLogprobTokenIdsKernel::test_custom_token_ids[3-4] FAILED [ 50%]
+
+====================================== FAILURES ======================================
+______________ TestFillLogprobTokenIdsKernel.test_custom_token_ids[3-4] ______________
+npu/test_fill_logprob_token_ids_kernel.py:156: in test_custom_token_ids
+    torch.testing.assert_close(out_token_ids.cpu(), expected_ids, rtol=0, atol=0)
+E   AssertionError: Tensor-likes are not equal!
+E   
+E   Mismatched elements: 9 / 68 (13.2%)
+E   Greatest absolute difference: 951 at index (1, 1)
+E   Greatest relative difference: 1.0 at index (1, 1)
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+npu/test_fill_logprob_token_ids_kernel.py::TestFillLogprobTokenIdsKernel::test_custom_token_ids[0-1]
+  /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut/npu/test_fill_logprob_token_ids_kernel.py:112: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+    torch.arange(batch_size, dtype=torch.int32, device=self.device)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================== short test summary info ===============================
+FAILED npu/test_fill_logprob_token_ids_kernel.py::TestFillLogprobTokenIdsKernel::test_custom_token_ids[3-4] - AssertionError: Tensor-likes are not equal!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+===================== 1 failed, 4 passed, 15 warnings in 13.66s ======================
+
+[15/37] test_flatten_sampled_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 14 items                                                                   
+
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_flatten_basic[1-1] PASSED [  7%]
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_flatten_basic[1-2] PASSED [ 14%]
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_flatten_basic[1-4] PASSED [ 21%]
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_flatten_basic[1-8] PASSED [ 28%]
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_flatten_basic[3-1] PASSED [ 35%]
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_flatten_basic[3-2] PASSED [ 42%]
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_flatten_basic[3-4] PASSED [ 50%]
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_flatten_basic[3-8] PASSED [ 57%]
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_flatten_basic[5-1] PASSED [ 64%]
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_flatten_basic[5-2] PASSED [ 71%]
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_flatten_basic[5-4] PASSED [ 78%]
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_flatten_basic[5-8] PASSED [ 85%]
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_all_zeros_num_sampled PASSED [ 92%]
+npu/test_flatten_sampled_kernel.py::TestFlattenSampledKernel::test_single_req_multi_logits PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 14 passed, 14 warnings in 12.58s ==========================
+
+[16/37] test_gather_block_tables_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 14 items                                                                   
+
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_gather_basic[64-4-1] PASSED [  7%]
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_gather_basic[64-4-2] PASSED [ 14%]
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_gather_basic[64-4-4] PASSED [ 21%]
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_gather_basic[64-8-1] PASSED [ 28%]
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_gather_basic[64-8-2] PASSED [ 35%]
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_gather_basic[64-8-4] PASSED [ 42%]
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_gather_basic[128-4-1] PASSED [ 50%]
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_gather_basic[128-4-2] PASSED [ 57%]
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_gather_basic[128-4-4] PASSED [ 64%]
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_gather_basic[128-8-1] PASSED [ 71%]
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_gather_basic[128-8-2] PASSED [ 78%]
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_gather_basic[128-8-4] PASSED [ 85%]
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_padding_zeros[1] PASSED [ 92%]
+npu/test_gather_block_tables_kernel.py::TestGatherBlockTablesKernel::test_padding_zeros[2] PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 14 passed, 14 warnings in 18.28s ==========================
+
+[17/37] test_get_num_sampled_and_rejected_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 13 items                                                                   
+
+npu/test_get_num_sampled_and_rejected_kernel.py::TestGetNumSampledAndRejectedKernel::test_basic[1-1] PASSED [  7%]
+npu/test_get_num_sampled_and_rejected_kernel.py::TestGetNumSampledAndRejectedKernel::test_basic[1-2] PASSED [ 15%]
+npu/test_get_num_sampled_and_rejected_kernel.py::TestGetNumSampledAndRejectedKernel::test_basic[1-4] PASSED [ 23%]
+npu/test_get_num_sampled_and_rejected_kernel.py::TestGetNumSampledAndRejectedKernel::test_basic[3-1] PASSED [ 30%]
+npu/test_get_num_sampled_and_rejected_kernel.py::TestGetNumSampledAndRejectedKernel::test_basic[3-2] PASSED [ 38%]
+npu/test_get_num_sampled_and_rejected_kernel.py::TestGetNumSampledAndRejectedKernel::test_basic[3-4] PASSED [ 46%]
+npu/test_get_num_sampled_and_rejected_kernel.py::TestGetNumSampledAndRejectedKernel::test_basic[5-1] PASSED [ 53%]
+npu/test_get_num_sampled_and_rejected_kernel.py::TestGetNumSampledAndRejectedKernel::test_basic[5-2] PASSED [ 61%]
+npu/test_get_num_sampled_and_rejected_kernel.py::TestGetNumSampledAndRejectedKernel::test_basic[5-4] PASSED [ 69%]
+npu/test_get_num_sampled_and_rejected_kernel.py::TestGetNumSampledAndRejectedKernel::test_chunked_prefilling PASSED [ 76%]
+npu/test_get_num_sampled_and_rejected_kernel.py::TestGetNumSampledAndRejectedKernel::test_various_sampled_counts[0-3] PASSED [ 84%]
+npu/test_get_num_sampled_and_rejected_kernel.py::TestGetNumSampledAndRejectedKernel::test_various_sampled_counts[2-1] PASSED [ 92%]
+npu/test_get_num_sampled_and_rejected_kernel.py::TestGetNumSampledAndRejectedKernel::test_various_sampled_counts[3-0] PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 13 passed, 14 warnings in 10.73s ==========================
+
+[18/37] test_gumbel_sample.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 30 items                                                                   
+
+npu/test_gumbel_sample.py::TestGumbelSampling::test_apply_temperature[1-32000] PASSED [  3%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_apply_temperature[8-32000] PASSED [  6%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_apply_temperature[48-102400] PASSED [ 10%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_apply_temperature[64-151936] PASSED [ 13%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_apply_temperature_skip_zero_and_one PASSED [ 16%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_greedy[1-1-32000] PASSED [ 20%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_greedy[4-4-32000] PASSED [ 23%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_greedy[8-4-32000] PASSED [ 26%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_greedy[16-8-102400] PASSED [ 30%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_greedy_apply_temp_flag_irrelevant PASSED [ 33%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_deterministic[4-4-32000] PASSED [ 36%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_deterministic[8-4-32000] PASSED [ 40%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_deterministic[16-8-102400] PASSED [ 43%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_different_seeds PASSED [ 46%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_valid_token_ids[4-4-32000] PASSED [ 50%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_valid_token_ids[8-4-32000] PASSED [ 53%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_valid_token_ids[16-8-102400] PASSED [ 56%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_temperature_affects_distribution PASSED [ 60%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_mixed_temperature[4-4-32000] PASSED [ 63%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_mixed_temperature[8-4-32000] PASSED [ 66%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_expanded_idx_mapping PASSED [ 70%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_shared_seed_same_request PASSED [ 73%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_apply_temperature_true_nonzero PASSED [ 76%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_apply_temperature_false_nonzero PASSED [ 80%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_processed_logits_req_state_idx PASSED [ 83%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_processed_logits_col PASSED [ 86%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_processed_logits_mixed_temp PASSED [ 90%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_single_token PASSED [ 93%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_large_vocab PASSED [ 96%]
+npu/test_gumbel_sample.py::TestGumbelSampling::test_gumbel_sample_extreme_temperatures PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 30 passed, 14 warnings in 13.30s ==========================
+
+[19/37] test_input_batch_prepare_prefill_inputs_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 11 items                                                                   
+
+npu/test_input_batch_prepare_prefill_inputs_kernel.py::TestPreparePrefillInputsKernel::test_prepare_prefill_inputs[1-1] FAILED [  9%]
+
+====================================== FAILURES ======================================
+__________ TestPreparePrefillInputsKernel.test_prepare_prefill_inputs[1-1] ___________
+npu/test_input_batch_prepare_prefill_inputs_kernel.py:96: in test_prepare_prefill_inputs
+    _prepare_prefill_inputs_kernel[(num_reqs,)](
+/usr/local/python3.12.13/lib/python3.12/site-packages/triton/runtime/jit.py:333: in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+/usr/local/python3.12.13/lib/python3.12/site-packages/triton/runtime/jit.py:583: in run
+    bound_args, sig_and_spec, constexpr_vals, non_constexpr_vals, excess_kwargs = self.binder(*args, **kwargs)
+E   TypeError: dynamic_func() missing 3 required positional arguments: 'prefill_lens_ptr', 'num_computed_tokens_ptr', and 'LOOKAHEAD_BLOCK'
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================== short test summary info ===============================
+FAILED npu/test_input_batch_prepare_prefill_inputs_kernel.py::TestPreparePrefillInputsKernel::test_prepare_prefill_inputs[1-1] - TypeError: dynamic_func() missing 3 required positional arguments: 'prefill_lens_...
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+=========================== 1 failed, 14 warnings in 7.37s ===========================
+
+[20/37] test_insert_resampled_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 8 items                                                                    
+
+npu/test_insert_resampled_kernel.py::TestInsertResampledKernel::test_insert_resampled_basic[1-1] PASSED [ 12%]
+npu/test_insert_resampled_kernel.py::TestInsertResampledKernel::test_insert_resampled_basic[1-2] PASSED [ 25%]
+npu/test_insert_resampled_kernel.py::TestInsertResampledKernel::test_insert_resampled_basic[1-4] PASSED [ 37%]
+npu/test_insert_resampled_kernel.py::TestInsertResampledKernel::test_insert_resampled_basic[3-1] PASSED [ 50%]
+npu/test_insert_resampled_kernel.py::TestInsertResampledKernel::test_insert_resampled_basic[3-2] PASSED [ 62%]
+npu/test_insert_resampled_kernel.py::TestInsertResampledKernel::test_insert_resampled_basic[3-4] PASSED [ 75%]
+npu/test_insert_resampled_kernel.py::TestInsertResampledKernel::test_greedy_non_bonus_skip PASSED [ 87%]
+npu/test_insert_resampled_kernel.py::TestInsertResampledKernel::test_bonus_token_greedy PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 8 passed, 14 warnings in 11.69s ===========================
+
+[21/37] test_min_p.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 4 items                                                                    
+
+npu/test_min_p.py::test_apply_min_p_kernel[48-102400] PASSED                   [ 25%]
+npu/test_min_p.py::test_apply_min_p_kernel[96-102400] PASSED                   [ 50%]
+npu/test_min_p.py::test_apply_min_p_kernel[24-151936] PASSED                   [ 75%]
+npu/test_min_p.py::test_apply_min_p_kernel[1-32000] PASSED                     [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== 4 passed, 14 warnings in 8.01s ===========================
+
+[22/37] test_num_nans_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 66 items                                                                   
+
+npu/test_num_nans_kernel.py::TestNumNansKernel::test_num_nans[0.0-128-1] FAILED [  1%]
+
+====================================== FAILURES ======================================
+_____________________ TestNumNansKernel.test_num_nans[0.0-128-1] _____________________
+npu/test_num_nans_kernel.py:65: in test_num_nans
+    _num_nans_kernel[(num_reqs,)](
+/usr/local/python3.12.13/lib/python3.12/site-packages/triton/runtime/jit.py:333: in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+/usr/local/python3.12.13/lib/python3.12/site-packages/triton/runtime/jit.py:622: in run
+    kernel = self._do_compile(key, signature, device, backend, target, constants, options, configs[0], warmup)
+/usr/local/python3.12.13/lib/python3.12/site-packages/triton/runtime/jit.py:787: in _do_compile
+    kernel = self.compile(src, target=target, options=options.__dict__)
+/usr/local/python3.12.13/lib/python3.12/site-packages/triton/compiler/compiler.py:282: in compile
+    module = src.make_ir(options, codegen_fns, module_map, context)
+/usr/local/python3.12.13/lib/python3.12/site-packages/triton/backends/ascend/__init__.py:38: in _patched_make_ir
+    module = _original_make_ir(self, options, codegen_fns, module_map, context)
+/usr/local/python3.12.13/lib/python3.12/site-packages/triton/compiler/compiler.py:102: in make_ir
+    return ast_to_ttir(self.fn, self, context=context, options=options, codegen_fns=codegen_fns,
+E   triton.compiler.errors.CompilationError: at 17:17:
+E       BLOCK_SIZE: tl.constexpr,
+E   ):
+E       req_idx = tl.program_id(0)
+E       num_nans = 0
+E       for i in range(0, vocab_size, BLOCK_SIZE):
+E           block = i + tl.arange(0, BLOCK_SIZE)
+E           mask = block < vocab_size
+E           logits = tl.load(
+E               logits_ptr + req_idx * logits_stride + block, mask=mask, other=0
+E           )
+E           logits = logits.to(tl.float32)
+E           is_nan = libdevice.isnan(logits).to(tl.int1)
+E                    ^
+E   AttributeError("'NoneType' object has no attribute 'to'")
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================== short test summary info ===============================
+FAILED npu/test_num_nans_kernel.py::TestNumNansKernel::test_num_nans[0.0-128-1] - triton.compiler.errors.CompilationError: at 17:17:
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+=========================== 1 failed, 14 warnings in 7.47s ===========================
+
+[23/37] test_penalties.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 24 items                                                                   
+
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-0-1-1000-1] PASSED [  4%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-0-1-1000-4] PASSED [  8%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-0-4-1000-1] PASSED [ 12%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-0-4-1000-4] PASSED [ 16%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-1-1-1000-1] PASSED [ 20%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-1-1-1000-4] PASSED [ 25%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-1-4-1000-1] PASSED [ 29%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-1-4-1000-4] PASSED [ 33%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-3-1-1000-1] PASSED [ 37%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-3-1-1000-4] PASSED [ 41%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-3-4-1000-1] PASSED [ 45%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype0-3-4-1000-4] PASSED [ 50%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-0-1-1000-1] PASSED [ 54%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-0-1-1000-4] PASSED [ 58%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-0-4-1000-1] PASSED [ 62%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-0-4-1000-4] PASSED [ 66%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-1-1-1000-1] PASSED [ 70%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-1-1-1000-4] PASSED [ 75%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-1-4-1000-1] PASSED [ 79%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-1-4-1000-4] PASSED [ 83%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-3-1-1000-1] PASSED [ 87%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-3-1-1000-4] PASSED [ 91%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-3-4-1000-1] PASSED [ 95%]
+npu/test_penalties.py::TestApplyPenalties::test_apply_penalties[npu:0-42-dtype1-3-4-1000-4] PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 24 passed, 14 warnings in 18.05s ==========================
+
+[24/37] test_post_update_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 3 items                                                                    
+
+npu/test_post_update_kernel.py::test_post_update[36-36-200-2] FAILED           [ 33%]
+
+====================================== FAILURES ======================================
+___________________________ test_post_update[36-36-200-2] ____________________________
+post_update environment compatibility failure; this is not a precision failure and no kernel was tested.
+error=cannot import name 'extract_slice' from 'vllm_ascend.ops.triton.triton_utils' (unknown location)
+traceback:
+Traceback (most recent call last):
+  File "/mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut/npu/test_post_update_kernel.py", line 30, in <module>
+    from vllm_ascend.worker.v2.input_batch import (
+  File "/mnt/share/x30084275/accuracy_triton0811/vllm-ascend-xyz/vllm_ascend/worker/v2/input_batch.py", line 25, in <module>
+    from vllm_ascend.attention.attention_v1 import AscendAttentionState
+  File "/mnt/share/x30084275/accuracy_triton0811/vllm-ascend-xyz/vllm_ascend/attention/attention_v1.py", line 62, in <module>
+    from vllm_ascend.device.device_op import DeviceOperator
+  File "/mnt/share/x30084275/accuracy_triton0811/vllm-ascend-xyz/vllm_ascend/device/device_op.py", line 28, in <module>
+    from vllm_ascend.ops.triton.fla.solve_tril import solve_tril_16x16_kernel
+  File "/mnt/share/x30084275/accuracy_triton0811/vllm-ascend-xyz/vllm_ascend/ops/triton/fla/solve_tril.py", line 15, in <module>
+    from vllm_ascend.ops.triton.triton_utils import extract_slice, insert_slice
+ImportError: cannot import name 'extract_slice' from 'vllm_ascend.ops.triton.triton_utils' (unknown location)
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================== short test summary info ===============================
+FAILED npu/test_post_update_kernel.py::test_post_update[36-36-200-2] - Failed: post_update environment compatibility failure; this is not a precision fa...
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+========================== 1 failed, 14 warnings in 10.15s ===========================
+
+[25/37] test_post_update_num_computed_tokens_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 11 items                                                                   
+
+npu/test_post_update_num_computed_tokens_kernel.py::TestPostUpdateNumComputedTokensKernel::test_basic_increment[1-1] PASSED [  9%]
+npu/test_post_update_num_computed_tokens_kernel.py::TestPostUpdateNumComputedTokensKernel::test_basic_increment[1-2] PASSED [ 18%]
+npu/test_post_update_num_computed_tokens_kernel.py::TestPostUpdateNumComputedTokensKernel::test_basic_increment[1-4] PASSED [ 27%]
+npu/test_post_update_num_computed_tokens_kernel.py::TestPostUpdateNumComputedTokensKernel::test_basic_increment[4-1] PASSED [ 36%]
+npu/test_post_update_num_computed_tokens_kernel.py::TestPostUpdateNumComputedTokensKernel::test_basic_increment[4-2] PASSED [ 45%]
+npu/test_post_update_num_computed_tokens_kernel.py::TestPostUpdateNumComputedTokensKernel::test_basic_increment[4-4] PASSED [ 54%]
+npu/test_post_update_num_computed_tokens_kernel.py::TestPostUpdateNumComputedTokensKernel::test_basic_increment[8-1] PASSED [ 63%]
+npu/test_post_update_num_computed_tokens_kernel.py::TestPostUpdateNumComputedTokensKernel::test_basic_increment[8-2] PASSED [ 72%]
+npu/test_post_update_num_computed_tokens_kernel.py::TestPostUpdateNumComputedTokensKernel::test_basic_increment[8-4] PASSED [ 81%]
+npu/test_post_update_num_computed_tokens_kernel.py::TestPostUpdateNumComputedTokensKernel::test_non_contiguous_idx_mapping PASSED [ 90%]
+npu/test_post_update_num_computed_tokens_kernel.py::TestPostUpdateNumComputedTokensKernel::test_zero_query_len PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 11 passed, 14 warnings in 7.44s ===========================
+
+[26/37] test_prepare_decode_inputs_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 8 items                                                                    
+
+npu/test_prepare_decode_inputs_kernel.py::TestPrepareDecodeInputsKernel::test_prepare_decode_inputs[False-1] FAILED [ 12%]
+
+====================================== FAILURES ======================================
+_________ TestPrepareDecodeInputsKernel.test_prepare_decode_inputs[False-1] __________
+npu/test_prepare_decode_inputs_kernel.py:111: in test_prepare_decode_inputs
+    torch.testing.assert_close(seq_lens.cpu(), expected_seq_lens, rtol=0, atol=0)
+E   AssertionError: Tensor-likes are not equal!
+E   
+E   Mismatched elements: 1 / 8 (12.5%)
+E   Greatest absolute difference: 75 at index (0,)
+E   Greatest relative difference: 75.0 at index (0,)
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================== short test summary info ===============================
+FAILED npu/test_prepare_decode_inputs_kernel.py::TestPrepareDecodeInputsKernel::test_prepare_decode_inputs[False-1] - AssertionError: Tensor-likes are not equal!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+========================== 1 failed, 14 warnings in 15.72s ===========================
+
+[27/37] test_prepare_dflash_inputs_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 4 items                                                                    
+
+npu/test_prepare_dflash_inputs_kernel.py::TestPrepareDFlashInputsKernelAscendPatch::test_prepare_dflash_inputs[False-1] PASSED [ 25%]
+npu/test_prepare_dflash_inputs_kernel.py::TestPrepareDFlashInputsKernelAscendPatch::test_prepare_dflash_inputs[False-2] PASSED [ 50%]
+npu/test_prepare_dflash_inputs_kernel.py::TestPrepareDFlashInputsKernelAscendPatch::test_prepare_dflash_inputs[True-1] PASSED [ 75%]
+npu/test_prepare_dflash_inputs_kernel.py::TestPrepareDFlashInputsKernelAscendPatch::test_prepare_dflash_inputs[True-2] PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 4 passed, 14 warnings in 21.51s ===========================
+
+[28/37] test_prepare_pos_seq_lens_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 26 items                                                                   
+
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[1-8-1] PASSED [  3%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[1-8-2] PASSED [  7%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[1-8-4] PASSED [ 11%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[1-8-8] PASSED [ 15%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[1-16-1] PASSED [ 19%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[1-16-2] PASSED [ 23%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[1-16-4] PASSED [ 26%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[1-16-8] PASSED [ 30%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[4-8-1] PASSED [ 34%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[4-8-2] PASSED [ 38%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[4-8-4] PASSED [ 42%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[4-8-8] PASSED [ 46%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[4-16-1] PASSED [ 50%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[4-16-2] PASSED [ 53%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[4-16-4] PASSED [ 57%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[4-16-8] PASSED [ 61%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[8-8-1] PASSED [ 65%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[8-8-2] PASSED [ 69%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[8-8-4] PASSED [ 73%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[8-8-8] PASSED [ 76%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[8-16-1] PASSED [ 80%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[8-16-2] PASSED [ 84%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[8-16-4] PASSED [ 88%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_pos_seq_lens[8-16-8] PASSED [ 92%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_cuda_graph_padding PASSED [ 96%]
+npu/test_prepare_pos_seq_lens_kernel.py::TestPreparePosSeqLensKernel::test_event_driven PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 26 passed, 14 warnings in 7.39s ===========================
+
+[29/37] test_prepare_rope_positions_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 11 items                                                                   
+
+npu/test_prepare_rope_positions_kernel.py::TestPrepareRopePositionsKernel::test_prefill[1-3] PASSED [  9%]
+npu/test_prepare_rope_positions_kernel.py::TestPrepareRopePositionsKernel::test_prefill[1-4] PASSED [ 18%]
+npu/test_prepare_rope_positions_kernel.py::TestPrepareRopePositionsKernel::test_prefill[4-3] PASSED [ 27%]
+npu/test_prepare_rope_positions_kernel.py::TestPrepareRopePositionsKernel::test_prefill[4-4] PASSED [ 36%]
+npu/test_prepare_rope_positions_kernel.py::TestPrepareRopePositionsKernel::test_prefill[8-3] PASSED [ 45%]
+npu/test_prepare_rope_positions_kernel.py::TestPrepareRopePositionsKernel::test_prefill[8-4] PASSED [ 54%]
+npu/test_prepare_rope_positions_kernel.py::TestPrepareRopePositionsKernel::test_decode[1-3] PASSED [ 63%]
+npu/test_prepare_rope_positions_kernel.py::TestPrepareRopePositionsKernel::test_decode[1-4] PASSED [ 72%]
+npu/test_prepare_rope_positions_kernel.py::TestPrepareRopePositionsKernel::test_decode[4-3] PASSED [ 81%]
+npu/test_prepare_rope_positions_kernel.py::TestPrepareRopePositionsKernel::test_decode[4-4] PASSED [ 90%]
+npu/test_prepare_rope_positions_kernel.py::TestPrepareRopePositionsKernel::test_mixed_prefill_decode PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 11 passed, 14 warnings in 10.88s ==========================
+
+[30/37] test_prompt_logprobs_token_ids_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 10 items                                                                   
+
+npu/test_prompt_logprobs_token_ids_kernel.py::TestPromptLogprobsTokenIdsKernel::test_prompt_logprobs_token_ids[1-1] PASSED [ 10%]
+npu/test_prompt_logprobs_token_ids_kernel.py::TestPromptLogprobsTokenIdsKernel::test_prompt_logprobs_token_ids[1-2] PASSED [ 20%]
+npu/test_prompt_logprobs_token_ids_kernel.py::TestPromptLogprobsTokenIdsKernel::test_prompt_logprobs_token_ids[1-4] PASSED [ 30%]
+npu/test_prompt_logprobs_token_ids_kernel.py::TestPromptLogprobsTokenIdsKernel::test_prompt_logprobs_token_ids[4-1] PASSED [ 40%]
+npu/test_prompt_logprobs_token_ids_kernel.py::TestPromptLogprobsTokenIdsKernel::test_prompt_logprobs_token_ids[4-2] PASSED [ 50%]
+npu/test_prompt_logprobs_token_ids_kernel.py::TestPromptLogprobsTokenIdsKernel::test_prompt_logprobs_token_ids[4-4] PASSED [ 60%]
+npu/test_prompt_logprobs_token_ids_kernel.py::TestPromptLogprobsTokenIdsKernel::test_prompt_logprobs_token_ids[16-1] PASSED [ 70%]
+npu/test_prompt_logprobs_token_ids_kernel.py::TestPromptLogprobsTokenIdsKernel::test_prompt_logprobs_token_ids[16-2] PASSED [ 80%]
+npu/test_prompt_logprobs_token_ids_kernel.py::TestPromptLogprobsTokenIdsKernel::test_prompt_logprobs_token_ids[16-4] PASSED [ 90%]
+npu/test_prompt_logprobs_token_ids_kernel.py::TestPromptLogprobsTokenIdsKernel::test_nonzero_num_computed_tokens PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 10 passed, 14 warnings in 11.40s ==========================
+
+[31/37] test_ranks.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 4 items                                                                    
+
+npu/test_ranks.py::test_compute_topk_logprobs[48-1024-5] PASSED                [ 25%]
+npu/test_ranks.py::test_compute_topk_logprobs[96-1024-0] PASSED                [ 50%]
+npu/test_ranks.py::test_compute_topk_logprobs[24-1519-1] PASSED                [ 75%]
+npu/test_ranks.py::test_compute_topk_logprobs[1-320-10] PASSED                 [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 4 passed, 14 warnings in 11.13s ===========================
+
+[32/37] test_rejection_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 18 items                                                                   
+
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_greedy_all_accepted PASSED [  5%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_greedy_all_rejected PASSED [ 11%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_greedy_varying_lengths[1] PASSED [ 16%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_greedy_varying_lengths[3] PASSED [ 22%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_greedy_varying_lengths[5] PASSED [ 27%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_greedy_sampled_output PASSED [ 33%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_greedy_multi_req PASSED [ 38%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_non_greedy_always_accept PASSED [ 44%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_non_greedy_no_draft_logits PASSED [ 50%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_non_greedy_varying_temps[0.5] PASSED [ 55%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_non_greedy_varying_temps[1.0] PASSED [ 61%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_non_greedy_varying_temps[2.0] PASSED [ 66%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_non_greedy_sampled_output PASSED [ 72%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_mixed_greedy_and_non_greedy PASSED [ 77%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_bonus_token_only PASSED [ 83%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_varying_vocab_sizes[32] PASSED [ 88%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_varying_vocab_sizes[64] PASSED [ 94%]
+npu/test_rejection_kernel.py::TestProbabilisticRejectionKernelPatch::test_varying_vocab_sizes[128] PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 18 passed, 14 warnings in 29.80s ==========================
+
+[33/37] test_resample_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 2 items                                                                    
+
+npu/test_resample_kernel.py::TestResampleKernelPatch::test_greedy_bonus_token PASSED [ 50%]
+npu/test_resample_kernel.py::TestResampleKernelPatch::test_non_bonus_greedy PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 2 passed, 14 warnings in 15.15s ===========================
+
+[34/37] test_scatter_num_accepted_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 10 items                                                                   
+
+npu/test_scatter_num_accepted_kernel.py::TestScatterNumAcceptedKernel::test_scatter_basic[16-1] PASSED [ 10%]
+npu/test_scatter_num_accepted_kernel.py::TestScatterNumAcceptedKernel::test_scatter_basic[16-4] PASSED [ 20%]
+npu/test_scatter_num_accepted_kernel.py::TestScatterNumAcceptedKernel::test_scatter_basic[16-8] PASSED [ 30%]
+npu/test_scatter_num_accepted_kernel.py::TestScatterNumAcceptedKernel::test_scatter_basic[16-16] PASSED [ 40%]
+npu/test_scatter_num_accepted_kernel.py::TestScatterNumAcceptedKernel::test_scatter_basic[32-1] PASSED [ 50%]
+npu/test_scatter_num_accepted_kernel.py::TestScatterNumAcceptedKernel::test_scatter_basic[32-4] PASSED [ 60%]
+npu/test_scatter_num_accepted_kernel.py::TestScatterNumAcceptedKernel::test_scatter_basic[32-8] PASSED [ 70%]
+npu/test_scatter_num_accepted_kernel.py::TestScatterNumAcceptedKernel::test_scatter_basic[32-16] PASSED [ 80%]
+npu/test_scatter_num_accepted_kernel.py::TestScatterNumAcceptedKernel::test_skip_negative PASSED [ 90%]
+npu/test_scatter_num_accepted_kernel.py::TestScatterNumAcceptedKernel::test_clamp_to_one PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 10 passed, 14 warnings in 12.82s ==========================
+
+[35/37] test_temperature.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 5 items                                                                    
+
+npu/test_temperature.py::test_temperature_kernel[35-32000] PASSED              [ 20%]
+npu/test_temperature.py::test_temperature_kernel[36-50257] PASSED              [ 40%]
+npu/test_temperature.py::test_temperature_kernel[45-65024] PASSED              [ 60%]
+npu/test_temperature.py::test_temperature_kernel[12-128256] PASSED             [ 80%]
+npu/test_temperature.py::test_temperature_kernel[44-151936] PASSED             [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== 5 passed, 14 warnings in 7.56s ===========================
+
+[36/37] test_topk_log_softmax.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 3 items                                                                    
+
+npu/test_topk_log_softmax.py::test_topk_log_softmax_kernel[48-102400-50] PASSED [ 33%]
+npu/test_topk_log_softmax.py::test_topk_log_softmax_kernel[96-102400-1] PASSED [ 66%]
+npu/test_topk_log_softmax.py::test_topk_log_softmax_kernel[24-151936-8] PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 3 passed, 14 warnings in 11.21s ===========================
+
+[37/37] test_update_draft_inputs_kernel.py
+================================ test session starts =================================
+platform linux -- Python 3.12.13, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.12.13/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725/accuracy_test/strict_ut
+configfile: pytest.ini
+plugins: xdist-3.6.1, anyio-4.14.2
+collected 13 items                                                                   
+
+npu/test_update_draft_inputs_kernel.py::TestUpdateDraftInputsKernel::test_update_draft_inputs[False-128-1] PASSED [  7%]
+npu/test_update_draft_inputs_kernel.py::TestUpdateDraftInputsKernel::test_update_draft_inputs[False-128-2] PASSED [ 15%]
+npu/test_update_draft_inputs_kernel.py::TestUpdateDraftInputsKernel::test_update_draft_inputs[False-128-4] PASSED [ 23%]
+npu/test_update_draft_inputs_kernel.py::TestUpdateDraftInputsKernel::test_update_draft_inputs[False-512-1] PASSED [ 30%]
+npu/test_update_draft_inputs_kernel.py::TestUpdateDraftInputsKernel::test_update_draft_inputs[False-512-2] PASSED [ 38%]
+npu/test_update_draft_inputs_kernel.py::TestUpdateDraftInputsKernel::test_update_draft_inputs[False-512-4] PASSED [ 46%]
+npu/test_update_draft_inputs_kernel.py::TestUpdateDraftInputsKernel::test_update_draft_inputs[True-128-1] PASSED [ 53%]
+npu/test_update_draft_inputs_kernel.py::TestUpdateDraftInputsKernel::test_update_draft_inputs[True-128-2] PASSED [ 61%]
+npu/test_update_draft_inputs_kernel.py::TestUpdateDraftInputsKernel::test_update_draft_inputs[True-128-4] PASSED [ 69%]
+npu/test_update_draft_inputs_kernel.py::TestUpdateDraftInputsKernel::test_update_draft_inputs[True-512-1] PASSED [ 76%]
+npu/test_update_draft_inputs_kernel.py::TestUpdateDraftInputsKernel::test_update_draft_inputs[True-512-2] PASSED [ 84%]
+npu/test_update_draft_inputs_kernel.py::TestUpdateDraftInputsKernel::test_update_draft_inputs[True-512-4] PASSED [ 92%]
+npu/test_update_draft_inputs_kernel.py::TestUpdateDraftInputsKernel::test_final_step_skips_update PASSED [100%]
+
+================================== warnings summary ==================================
+../../../../../../../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================== 13 passed, 14 warnings in 16.71s ==========================
+
+NPU strict modules with failures:
+  test_compute_local_logits_stats_kernel.py: pytest exit 1
+  test_fill_logprob_token_ids_kernel.py: pytest exit 1
+  test_input_batch_prepare_prefill_inputs_kernel.py: pytest exit 1
+  test_num_nans_kernel.py: pytest exit 1
+  test_post_update_kernel.py: pytest exit 1
+  test_prepare_decode_inputs_kernel.py: pytest exit 1
+root@host127:/mnt/share/x30084275/accuracy_triton0811/xyz-triton-test-0725# 

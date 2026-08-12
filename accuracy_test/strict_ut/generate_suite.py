@@ -148,6 +148,17 @@ def _npu_transform(text: str) -> str:
         "from accuracy_test.strict_ut.runtime_npu import "
         "init_device_properties_triton",
     )
+    # The reviewed post-update test bootstrapped the full Ascend ops package.
+    # Strict kernel tests install a lightweight triton-utils shim instead;
+    # importing ops here would pull fused MoE and reintroduce unrelated API skew.
+    text = re.sub(
+        r'\s*# Bootstrap the parent ops package first\..*?'
+        r'\s*from vllm\.v1\.worker\.gpu\.input_batch import \(',
+        "\n    from vllm.v1.worker.gpu.input_batch import (",
+        text,
+        count=1,
+        flags=re.DOTALL,
+    )
     return text
 
 

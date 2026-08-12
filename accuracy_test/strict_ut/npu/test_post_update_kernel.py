@@ -20,17 +20,6 @@ init_device_properties_triton = None
 _post_update_import_error = None
 _post_update_import_traceback = None
 try:
-    # Bootstrap the parent ops package first. Importing device_op directly can
-    # cycle through ops.__init__ -> fused_moe -> experts_selector -> device_op
-    # before DeviceOperator is bound. Starting from ops registers the parent
-    # package before device_op imports ops.triton children, breaking that cycle.
-    importlib.import_module("vllm_ascend.ops")
-    device_op = importlib.import_module("vllm_ascend.device.device_op")
-    if not hasattr(device_op, "DeviceOperator"):
-        raise ImportError(
-            "vllm_ascend.device.device_op initialized without DeviceOperator"
-        )
-
     from vllm.v1.worker.gpu.input_batch import (
         _post_update_kernel as post_update_kernel_upstream,
     )

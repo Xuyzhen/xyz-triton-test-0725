@@ -447,3 +447,62 @@
 - **num_speculative_steps**：1 ~ 5；**periodic steps**：2~3。
 - **hidden_size**：128 / 512。
 - **block / 分组**：num_groups 1~4，max_num_blocks 32~128。
+
+---
+
+## 附录：按维度汇总（各算子的 Shape 覆盖）
+
+以下表格**去重**列出每个算子实际覆盖的维度取值，便于横向对比覆盖广度。
+（`--` 表示该算子不涉及此维度；`n` 前的 `~` 表示近似/随机取值。）
+
+### 附录 A：vocab_size（词表大小）覆盖
+
+| 算子 | 覆盖的 vocab_size |
+|---|---|
+| _apply_grammar_bitmask_kernel | 128, 256, 512, 1024, 4096, 8192 |
+| _bad_words_kernel | 50257 |
+| _bias_kernel | 64, 128, 1024 |
+| _bincount_kernel | 40960（buffer），151936（bin） |
+| _compute_local_logits_stats_kernel | 128, 1024, 8192 |
+| _gumbel_sample_kernel / _temperature_kernel | 32000, 50257, 65024, 102400, 128256, 151936 |
+| _min_p_kernel | 32000, 102400, 151936 |
+| _num_nans_kernel | 128, 512, 1024, 4096, 8192, 16384 |
+| _penalties_kernel | 1000 |
+| _post_update_kernel | 200, 32000 |
+| _ranks_kernel | 320, 1024, 1519 |
+| _rejection_kernel | 32, 64, 128 |
+| _resample_kernel | 128, 512 |
+| _temperature_kernel | 32000, 50257, 65024, 128256, 151936 |
+| _topk_log_softmax_kernel | 102400, 151936 |
+
+### 附录 B：请求数 / batch_size / num_reqs 覆盖
+
+| 维度 | 覆盖取值 |
+|---|---|
+| num_reqs（请求数） | 1, 2, 3, 4, 6, 8, 16, 36, 48, 96, 128 |
+| batch_size（topk/ranks） | 1, 4, 8, 24, 48, 96 |
+| num_tokens（token 数） | 1~2048（bad_words 到 2048；temperature 随机 1~64） |
+| max_num_reqs（缓冲上限） | 2, 4, 6, 8, 16, 32, 36, 48, 128 |
+
+### 附录 C：投机解码相关覆盖
+
+| 维度 | 覆盖取值 | 涉及算子 |
+|---|---|---|
+| num_speculative_steps | 1, 2, 3, 5 | combine/rejection/update/flatten/computer |
+| num_draft_tokens | 1, 3, 5 | rejection |
+| num_logits | 1, 2, 3, 4 | compute_local_stats / rejection |
+| num_logits_per_req | 1, 3, 5 | get_num_sampled_and_rejected |
+| num_new_sampled_tokens | 0, 1 | combine_sampled_and_draft |
+
+### 附录 D：其它维度覆盖
+
+| 维度 | 覆盖取值 | 涉及算子 |
+|---|---|---|
+| hidden_size | 64, 128, 512 | update_draft_inputs |
+| query_len | 1, 4, 8, 16 | 各类 prepare_prefill_inputs / prompt_logprobs |
+| max_num_blocks | 32, 64, 128 | gather_block_tables |
+| num_groups | 1, 2, 4 | gather_block_tables / apply_write |
+| num_dims | 3, 4 | prepare_rope_positions |
+| dcp_size | 2, 4 | dcp_local_seq_lens |
+| cp_interleave | 1, 2 | dcp_local_seq_lens / compute_slot_mappings |
+| num_logprobs | 0, 1, 5, 8, 10, 50 | topk_log_softmax / fill_logprob / ranks |

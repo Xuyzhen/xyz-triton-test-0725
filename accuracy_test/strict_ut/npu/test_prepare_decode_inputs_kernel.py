@@ -153,18 +153,26 @@ class TestPrepareDecodeInputsKernel:
         torch.testing.assert_close(seq_lens[0].item(), expected_seq_lens_0, rtol=0, atol=0)
         torch.testing.assert_close(seq_lens[1].item(), expected_seq_lens_1, rtol=0, atol=0)
 
-    def test_model_len_clamp(self):
+    @pytest.mark.parametrize("max_model_len", [262144, 1048576])
+    def test_model_len_clamp(self, max_model_len):
         """Positions and seq_lens should be clamped to max_model_len."""
         num_reqs = 2
         max_num_tokens = num_reqs
         max_num_reqs = 4
-        max_model_len = 8
 
         draft_tokens = torch.tensor([[5], [7]], dtype=torch.int32, device=self.device)
-        target_seq_lens = torch.tensor([20, 8], dtype=torch.int32, device=self.device)
+        target_seq_lens = torch.tensor(
+            [max_model_len, max_model_len - 1],
+            dtype=torch.int32,
+            device=self.device,
+        )
         num_rejected = torch.zeros(num_reqs, dtype=torch.int32, device=self.device)
         input_ids = torch.full((max_num_tokens,), -1, dtype=torch.int32, device=self.device)
-        positions = torch.tensor([7, 7], dtype=torch.int64, device=self.device)
+        positions = torch.tensor(
+            [max_model_len - 1, max_model_len - 2],
+            dtype=torch.int64,
+            device=self.device,
+        )
         query_start_loc = torch.full((max_num_reqs + 1,), -1, dtype=torch.int32, device=self.device)
         seq_lens = torch.full((max_num_reqs,), -1, dtype=torch.int32, device=self.device)
 
@@ -184,8 +192,7 @@ class TestPrepareDecodeInputsKernel:
         )
         torch.npu.synchronize()
 
-        # position 7+1=8, clamped to max_model_len-1=7
-        assert positions[0].item() == 7, f"Expected 7, got {positions[0].item()}"
-        assert positions[1].item() == 7, f"Expected 7, got {positions[1].item()}"
-        # seq_lens 20+1=21 clamped to 8
-        assert seq_lens[0].item() == 8, f"Expected 8, got {seq_lens[0].item()}"
+        assert positions[0].item() == max_model_len - 1
+        assert positions[1].item() == max_model_len - 1
+        assert seq_lens[0].item() == max_model_len
+        assert seq_lens[1].item() == max_model_len

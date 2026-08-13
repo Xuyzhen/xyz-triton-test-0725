@@ -50,6 +50,9 @@ def torch_min_p_torch(
         (96, 102400),
         (24, 151936),
         (1, 32000),
+        (4, 129280),  # DeepSeek V4
+        (4, 163840),  # Kimi K3
+        (4, 248320),  # Qwen 3.8 2.4T
     ],
 )
 def test_apply_min_p_kernel(num_reqs, vocab_size):

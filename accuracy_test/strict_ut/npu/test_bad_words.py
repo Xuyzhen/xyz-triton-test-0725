@@ -32,6 +32,9 @@ BAD_WORDS_TEST_CASES = [
     pytest.param(512, 50257, 16, 3, 2, id="small-case"),
     pytest.param(1024, 50257, 32, 5, 3, id="medium-case"),
     pytest.param(2048, 50257, 64, 8, 4, id="large-case"),
+    pytest.param(8, 129280, 4, 3, 2, id="deepseek-v4-vocab"),
+    pytest.param(8, 163840, 4, 3, 2, id="kimi-k3-vocab"),
+    pytest.param(8, 248320, 4, 3, 2, id="qwen-3-8-vocab"),
 ]
 
 

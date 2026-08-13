@@ -76,7 +76,7 @@ class TestPrepareDFlashInputsKernel:
 
     @pytest.mark.parametrize("num_reqs", [1, 2])
     @pytest.mark.parametrize("num_ctx", [2, 4])
-    @pytest.mark.parametrize("num_query_per_req_val", [2, 3])
+    @pytest.mark.parametrize("num_query_per_req_val", [2, 3, 5])
     def test_prepare_dflash_inputs(self, num_reqs, num_ctx, num_query_per_req_val):
         """Compare kernel output with CPU reference for basic fields."""
         num_speculative_steps = num_query_per_req_val  # typically same

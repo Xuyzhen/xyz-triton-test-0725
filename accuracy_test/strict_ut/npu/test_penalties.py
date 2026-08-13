@@ -258,3 +258,26 @@ class TestApplyPenalties:
         gc.collect()
         torch.npu.empty_cache()
         torch.npu.reset_peak_memory_stats()
+
+    @pytest.mark.parametrize("vocab_size", [129280, 163840, 248320])
+    @torch.inference_mode()
+    def test_model_vocab_shape(self, vocab_size):
+        """Validate production vocabulary and packed-mask shapes."""
+        data = create_test_data(
+            num_tokens=1,
+            vocab_size=vocab_size,
+            num_status=1,
+            num_speculative_tokens=1,
+            device="npu:0",
+            dtype=torch.bfloat16,
+            seed=42,
+        )
+        logits_triton = data[0]
+        logits_ref = logits_triton.clone()
+        args = data[1:]
+
+        apply_penalties(logits_triton, *args)
+        torch.npu.synchronize()
+        expected = pytorch_apply_penalties(logits_ref, *args)
+        assert torch.allclose(logits_triton, expected, atol=1e-2, rtol=1e-2)
+        torch.npu.empty_cache()

@@ -402,13 +402,13 @@ class TestResampleKernel:
             atol=0,
         )
 
-    def test_bonus_token(self):
+    @pytest.mark.parametrize("vocab_size", [256, 129280, 163840, 248320])
+    def test_bonus_token(self, vocab_size):
         """When the resample token is the bonus token, always resample."""
         num_reqs = 1
         num_spec_steps = 2
-        vocab_size = 256
         num_logits = num_reqs * (num_spec_steps + 1)
-        BLOCK_SIZE = 256
+        BLOCK_SIZE = 1024
         resample_num_blocks = triton.cdiv(vocab_size, BLOCK_SIZE)
 
         target_logits = torch.randn(num_logits, vocab_size, dtype=torch.float32, device=self.device)

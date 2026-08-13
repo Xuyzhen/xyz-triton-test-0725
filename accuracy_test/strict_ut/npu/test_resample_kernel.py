@@ -58,12 +58,12 @@ class TestResampleKernelPatch:
         self.device = torch.device("npu")
         self.BLOCK_SIZE = 1024
 
-    def test_greedy_bonus_token(self):
+    @pytest.mark.parametrize("vocab_size", [512, 129280, 163840, 248320])
+    def test_greedy_bonus_token(self, vocab_size):
         """For a bonus token with temp=0, resample with Gumbel noise."""
         from vllm_ascend.worker.v2.spec_decode.rejection_sampler_utils import _resample_kernel
 
         num_reqs = 1
-        vocab_size = 512
         num_blocks = triton.cdiv(vocab_size, self.BLOCK_SIZE)
         padded_resample_num_blocks = triton.next_power_of_2(num_blocks)
 

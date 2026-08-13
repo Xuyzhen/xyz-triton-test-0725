@@ -388,9 +388,8 @@ class TestPrepareDFlashInputsKernelAscendPatch:
         self.device = torch.device("npu")
         self.BLOCK_SIZE = 1024
 
-    def _test_modern_dflash_inputs(self, num_reqs, sample_from_anchor):
+    def _test_modern_dflash_inputs(self, num_reqs, sample_from_anchor, num_speculative_steps):
         """Test the installed modern Ascend DFlash input kernel."""
-        num_speculative_steps = 3
         num_query_per_req = (
             num_speculative_steps
             if sample_from_anchor
@@ -452,8 +451,11 @@ class TestPrepareDFlashInputsKernelAscendPatch:
             torch.testing.assert_close(actual.cpu(), reference, rtol=0, atol=0)
 
     @pytest.mark.parametrize("num_reqs", [1, 2])
+    @pytest.mark.parametrize("num_speculative_steps", [3, 5])
     @pytest.mark.parametrize("SAMPLE_FROM_ANCHOR", _sample_from_anchor_values)
-    def test_prepare_dflash_inputs(self, num_reqs, SAMPLE_FROM_ANCHOR):
+    def test_prepare_dflash_inputs(
+        self, num_reqs, num_speculative_steps, SAMPLE_FROM_ANCHOR
+    ):
         """Compare the installed legacy or modern DFlash kernel with CPU."""
 
         if _prepare_dflash_inputs_kernel_ascend is None:
@@ -464,12 +466,13 @@ class TestPrepareDFlashInputsKernelAscendPatch:
                     + _dflash_environment_diagnostics(),
                     pytrace=False,
                 )
-            self._test_modern_dflash_inputs(num_reqs, SAMPLE_FROM_ANCHOR)
+            self._test_modern_dflash_inputs(
+                num_reqs, SAMPLE_FROM_ANCHOR, num_speculative_steps
+            )
             return
 
         max_num_reqs = 4
-        num_query_per_req = 3
-        num_speculative_steps = 3
+        num_query_per_req = num_speculative_steps
         block_size = 64
         parallel_drafting_token_id = 0
         max_model_len = 1024

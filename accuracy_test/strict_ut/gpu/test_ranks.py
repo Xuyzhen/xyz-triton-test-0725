@@ -26,6 +26,9 @@ except (ImportError, ModuleNotFoundError) as exc:
         (96, 1024, 0),
         (24, 1519, 1),
         (1, 320, 10),
+        (4, 129280, 6),  # DeepSeek V4
+        (4, 163840, 8),  # Kimi K3
+        (4, 248320, 8),  # Qwen 3.8 2.4T
     ],
 )
 def test_compute_topk_logprobs(batch_size, vocab_size, num_logprobs):

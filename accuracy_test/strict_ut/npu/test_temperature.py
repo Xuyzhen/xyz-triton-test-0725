@@ -25,6 +25,9 @@ VOCAB_SIZES = [
     50257,  # GPT-2
     65024,  # ChatGLM
     128256,  # LLaMA3
+    129280,  # DeepSeek V4
+    163840,  # Kimi K3
+    248320,  # Qwen 3.8 2.4T
     151936,  # Qwen2
 ]
 

@@ -24,6 +24,9 @@ except (ImportError, ModuleNotFoundError) as exc:
         (48, 102400, 50),
         (96, 102400, 1),
         (24, 151936, 8),
+        (8, 129280, 6),  # DeepSeek V4
+        (8, 163840, 8),  # Kimi K3
+        (8, 248320, 8),  # Qwen 3.8 2.4T
     ],
 )
 def test_topk_log_softmax_kernel(batch_size, vocab_size, num_logprobs):

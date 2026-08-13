@@ -87,7 +87,7 @@ class TestApplyGrammarBitmaskKernelPatch:
         )
         torch.npu.synchronize()
 
-    @pytest.mark.parametrize("vocab_size", [128, 1024, 8192])
+    @pytest.mark.parametrize("vocab_size", [128, 1024, 8192, 129280, 163840, 248320])
     def test_basic_bitmask(self, vocab_size):
         """Verify bitmask correctly blocks tokens."""
         num_bitmasks = 2

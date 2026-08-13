@@ -712,7 +712,7 @@ class TestProbabilisticRejectionKernelPatch:
             rtol=0, atol=0,
         )
 
-    @pytest.mark.parametrize("vocab_size", [32, 64, 128])
+    @pytest.mark.parametrize("vocab_size", [32, 64, 128, 129280, 163840, 248320])
     def test_varying_vocab_sizes(self, vocab_size):
         """Parametrized: correct acceptance across different vocab sizes."""
         num_reqs = 1

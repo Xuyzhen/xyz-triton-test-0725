@@ -133,7 +133,7 @@ class TestPreparePrefillInputsKernel:
         max_num_tokens = num_reqs * query_len
         max_num_reqs = 4
         max_model_len = 32
-        num_lookahead = 2
+        num_lookahead = 1
 
         all_token_ids = torch.randint(0, 100, (max_num_reqs, max_model_len), dtype=torch.int32, device=self.device)
         idx_mapping = torch.tensor([0, 1], dtype=torch.int32, device=self.device)
@@ -168,7 +168,6 @@ class TestPreparePrefillInputsKernel:
         for i in range(query_len):
             expected_input_ids[query_len + i] = token_ids_cpu[1, 15 + i]
         expected_next_prefill[0, 1] = token_ids_cpu[1, 15 + 4]
-        expected_next_prefill[1, 1] = 0
 
         torch.testing.assert_close(input_ids.cpu(), expected_input_ids, rtol=0, atol=0)
         torch.testing.assert_close(next_prefill_tokens.cpu(), expected_next_prefill, rtol=0, atol=0)

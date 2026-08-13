@@ -51,9 +51,18 @@ class TestUpdateDraftInputsKernel:
         self.device = torch.device("cuda")
 
     @pytest.mark.parametrize("num_reqs", [1, 2, 4])
-    @pytest.mark.parametrize("hidden_size", [128, 512])
+    @pytest.mark.parametrize(
+        "hidden_size,dtype",
+        [
+            (128, torch.float16),
+            (512, torch.float16),
+            (4096, torch.bfloat16),  # DeepSeek V4
+            (7168, torch.bfloat16),  # Kimi K3
+            (8192, torch.bfloat16),  # Qwen 3.8 2.4T
+        ],
+    )
     @pytest.mark.parametrize("advance_pos", [False, True])
-    def test_update_draft_inputs(self, num_reqs, hidden_size, advance_pos):
+    def test_update_draft_inputs(self, num_reqs, hidden_size, dtype, advance_pos):
         """Compare kernel output with CPU reference."""
         num_speculative_steps = 3
         max_num_reqs = 8
@@ -63,13 +72,13 @@ class TestUpdateDraftInputsKernel:
         output_draft_tokens = torch.full(
             (max_num_reqs, num_speculative_steps + 1), -1, dtype=torch.int64, device=self.device
         )
-        next_input_hidden_states = torch.zeros(num_reqs, hidden_size, dtype=torch.float16, device=self.device)
+        next_input_hidden_states = torch.zeros(num_reqs, hidden_size, dtype=dtype, device=self.device)
         input_ids = torch.full((max_num_tokens,), -1, dtype=torch.int32, device=self.device)
         positions = torch.full((max_num_tokens,), 5, dtype=torch.int64, device=self.device)
         seq_lens = torch.full((max_num_reqs,), 10, dtype=torch.int32, device=self.device)
         draft_tokens = torch.randint(0, 100, (num_reqs,), dtype=torch.int32, device=self.device)
         current_draft_step = torch.tensor(1, dtype=torch.int64, device=self.device)  # not the final step
-        hidden_states = torch.randn(num_reqs, hidden_size, dtype=torch.float16, device=self.device)
+        hidden_states = torch.randn(num_reqs, hidden_size, dtype=dtype, device=self.device)
 
         expected_output_draft = output_draft_tokens.clone().cpu()
         expected_input_hidden = next_input_hidden_states.clone().cpu()

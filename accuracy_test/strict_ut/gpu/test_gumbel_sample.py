@@ -53,6 +53,9 @@ class TestGumbelSampling:
             (8, 32000),
             (48, 102400),
             (64, 151936),
+            (4, 129280),  # DeepSeek V4
+            (4, 163840),  # Kimi K3
+            (4, 248320),  # Qwen 3.8 2.4T
         ],
     )
     def test_apply_temperature(self, num_tokens, vocab_size):
@@ -98,6 +101,9 @@ class TestGumbelSampling:
             (4, 4, 32000),
             (8, 4, 32000),  # expanded: multiple tokens per request
             (16, 8, 102400),
+            (2, 2, 129280),  # DeepSeek V4
+            (2, 2, 163840),  # Kimi K3
+            (2, 2, 248320),  # Qwen 3.8 2.4T
         ],
     )
     def test_gumbel_sample_greedy(self, num_tokens, num_reqs, vocab_size):

@@ -81,8 +81,8 @@ class TestComputeBlockMaxAndSumexp:
         self.device = torch.device("cuda")
 
     @pytest.mark.parametrize("num_logits", [1, 2, 4])
-    @pytest.mark.parametrize("vocab_size", [128, 1024, 8192])
-    @pytest.mark.parametrize("num_speculative_steps", [2, 3])
+    @pytest.mark.parametrize("vocab_size", [128, 1024, 8192, 129280, 163840, 248320])
+    @pytest.mark.parametrize("num_speculative_steps", [1, 2, 3])
     def test_compute_block_max_and_sumexp(self, num_logits, vocab_size, num_speculative_steps):
         """Compare block-level max and sumexp with CPU reference (greedy and non-greedy)."""
         max_num_reqs = 4

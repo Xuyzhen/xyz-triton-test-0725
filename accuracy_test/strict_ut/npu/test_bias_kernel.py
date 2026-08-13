@@ -160,7 +160,7 @@ class TestBiasKernel:
         torch.npu.synchronize()
 
     @pytest.mark.parametrize("num_tokens", [1, 4, 8])
-    @pytest.mark.parametrize("vocab_size", [128, 1024])
+    @pytest.mark.parametrize("vocab_size", [128, 1024, 129280, 163840, 248320])
     def test_allowed_token_ids(self, num_tokens, vocab_size):
         """Only allowed token IDs should have non -inf logits."""
         num_reqs = 4

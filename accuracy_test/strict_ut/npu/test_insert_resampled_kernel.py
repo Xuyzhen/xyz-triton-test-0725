@@ -100,9 +100,9 @@ class TestInsertResampledKernel:
 
     @pytest.mark.parametrize("num_reqs", [1, 2, 4])
     @pytest.mark.parametrize("num_spec_steps", [1, 3])
-    def test_insert_resampled_basic(self, num_reqs, num_spec_steps):
+    @pytest.mark.parametrize("vocab_size", [4096, 129280, 163840, 248320])
+    def test_insert_resampled_basic(self, num_reqs, num_spec_steps, vocab_size):
         """Test the insert kernel inserts the correct resampled token."""
-        vocab_size = 4096
         RESAMPLE_BLOCK_SIZE = 1024
         resample_num_blocks = triton.cdiv(vocab_size, RESAMPLE_BLOCK_SIZE)
         padded_resample_num_blocks = triton.next_power_of_2(resample_num_blocks)

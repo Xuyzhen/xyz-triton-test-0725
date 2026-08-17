@@ -210,5 +210,8 @@ def test_no_above_entries():
 
     _launch(data, above_mask, min_larger, num_min_larger, BLOCK_SIZE)
 
-    assert min_larger.item() == 3.14, "min_larger should remain unchanged"
+    min_larger_expected = torch.tensor([3.14], dtype=torch.float32, device=DEVICE)
+    torch.testing.assert_close(
+        min_larger, min_larger_expected, rtol=0, atol=0, check_dtype=True
+    )
     assert num_min_larger.item() == 5, "num_min_larger should remain unchanged"

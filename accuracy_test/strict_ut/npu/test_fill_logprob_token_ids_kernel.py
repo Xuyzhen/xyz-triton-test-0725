@@ -125,23 +125,34 @@ class TestFillLogprobTokenIdsKernel:
         out_token_ids = torch.zeros(batch_size, 1 + PADDED_COLS, dtype=torch.int64, device=self.device)
         out_valid_mask = torch.zeros(batch_size, 1 + PADDED_COLS, dtype=torch.bool, device=self.device)
 
-        _fill_logprob_token_ids_kernel[(batch_size,)](
-            out_token_ids,
-            out_token_ids.stride(0),
-            out_valid_mask,
-            out_valid_mask.stride(0),
-            sampled_token_ids,
-            topk_indices,
-            topk_indices.stride(0),
-            expanded_idx_mapping,
-            num_per_req_token_ids,
-            per_req_token_ids,
-            per_req_token_ids.stride(0),
-            NUM_TOPK=NUM_TOPK,
-            PADDED_COLS=PADDED_COLS,
-        )
-        torch.npu.synchronize()
+        # Soft-assert: collect all per-batch mismatches, continue checking
+        # every batch, then report all diagnostics at the end. This avoids
+        # stopping on the first mismatch and gives full visibility into which
+        # batches/branches diverged in a single run.
+        errors: list[str] = []
 
+        # Stage 1: kernel launch (catch execution errors without aborting)
+        try:
+            _fill_logprob_token_ids_kernel[(batch_size,)](
+                out_token_ids,
+                out_token_ids.stride(0),
+                out_valid_mask,
+                out_valid_mask.stride(0),
+                sampled_token_ids,
+                topk_indices,
+                topk_indices.stride(0),
+                expanded_idx_mapping,
+                num_per_req_token_ids,
+                per_req_token_ids,
+                per_req_token_ids.stride(0),
+                NUM_TOPK=NUM_TOPK,
+                PADDED_COLS=PADDED_COLS,
+            )
+            torch.npu.synchronize()
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"kernel launch failed: {exc!r}")
+
+        # Stage 2: CPU reference (always computable)
         expected_ids, expected_mask = _fill_logprob_token_ids_ref(
             batch_size,
             sampled_token_ids.cpu(),
@@ -153,50 +164,50 @@ class TestFillLogprobTokenIdsKernel:
             PADDED_COLS,
         )
 
-        out_token_ids_cpu = out_token_ids.cpu()
-        out_valid_mask_cpu = out_valid_mask.cpu()
+        # Stage 3: per-batch comparison (continue on mismatch, collect all)
+        if not errors:
+            out_token_ids_cpu = out_token_ids.cpu()
+            out_valid_mask_cpu = out_valid_mask.cpu()
 
-        # Per-batch diagnostic: identify which batch and branch diverged.
-        # This kernel uses a scalar `if num_custom > 0` control flow that may
-        # be miscompiled on Ascend when different batches in the same grid
-        # take different branches. The diagnostic below pinpoints the failing
-        # batch, its req_state_idx, num_custom, and expected branch.
-        if not torch.equal(out_token_ids_cpu, expected_ids) or not torch.equal(
-            out_valid_mask_cpu, expected_mask
-        ):
-            lines = ["_fill_logprob_token_ids_kernel mismatch diagnostic:"]
-            for b in range(batch_size):
-                req_idx = expanded_idx_mapping.cpu()[b].item()
-                num_custom = num_per_req_token_ids.cpu()[req_idx].item()
-                expected_branch = "custom" if num_custom > 0 else "topk"
-                ids_match = torch.equal(
-                    out_token_ids_cpu[b], expected_ids[b]
-                )
-                mask_match = torch.equal(
-                    out_valid_mask_cpu[b], expected_mask[b]
-                )
-                status = "OK" if (ids_match and mask_match) else "MISMATCH"
-                lines.append(
-                    f"  batch={b} req_state_idx={req_idx} num_custom={num_custom} "
-                    f"expected_branch={expected_branch} status={status}"
-                )
-                if status == "MISMATCH":
-                    lines.append(
-                        f"    out_token_ids[b]={out_token_ids_cpu[b].tolist()}"
+            overall_match = torch.equal(out_token_ids_cpu, expected_ids) and torch.equal(
+                out_valid_mask_cpu, expected_mask
+            )
+
+            if not overall_match:
+                lines = ["_fill_logprob_token_ids_kernel mismatch diagnostic:"]
+                for b in range(batch_size):
+                    req_idx = expanded_idx_mapping.cpu()[b].item()
+                    num_custom = num_per_req_token_ids.cpu()[req_idx].item()
+                    expected_branch = "custom" if num_custom > 0 else "topk"
+                    ids_match = torch.equal(
+                        out_token_ids_cpu[b], expected_ids[b]
                     )
-                    lines.append(
-                        f"    expected_ids[b]={expected_ids[b].tolist()}"
+                    mask_match = torch.equal(
+                        out_valid_mask_cpu[b], expected_mask[b]
                     )
+                    status = "OK" if (ids_match and mask_match) else "MISMATCH"
                     lines.append(
-                        f"    out_valid_mask[b]={out_valid_mask_cpu[b].tolist()}"
+                        f"  batch={b} req_state_idx={req_idx} num_custom={num_custom} "
+                        f"expected_branch={expected_branch} status={status}"
                     )
-                    lines.append(
-                        f"    expected_mask[b]={expected_mask[b].tolist()}"
-                    )
-            diag = "\n".join(lines)
-            # torch.testing.assert_close in this torch version does not accept
-            # msg_func; raise with the diagnostic text directly.
-            assert False, diag
+                    if status == "MISMATCH":
+                        lines.append(
+                            f"    out_token_ids[b]={out_token_ids_cpu[b].tolist()}"
+                        )
+                        lines.append(
+                            f"    expected_ids[b]={expected_ids[b].tolist()}"
+                        )
+                        lines.append(
+                            f"    out_valid_mask[b]={out_valid_mask_cpu[b].tolist()}"
+                        )
+                        lines.append(
+                            f"    expected_mask[b]={expected_mask[b].tolist()}"
+                        )
+                errors.append("\n".join(lines))
+
+        # Stage 4: report all collected errors at the end (single failure point)
+        if errors:
+            pytest.fail("\n\n".join(errors), pytrace=False)
 
     def test_no_custom_no_topk(self):
         """When both custom and topk are empty, only sampled token is written."""

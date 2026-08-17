@@ -89,17 +89,20 @@ class TestPrepareDecodeInputsKernel:
         torch.npu.synchronize()
 
         # CPU reference
+        # NOTE: the kernel only writes seq_lens[req_idx] when
+        # ADVANCE_DRAFT_POSITIONS is True. When False, seq_lens[req_idx]
+        # is left unchanged (stays at its initialised value of -1).
         for req_idx in range(num_reqs):
             dt = draft_tokens[req_idx, 0].item()
             expected_input_ids[req_idx] = dt
-            tsl = target_seq_lens[req_idx].item()
-            nr = num_rejected[req_idx].item()
-            seq_len = tsl - nr
             if advance_pos:
+                tsl = target_seq_lens[req_idx].item()
+                nr = num_rejected[req_idx].item()
+                seq_len = tsl - nr
                 old_pos = expected_positions[req_idx].item()
                 expected_positions[req_idx] = min(old_pos + 1, max_model_len - 1)
                 seq_len += 1
-            expected_seq_lens[req_idx] = min(seq_len, max_model_len)
+                expected_seq_lens[req_idx] = min(seq_len, max_model_len)
         # Padding block at req_idx == num_reqs
         for i in range(num_reqs):
             expected_query_start_loc[i] = i

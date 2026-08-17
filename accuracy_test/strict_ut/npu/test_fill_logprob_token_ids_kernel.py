@@ -194,20 +194,9 @@ class TestFillLogprobTokenIdsKernel:
                         f"    expected_mask[b]={expected_mask[b].tolist()}"
                     )
             diag = "\n".join(lines)
-            torch.testing.assert_close(
-                out_token_ids_cpu,
-                expected_ids,
-                rtol=0,
-                atol=0,
-                msg_func=lambda err: diag,
-            )
-            torch.testing.assert_close(
-                out_valid_mask_cpu,
-                expected_mask,
-                rtol=0,
-                atol=0,
-                msg_func=lambda err: diag,
-            )
+            # torch.testing.assert_close in this torch version does not accept
+            # msg_func; raise with the diagnostic text directly.
+            assert False, diag
 
     def test_no_custom_no_topk(self):
         """When both custom and topk are empty, only sampled token is written."""

@@ -153,8 +153,61 @@ class TestFillLogprobTokenIdsKernel:
             PADDED_COLS,
         )
 
-        torch.testing.assert_close(out_token_ids.cpu(), expected_ids, rtol=0, atol=0)
-        torch.testing.assert_close(out_valid_mask.cpu(), expected_mask, rtol=0, atol=0)
+        out_token_ids_cpu = out_token_ids.cpu()
+        out_valid_mask_cpu = out_valid_mask.cpu()
+
+        # Per-batch diagnostic: identify which batch and branch diverged.
+        # This kernel uses a scalar `if num_custom > 0` control flow that may
+        # be miscompiled on Ascend when different batches in the same grid
+        # take different branches. The diagnostic below pinpoints the failing
+        # batch, its req_state_idx, num_custom, and expected branch.
+        if not torch.equal(out_token_ids_cpu, expected_ids) or not torch.equal(
+            out_valid_mask_cpu, expected_mask
+        ):
+            lines = ["_fill_logprob_token_ids_kernel mismatch diagnostic:"]
+            for b in range(batch_size):
+                req_idx = expanded_idx_mapping.cpu()[b].item()
+                num_custom = num_per_req_token_ids.cpu()[req_idx].item()
+                expected_branch = "custom" if num_custom > 0 else "topk"
+                ids_match = torch.equal(
+                    out_token_ids_cpu[b], expected_ids[b]
+                )
+                mask_match = torch.equal(
+                    out_valid_mask_cpu[b], expected_mask[b]
+                )
+                status = "OK" if (ids_match and mask_match) else "MISMATCH"
+                lines.append(
+                    f"  batch={b} req_state_idx={req_idx} num_custom={num_custom} "
+                    f"expected_branch={expected_branch} status={status}"
+                )
+                if status == "MISMATCH":
+                    lines.append(
+                        f"    out_token_ids[b]={out_token_ids_cpu[b].tolist()}"
+                    )
+                    lines.append(
+                        f"    expected_ids[b]={expected_ids[b].tolist()}"
+                    )
+                    lines.append(
+                        f"    out_valid_mask[b]={out_valid_mask_cpu[b].tolist()}"
+                    )
+                    lines.append(
+                        f"    expected_mask[b]={expected_mask[b].tolist()}"
+                    )
+            diag = "\n".join(lines)
+            torch.testing.assert_close(
+                out_token_ids_cpu,
+                expected_ids,
+                rtol=0,
+                atol=0,
+                msg_func=lambda err: diag,
+            )
+            torch.testing.assert_close(
+                out_valid_mask_cpu,
+                expected_mask,
+                rtol=0,
+                atol=0,
+                msg_func=lambda err: diag,
+            )
 
     def test_no_custom_no_topk(self):
         """When both custom and topk are empty, only sampled token is written."""

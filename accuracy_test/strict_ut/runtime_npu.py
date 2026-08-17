@@ -24,7 +24,7 @@ if not hasattr(torch, "npu") or not torch.npu.is_available():
     )
 
 try:
-    from vllm.triton_utils import HAS_TRITON, triton
+    from vllm.triton_utils import HAS_TRITON, tl, triton
 except (ImportError, ModuleNotFoundError) as exc:
     pytest.fail(f"vLLM Triton runtime is unavailable: {exc}", pytrace=False)
 
@@ -72,6 +72,34 @@ def synchronize() -> None:
     torch.npu.synchronize()
 
 
+def _resolve_triton_ascend_op(op_name: str):
+    """Resolve an Ascend helper, deferring errors until it is actually used."""
+    try:
+        import triton.language.extra.cann.extension as cann_extension
+    except ImportError:
+        cann_extension = None
+
+    if cann_extension is not None:
+        extension_op = getattr(cann_extension, op_name, None)
+        if extension_op is not None:
+            return extension_op
+
+    tl_op = getattr(tl, op_name, None)
+    if tl_op is not None:
+        return tl_op
+
+    def unavailable_op(*args, **kwargs):
+        del args, kwargs
+        raise RuntimeError(
+            f"Triton op '{op_name}' is unavailable in this Ascend Triton "
+            "runtime. Upgrade the runtime before executing a kernel that "
+            "requires this op."
+        )
+
+    unavailable_op.__name__ = op_name
+    return unavailable_op
+
+
 def _install_triton_utils_shim() -> None:
     """Satisfy legacy utility imports without executing ``ops.__init__``."""
     module_name = "vllm_ascend.ops.triton.triton_utils"
@@ -100,6 +128,9 @@ def _install_triton_utils_shim() -> None:
             "init_device_properties_triton": init_device_properties_triton,
             "get_aicore_num": get_aicore_num,
             "get_vectorcore_num": get_vectorcore_num,
+            "insert_slice": _resolve_triton_ascend_op("insert_slice"),
+            "extract_slice": _resolve_triton_ascend_op("extract_slice"),
+            "get_element": _resolve_triton_ascend_op("get_element"),
         }
     )
     sys.modules[module_name] = shim

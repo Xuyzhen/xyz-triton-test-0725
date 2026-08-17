@@ -1,6 +1,5 @@
 # GENERATED STRICT UT. Source: accuracy_test/codex/existing_accuracy_tests/from_vllm/test_topk_topp_kernel.py
 # Do not edit mechanically; update the reviewed Codex source or strict generator.
-from accuracy_test.strict_ut.runtime_npu import STRICT_DEVICE as _STRICT_DEVICE
 # Standalone Ascend A3 adaptation of an upstream vLLM accuracy path.
 # Accuracy UT source: vllm/tests/v1/sample/test_topk_topp_sampler.py
 # Kernel source: vllm/vllm/v1/sample/ops/topk_topp_triton.py
@@ -42,7 +41,6 @@ Realistic shapes:
   - k: 1..20 (typical top-k sampling), or vocab_size (disabled)
   - p: 0.8..0.99 (typical top-p), or 1.0 (disabled)
 """
-
 from __future__ import annotations
 
 import pytest

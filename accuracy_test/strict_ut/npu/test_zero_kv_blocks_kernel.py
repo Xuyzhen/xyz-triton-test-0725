@@ -1,6 +1,5 @@
 # GENERATED STRICT UT. Source: accuracy_test/codex/missing_accuracy_tests/test_zero_kv_blocks_kernel_patch.py
 # Do not edit mechanically; update the reviewed Codex source or strict generator.
-from accuracy_test.strict_ut.runtime_npu import STRICT_DEVICE as _STRICT_DEVICE
 # Standalone Ascend A3 adaptation of an upstream vLLM accuracy path.
 # Accuracy UT source: vllm/tests/v1/worker/test_gpu_block_table.py (zero_kv path)
 # Kernel source: vllm/vllm/v1/worker/utils.py (upstream) /
@@ -35,7 +34,6 @@ Realistic shapes:
   - n_segs = 1 (block_dim=0, K+V fused) or 2 (block_dim=1, K/V separate)
   - n_blocks: number of freed KV cache blocks per step (1..64 in practice)
 """
-
 from __future__ import annotations
 
 import importlib

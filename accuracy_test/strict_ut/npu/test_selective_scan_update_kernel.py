@@ -1,6 +1,5 @@
 # GENERATED STRICT UT. Source: accuracy_test/codex/existing_accuracy_tests/from_vllm/test_selective_scan_update_kernel.py
 # Do not edit mechanically; update the reviewed Codex source or strict generator.
-from accuracy_test.strict_ut.runtime_npu import STRICT_DEVICE as _STRICT_DEVICE
 # Standalone Ascend A3 adaptation of an upstream vLLM accuracy path.
 # Accuracy UT source: vllm/tests/kernels/mamba/test_mamba_ssm.py
 # Kernel source: vllm/vllm/model_executor/layers/mamba/ops/mamba_ssm.py
@@ -55,7 +54,6 @@ Realistic shapes (Mamba2 / Jamba):
   - ngroups: 1, 8 (nheads // ngroups ratio >= 1)
   - batch: 1 (single-stream), 4 (small batch)
 """
-
 from __future__ import annotations
 
 import pytest

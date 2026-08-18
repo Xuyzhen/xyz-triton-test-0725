@@ -352,17 +352,19 @@ def test_selective_scan_tie_hdim():
     state = torch.randn(batch, nheads, dim, dstate, dtype=torch.float32, device=DEVICE)
     state_before = state.clone()
     x = torch.randn(batch, nheads, dim, dtype=torch.float32, device=DEVICE)
-    # TIE_HDIM requires scalar dt and dt_bias across dim: stride(-1) == 0.
-    # Keep dt ~ N(0,1) and dt_bias strongly negative; dt_softplus=True maps
-    # dt_val to small positives so dA = exp(A * dt_val) decays.
-    # Matches upstream vllm parameter ranges (see test_selective_scan_full).
+    # TIE_HDIM requires scalar dt, dt_bias, A across dim: stride(-1) == 0.
+    # Use expand() (NOT contiguous()) to keep stride=0, matching the wrapper's
+    # tie_hdim inference at mamba_ssm.py:627-632. The kernel's TIE_HDIM branch
+    # uses scalar tl.load(dt_ptr) / tl.load(A_ptr), which reads the first
+    # element regardless of stride, so expand() is both correct and normative.
+    # Parameter ranges match upstream vllm (see test_selective_scan_full).
     dt_scalar = torch.randn(1, 1, 1, dtype=torch.float32, device=DEVICE)
-    dt = dt_scalar.expand(batch, nheads, dim).contiguous()
+    dt = dt_scalar.expand(batch, nheads, dim)
     dt_bias_scalar = torch.rand(1, 1, dtype=torch.float32, device=DEVICE) - 4.0
-    dt_bias = dt_bias_scalar.expand(nheads, dim).contiguous()
+    dt_bias = dt_bias_scalar.expand(nheads, dim)
     # A must be a negative scalar under TIE_HDIM (Mamba/S4 decay requirement).
     A_scalar = -torch.rand(1, 1, 1, dtype=torch.float32, device=DEVICE) - 1.0
-    A = A_scalar.expand(nheads, dim, dstate).contiguous()
+    A = A_scalar.expand(nheads, dim, dstate)
     B = torch.randn(batch, ngroups, dstate, dtype=torch.float32, device=DEVICE)
     C = torch.randn(batch, ngroups, dstate, dtype=torch.float32, device=DEVICE)
     D = torch.randn(nheads, dim, dtype=torch.float32, device=DEVICE)

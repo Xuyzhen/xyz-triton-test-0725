@@ -229,11 +229,15 @@ def test_selective_scan_full(batch, nheads, dim, dstate, ngroups):
     state = torch.randn(batch, nheads, dim, dstate, dtype=torch.float32, device=DEVICE)
     state_before = state.clone()
     x = torch.randn(batch, nheads, dim, dtype=torch.float32, device=DEVICE)
-    dt = torch.randn(batch, nheads, dim, dtype=torch.float32, device=DEVICE)
-    dt_bias = torch.randn(nheads, dim, dtype=torch.float32, device=DEVICE)
-    A = torch.randn(nheads, dim, dstate, dtype=torch.float32, device=DEVICE)
+    # Match upstream vllm tests/kernels/mamba/test_mamba_ssm.py parameter ranges:
+    # A < 0 (decay requirement), dt_bias strongly negative, dt ~ N(0,1).
+    # dt_softplus=True with dt_bias in [-4,-3) maps dt_val to small positives,
+    # keeping dA = exp(A * dt_val) in (0, 1) so state converges.
+    A = -torch.rand(nheads, dim, dstate, dtype=torch.float32, device=DEVICE) - 1.0
     B = torch.randn(batch, ngroups, dstate, dtype=torch.float32, device=DEVICE)
     C = torch.randn(batch, ngroups, dstate, dtype=torch.float32, device=DEVICE)
+    dt = torch.randn(batch, nheads, dim, dtype=torch.float32, device=DEVICE)
+    dt_bias = torch.rand(nheads, dim, dtype=torch.float32, device=DEVICE) - 4.0
     D = torch.randn(nheads, dim, dtype=torch.float32, device=DEVICE)
     z = torch.randn(batch, nheads, dim, dtype=torch.float32, device=DEVICE)
     out = torch.empty_like(x)
@@ -269,11 +273,12 @@ def test_selective_scan_no_z_no_d(batch, nheads, dim, dstate, ngroups):
     state = torch.randn(batch, nheads, dim, dstate, dtype=torch.float32, device=DEVICE)
     state_before = state.clone()
     x = torch.randn(batch, nheads, dim, dtype=torch.float32, device=DEVICE)
-    dt = torch.randn(batch, nheads, dim, dtype=torch.float32, device=DEVICE)
-    dt_bias = torch.randn(nheads, dim, dtype=torch.float32, device=DEVICE)
-    A = torch.randn(nheads, dim, dstate, dtype=torch.float32, device=DEVICE)
+    # Match upstream vllm parameter ranges (see test_selective_scan_full).
+    A = -torch.rand(nheads, dim, dstate, dtype=torch.float32, device=DEVICE) - 1.0
     B = torch.randn(batch, ngroups, dstate, dtype=torch.float32, device=DEVICE)
     C = torch.randn(batch, ngroups, dstate, dtype=torch.float32, device=DEVICE)
+    dt = torch.randn(batch, nheads, dim, dtype=torch.float32, device=DEVICE)
+    dt_bias = torch.rand(nheads, dim, dtype=torch.float32, device=DEVICE) - 4.0
     out = torch.empty_like(x)
 
     _launch(
@@ -305,11 +310,12 @@ def test_selective_scan_varied_dstate(dstate):
     state = torch.randn(batch, nheads, dim, dstate, dtype=torch.float32, device=DEVICE)
     state_before = state.clone()
     x = torch.randn(batch, nheads, dim, dtype=torch.float32, device=DEVICE)
-    dt = torch.randn(batch, nheads, dim, dtype=torch.float32, device=DEVICE)
-    dt_bias = torch.randn(nheads, dim, dtype=torch.float32, device=DEVICE)
-    A = torch.randn(nheads, dim, dstate, dtype=torch.float32, device=DEVICE)
+    # Match upstream vllm parameter ranges (see test_selective_scan_full).
+    A = -torch.rand(nheads, dim, dstate, dtype=torch.float32, device=DEVICE) - 1.0
     B = torch.randn(batch, ngroups, dstate, dtype=torch.float32, device=DEVICE)
     C = torch.randn(batch, ngroups, dstate, dtype=torch.float32, device=DEVICE)
+    dt = torch.randn(batch, nheads, dim, dtype=torch.float32, device=DEVICE)
+    dt_bias = torch.rand(nheads, dim, dtype=torch.float32, device=DEVICE) - 4.0
     D = torch.randn(nheads, dim, dtype=torch.float32, device=DEVICE)
     out = torch.empty_like(x)
 
@@ -346,12 +352,16 @@ def test_selective_scan_tie_hdim():
     state = torch.randn(batch, nheads, dim, dstate, dtype=torch.float32, device=DEVICE)
     state_before = state.clone()
     x = torch.randn(batch, nheads, dim, dtype=torch.float32, device=DEVICE)
-    # TIE_HDIM requires scalar dt and dt_bias across dim: stride(-1) == 0
+    # TIE_HDIM requires scalar dt and dt_bias across dim: stride(-1) == 0.
+    # Keep dt ~ N(0,1) and dt_bias strongly negative; dt_softplus=True maps
+    # dt_val to small positives so dA = exp(A * dt_val) decays.
+    # Matches upstream vllm parameter ranges (see test_selective_scan_full).
     dt_scalar = torch.randn(1, 1, 1, dtype=torch.float32, device=DEVICE)
     dt = dt_scalar.expand(batch, nheads, dim).contiguous()
-    dt_bias_scalar = torch.randn(1, 1, dtype=torch.float32, device=DEVICE)
+    dt_bias_scalar = torch.rand(1, 1, dtype=torch.float32, device=DEVICE) - 4.0
     dt_bias = dt_bias_scalar.expand(nheads, dim).contiguous()
-    A_scalar = torch.randn(1, 1, 1, dtype=torch.float32, device=DEVICE)
+    # A must be a negative scalar under TIE_HDIM (Mamba/S4 decay requirement).
+    A_scalar = -torch.rand(1, 1, 1, dtype=torch.float32, device=DEVICE) - 1.0
     A = A_scalar.expand(nheads, dim, dstate).contiguous()
     B = torch.randn(batch, ngroups, dstate, dtype=torch.float32, device=DEVICE)
     C = torch.randn(batch, ngroups, dstate, dtype=torch.float32, device=DEVICE)

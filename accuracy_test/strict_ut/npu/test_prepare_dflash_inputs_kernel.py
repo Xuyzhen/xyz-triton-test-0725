@@ -16,6 +16,8 @@ Patch differences vs original vllm _prepare_dflash_inputs_kernel:
 - Uses tl.minimum(block_num, block_table_stride - 1) for block_num safety
 - Simplified loop structure using tl.range
 - Returns -1 for padded sample idx mapping (OOB guard)
+- Adds temperature/seeds copy (vllm-project/vllm#50000): out_temperature_ptr,
+  out_seeds_ptr outputs and temperature_ptr, seeds_ptr inputs
 
 Kernel signature:
     _prepare_dflash_inputs_kernel_ascend(
@@ -30,6 +32,8 @@ Kernel signature:
         out_sample_indices_ptr,         # [max_num_reqs * num_spec_steps] sample indices
         out_sample_pos_ptr,             # [max_num_reqs * num_spec_steps] sample positions
         out_sample_idx_mapping_ptr,     # [max_num_reqs * num_spec_steps] sample idx mapping
+        out_temperature_ptr,            # [max_num_reqs] output temperature (float32)
+        out_seeds_ptr,                  # [max_num_reqs] output seeds (int64)
         # Inputs from target batch
         target_positions_ptr,           # [num_tokens] target positions
         target_query_start_loc_ptr,     # [num_reqs + 1] target query start
@@ -38,6 +42,9 @@ Kernel signature:
         next_prefill_tokens_ptr,        # [max_num_reqs] next prefill tokens
         num_sampled_ptr,                # [num_reqs] num sampled
         num_rejected_ptr,               # [num_reqs] num rejected
+        # Sampling params
+        temperature_ptr,                # [max_num_reqs] temperature (float32)
+        seeds_ptr,                      # [max_num_reqs] seeds (int64)
         # Block table
         block_table_ptr,                # [num_reqs, max_blocks] block table
         block_table_stride,             # stride(0) of block_table
@@ -205,6 +212,8 @@ def _prepare_dflash_inputs_ref(
     out_sample_indices,
     out_sample_pos,
     out_sample_idx_mapping,
+    out_temperature,
+    out_seeds,
     # Inputs
     target_positions,
     target_query_start_loc,
@@ -213,6 +222,9 @@ def _prepare_dflash_inputs_ref(
     next_prefill_tokens,
     num_sampled,
     num_rejected,
+    # Sampling params
+    temperature,
+    seeds,
     block_table,
     parallel_drafting_token_id,
     block_size,
@@ -285,6 +297,9 @@ def _prepare_dflash_inputs_ref(
 
         out_query_start_loc[req_idx] = query_base
         out_seq_lens[req_idx] = last_valid_pos + 1 + num_query_per_req
+        # Copy sampling state (matching kernel stores for temperature/seeds).
+        out_temperature[req_state_idx] = temperature[req_state_idx]
+        out_seeds[req_state_idx] = seeds[req_state_idx]
 
     # Padding
     if num_reqs > 0:
@@ -489,6 +504,13 @@ class TestPrepareDFlashInputsKernelAscendPatch:
         num_sampled = torch.full((num_reqs,), 2, dtype=torch.int32, device=self.device)
         num_rejected = torch.zeros(num_reqs, dtype=torch.int32, device=self.device)
 
+        # Sampling params (added upstream in vllm-project/vllm#50000):
+        # temperature is float32, seeds is int64, both [max_num_reqs].
+        temperature = torch.arange(
+            max_num_reqs, dtype=torch.float32, device=self.device
+        ) + 0.5
+        seeds = torch.arange(max_num_reqs, dtype=torch.int64, device=self.device) * 7 + 3
+
         block_table = torch.randint(100, 200, (num_reqs, num_blocks_in_table), dtype=torch.int32, device=self.device)
 
         # --- Output tensors (initialized with sentinel values) ---
@@ -502,6 +524,8 @@ class TestPrepareDFlashInputsKernelAscendPatch:
         out_sample_indices = torch.full((max_num_reqs * num_speculative_steps,), -999, dtype=torch.int32, device=self.device)
         out_sample_pos = torch.full((max_num_reqs * num_speculative_steps,), -999, dtype=torch.int32, device=self.device)
         out_sample_idx_mapping = torch.full((max_num_reqs * num_speculative_steps,), -999, dtype=torch.int32, device=self.device)
+        out_temperature = torch.full((max_num_reqs,), -999.0, dtype=torch.float32, device=self.device)
+        out_seeds = torch.full((max_num_reqs,), -999, dtype=torch.int64, device=self.device)
 
         # --- CPU reference outputs ---
         ref_kwargs = dict(
@@ -515,6 +539,8 @@ class TestPrepareDFlashInputsKernelAscendPatch:
             out_sample_indices=torch.full((max_num_reqs * num_speculative_steps,), -999, dtype=torch.int32),
             out_sample_pos=torch.full((max_num_reqs * num_speculative_steps,), -999, dtype=torch.int32),
             out_sample_idx_mapping=torch.full((max_num_reqs * num_speculative_steps,), -999, dtype=torch.int32),
+            out_temperature=torch.full((max_num_reqs,), -999.0, dtype=torch.float32),
+            out_seeds=torch.full((max_num_reqs,), -999, dtype=torch.int64),
         )
         _prepare_dflash_inputs_ref(
             **ref_kwargs,
@@ -525,6 +551,8 @@ class TestPrepareDFlashInputsKernelAscendPatch:
             next_prefill_tokens=next_prefill_tokens.cpu(),
             num_sampled=num_sampled.cpu(),
             num_rejected=num_rejected.cpu(),
+            temperature=temperature.cpu(),
+            seeds=seeds.cpu(),
             block_table=block_table.cpu(),
             parallel_drafting_token_id=parallel_drafting_token_id,
             block_size=block_size,
@@ -549,6 +577,8 @@ class TestPrepareDFlashInputsKernelAscendPatch:
             out_sample_indices,
             out_sample_pos,
             out_sample_idx_mapping,
+            out_temperature,
+            out_seeds,
             target_positions,
             target_query_start_loc,
             idx_mapping,
@@ -556,6 +586,8 @@ class TestPrepareDFlashInputsKernelAscendPatch:
             next_prefill_tokens,
             num_sampled,
             num_rejected,
+            temperature,
+            seeds,
             block_table,
             block_table.stride(0),
             parallel_drafting_token_id,
@@ -582,3 +614,5 @@ class TestPrepareDFlashInputsKernelAscendPatch:
         torch.testing.assert_close(out_sample_indices.cpu(), ref_kwargs["out_sample_indices"], rtol=0, atol=0)
         torch.testing.assert_close(out_sample_pos.cpu(), ref_kwargs["out_sample_pos"], rtol=0, atol=0)
         torch.testing.assert_close(out_sample_idx_mapping.cpu(), ref_kwargs["out_sample_idx_mapping"], rtol=0, atol=0)
+        torch.testing.assert_close(out_temperature.cpu(), ref_kwargs["out_temperature"], rtol=0, atol=0)
+        torch.testing.assert_close(out_seeds.cpu(), ref_kwargs["out_seeds"], rtol=0, atol=0)

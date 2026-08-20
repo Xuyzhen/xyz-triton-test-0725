@@ -130,8 +130,11 @@ def _gen_inputs(
     elif scenario == "with_reject":
         query_lens = torch.randint(6, 12, (num_reqs,), dtype=torch.int32,
                                    device=device)
+        # num_rejected must be <= num_speculative_steps: num_reprefill =
+        # num_rejected - 1 fills at most num_speculative_steps - 1 cache slots.
         num_rejected_vals = [min(int(torch.randint(1, 4, ()).item()),
-                                  int(query_lens[r].item()) - 2)
+                                  int(query_lens[r].item()) - 2,
+                                  num_speculative_steps)
                              for r in range(num_reqs)]
     elif scenario == "tile_boundary":
         # num_input_hs = block_size_q exactly
@@ -149,7 +152,8 @@ def _gen_inputs(
         num_rejected_vals = []
         for r in range(num_reqs):
             ql = int(query_lens[r].item())
-            nr = min(int(torch.randint(0, max(1, ql // 2), ()).item()), ql - 1)
+            nr = min(int(torch.randint(0, max(1, ql // 2), ()).item()),
+                     ql - 1, num_speculative_steps)
             num_rejected_vals.append(nr)
 
     query_start_loc = torch.zeros(max_num_reqs + 1, dtype=torch.int32,

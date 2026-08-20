@@ -7,7 +7,7 @@
 
 # vLLM vanilla kernel: _fill_logprob_token_ids_kernel from
 # vllm/vllm/v1/worker/gpu/sample/logprob.py
-
+# Required branch: vllm v0.26.0 vllm-ascend main
 """
 Precision test for _fill_logprob_token_ids_kernel.
 

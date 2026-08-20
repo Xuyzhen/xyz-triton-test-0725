@@ -98,11 +98,20 @@ fp32 位级在 NPU/CPU 之间应保持一致，故采用更严格的 bitwise 判
 
 ## 5. 运行方式
 
-```bash
-# 单文件
-pytest accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py -v
+默认入口 `run_npu.sh` 采用**每个测试文件一个独立 pytest 进程**的隔离模式
+（同 `strict_ut_026/run_npu_isolated.py`）：昇腾 vector-core 异常会污染当前
+进程 device 上下文，若一次性跑全部文件会导致后续算子在被测前的张量创建阶段
+就失败；按文件隔离进程可避免相互污染，便于逐个算子定位与重跑。
 
-# 全部 easy_ut_026
+```bash
+# 一键逐个进程跑全部（推荐，防止互相污染）
+bash accuracy_test/easy_ut_026/run_npu.sh
+
+# 仅在隔离进程内跑指定文件 / 按关键字筛选
+bash accuracy_test/easy_ut_026/run_npu.sh test_prepare_input_buffers_kernel.py
+bash accuracy_test/easy_ut_026/run_npu.sh -k "shift_input_ids"
+
+# 不经过隔离，直接在单进程内跑整个目录（仅用于快速收集，不建议用于 NPU 全量）
 pytest accuracy_test/easy_ut_026/ -v
 
 # 单参数化用例
@@ -117,6 +126,8 @@ easy_ut_026/
 ├── __init__.py
 ├── conftest.py                                    # deterministic marker
 ├── runtime_npu.py                                 # 复用 strict_ut 运行时
+├── run_npu.sh                                     # 一键入口（隔离进程逐个跑）
+├── run_npu_isolated.py                            # 每个测试文件独立 pytest 进程
 ├── test_preprocess_mamba_align_fused_kernel.py
 ├── test_update_committed_marker_cache_kernel.py
 ├── test_thinking_budget_kernel.py

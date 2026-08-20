@@ -4,16 +4,16 @@ from accuracy_test.strict_ut.runtime_npu import STRICT_DEVICE as _STRICT_DEVICE
 # Standalone Ascend A3 adaptation of an upstream vLLM accuracy path.
 # Accuracy UT source: vllm/tests/v1/spec_decode/test_rejection_sampler_utils.py
 # Kernel source: vllm/vllm/v1/worker/gpu/spec_decode/rejection_sampler_utils.py
-# Coverage: _compute_block_stats_kernel
+# Coverage: _compute_local_logits_stats_kernel
 
-# vLLM vanilla kernel: _compute_block_stats_kernel from
+# vLLM vanilla kernel: _compute_local_logits_stats_kernel from
 # vllm/vllm/v1/worker/gpu/spec_decode/rejection_sampler_utils.py
 
 """
-Precision test for _compute_block_stats_kernel.
+Precision test for _compute_local_logits_stats_kernel.
 
-Kernel signature (_compute_block_stats_kernel):
-    _compute_block_stats_kernel(
+Kernel signature (_compute_local_logits_stats_kernel):
+    _compute_local_logits_stats_kernel(
         target_local_argmax_ptr,        # int64 [num_logits, num_blocks]
         target_local_argmax_stride,     # stride(0)
         target_local_max_ptr,           # fp32 [num_logits, num_blocks]
@@ -65,11 +65,11 @@ import pytest
 from vllm.triton_utils import tl, triton
 try:
     from vllm.v1.worker.gpu.spec_decode.rejection_sampler_utils import (
-        _compute_block_stats_kernel,
+        _compute_local_logits_stats_kernel,
     )
 except ImportError as exc:
     pytest.skip(
-        "installed vLLM does not provide _compute_block_stats_kernel; "
+        "installed vLLM does not provide _compute_local_logits_stats_kernel; "
         f"precision was not tested: {exc}",
         allow_module_level=True,
     )
@@ -181,7 +181,7 @@ class TestComputeBlockMaxAndSumexp:
             dtype=torch.float32, device=self.device,
         )
 
-        _compute_block_stats_kernel[(total_num_logits, vocab_num_blocks)](
+        _compute_local_logits_stats_kernel[(total_num_logits, vocab_num_blocks)](
             target_local_argmax,
             target_local_argmax.stride(0),
             target_local_max,
@@ -377,7 +377,7 @@ class TestComputeBlockMaxAndSumexp:
             dtype=torch.float32, device=self.device,
         )
 
-        _compute_block_stats_kernel[(total_num_logits, vocab_num_blocks)](
+        _compute_local_logits_stats_kernel[(total_num_logits, vocab_num_blocks)](
             target_local_argmax,
             target_local_argmax.stride(0),
             target_local_max,

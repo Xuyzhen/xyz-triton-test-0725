@@ -38,13 +38,20 @@ def _install_vllm_triton_utils_shim() -> types.ModuleType:
     """Provide ``vllm.triton_utils.tl`` without the ``trtion.experimental.gluon`` import.
 
     The installed Triton is 3.2.0, which predates ``triton.experimental.gluon``.
-    vLLM's ``triton_utils`` unconditionally does ``from triton.experimental
-    import gluon``, so merely importing vLLM breaks collection of every Triton
-    kernel test on this host. Register a narrow shim in ``sys.modules`` BEFORE
-    any vLLM import so kernel modules can still ``from vllm.triton_utils import
-    tl, triton``. This is a precision-UT-only shim; vLLM features that require
-    gluon are unavailable but are not used by the easy_ut_026 kernels.
+    vLLM's ``triton_utils/__init__.py`` unconditionally does ``from
+    triton.experimental import gluon``, so merely importing ``vllm.triton_utils``
+    breaks collection on this host.
+
+    Only that one ``__init__`` line needs bypassing (grep confirms no other
+    ``vllm.*`` module touches ``triton.experimental``). So instead of replacing
+    the whole package, we install a *package-shaped* shim: set ``__path__`` to
+    the real ``triton_utils`` directory so submodules like ``allocation`` /
+    ``libdevice`` still load from disk, and expose ``tl``/``triton`` from the
+    installed triton 3.2. Submodules that do ``from vllm.triton_utils import
+    triton`` will pick up the shim's attributes via ``sys.modules``.
     """
+    import importlib.util
+
     if "vllm.triton_utils" in sys.modules:
         existing = sys.modules["vllm.triton_utils"]
         if getattr(existing, "_easy_ut_026_shim", False):
@@ -55,6 +62,12 @@ def _install_vllm_triton_utils_shim() -> types.ModuleType:
             "triton.experimental.gluon",
             pytrace=False,
         )
+
+    # Locate the real package directory without importing it.
+    spec = importlib.util.find_spec("vllm")
+    if spec is None or not spec.submodule_search_locations:
+        pytest.fail("Could not locate the vllm package on this host", pytrace=False)
+    triton_utils_dir = Path(list(spec.submodule_search_locations)[0]) / "triton_utils"
 
     def _placeholder_lazy(name: str):
         def _fn(*args, **kwargs):  # pragma: no cover
@@ -69,6 +82,7 @@ def _install_vllm_triton_utils_shim() -> types.ModuleType:
 
     shim = types.ModuleType("vllm.triton_utils")
     shim.__package__ = "vllm.triton_utils"
+    shim.__path__ = [str(triton_utils_dir)]
     shim._easy_ut_026_shim = True
     shim.HAS_TRITON = True
     shim.triton = triton

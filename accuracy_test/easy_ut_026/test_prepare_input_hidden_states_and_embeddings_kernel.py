@@ -260,14 +260,31 @@ def _run_kernel(inputs: dict[str, Any], device: str) -> dict[str, torch.Tensor]:
 
 
 def _assert_bitwise(name: str, expected: torch.Tensor, actual: torch.Tensor) -> None:
-    exp_cpu = expected.cpu()
-    act_cpu = actual.cpu()
-    if not torch.equal(exp_cpu, act_cpu):
-        diffs = (exp_cpu != act_cpu).nonzero()
+    exp_cpu = expected.cpu().contiguous()
+    act_cpu = actual.cpu().contiguous()
+    if exp_cpu.dtype != act_cpu.dtype or exp_cpu.shape != act_cpu.shape:
+        raise AssertionError(
+            f"[{name}] shape/dtype mismatch: expected {tuple(exp_cpu.shape)} "
+            f"{exp_cpu.dtype} vs actual {tuple(act_cpu.shape)} {act_cpu.dtype}"
+        )
+    if exp_cpu.is_floating_point():
+        # Compare raw bits so NaN sentinels compare equal. torch.equal treats
+        # NaN != NaN, which falsely reports bit-identical NaN padding slots.
+        view_dtype = {
+            torch.float16: torch.int16,
+            torch.bfloat16: torch.int16,
+            torch.float32: torch.int32,
+            torch.float64: torch.int64,
+        }[exp_cpu.dtype]
+        eq = exp_cpu.view(view_dtype) == act_cpu.view(view_dtype)
+    else:
+        eq = exp_cpu == act_cpu
+    if not bool(torch.all(eq)):
+        diffs = (~eq).nonzero()
         max_show = min(10, diffs.shape[0])
         detail = []
         for i in range(max_show):
-            idx = diffs[i].tolist()
+            idx = tuple(diffs[i].tolist())
             detail.append(
                 f"  idx={idx} expected={exp_cpu[idx].item()} "
                 f"actual={act_cpu[idx].item()}"

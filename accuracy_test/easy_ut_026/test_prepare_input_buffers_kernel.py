@@ -244,7 +244,8 @@ def _gen_inputs(
         query_lens = torch.randint(5, 12, (num_reqs,), dtype=torch.int32,
                                    device=device)
         num_rejected_vals = [min(int(torch.randint(1, 4, ()).item()),
-                                  int(query_lens[r].item()) - 1)
+                                  int(query_lens[r].item()) - 1,
+                                  num_speculative_steps)
                              for r in range(num_reqs)]
     elif scenario == "chunked_prefill":
         query_lens = torch.randint(3, 10, (num_reqs,), dtype=torch.int32,
@@ -257,7 +258,8 @@ def _gen_inputs(
         for r in range(num_reqs):
             ql = int(query_lens[r].item())
             if r % 2 == 0:
-                nr = min(int(torch.randint(0, max(1, ql // 2), ()).item()), ql - 1)
+                nr = min(int(torch.randint(0, max(1, ql // 2), ()).item()),
+                         ql - 1, num_speculative_steps)
             else:
                 nr = 0
             num_rejected_vals.append(nr)

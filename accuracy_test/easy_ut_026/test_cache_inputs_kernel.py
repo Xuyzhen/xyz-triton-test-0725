@@ -266,7 +266,7 @@ def _assert_bitwise(name: str, expected: torch.Tensor,
         max_show = min(10, diffs.shape[0])
         detail = []
         for i in range(max_show):
-            idx = diffs[i].tolist()
+            idx = tuple(diffs[i].tolist())
             detail.append(
                 f"  idx={idx} expected={exp_cpu[idx].item()} "
                 f"actual={act_cpu[idx].item()}"

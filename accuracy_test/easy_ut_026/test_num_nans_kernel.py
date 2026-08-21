@@ -19,13 +19,17 @@ Counts NaN values in logits per request.  Uses libdevice.isnan to detect NaNs
 and sums them per row.
 """
 
+import pytest
+
 import torch
+
+# Import the easy_ut_026 runtime BEFORE any vllm.* import: it installs the
+# vllm.triton_utils shim so that ``from vllm.triton_utils import tl, triton``
+# works on Triton 3.2.0 (which lacks triton.experimental.gluon).
+from accuracy_test.easy_ut_026.runtime_npu import init_device_properties_triton
 
 from vllm.triton_utils import tl, triton
 from vllm.v1.worker.gpu.metrics.logits import _num_nans_kernel
-from accuracy_test.easy_ut_026.runtime_npu import init_device_properties_triton
-
-import pytest
 
 
 def _num_nans_ref(logits: torch.Tensor) -> torch.Tensor:

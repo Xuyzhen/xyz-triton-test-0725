@@ -46,7 +46,7 @@ from __future__ import annotations
 import pytest
 import torch
 
-from accuracy_test.strict_ut.runtime_npu import DEVICE, init_device_properties_triton, synchronize
+from accuracy_test.easy_ut_026.runtime_npu import DEVICE, init_device_properties_triton, synchronize
 from vllm.triton_utils import tl, triton
 from vllm.v1.sample.ops.topk_topp_triton import (
     _NORMAL_CDF_TO_SIGMA_TABLE,

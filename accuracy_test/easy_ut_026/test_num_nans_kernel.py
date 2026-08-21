@@ -1,6 +1,5 @@
 # GENERATED STRICT UT. Source: accuracy_test/codex/missing_accuracy_tests/test_num_nans_kernel.py
 # Do not edit mechanically; update the reviewed Codex source or strict generator.
-from accuracy_test.strict_ut.runtime_npu import STRICT_DEVICE as _STRICT_DEVICE
 # vLLM vanilla kernel: _num_nans_kernel from
 # vllm/vllm/v1/worker/gpu/metrics/logits.py
 
@@ -24,7 +23,7 @@ import torch
 
 from vllm.triton_utils import tl, triton
 from vllm.v1.worker.gpu.metrics.logits import _num_nans_kernel
-from accuracy_test.strict_ut.runtime_npu import init_device_properties_triton
+from accuracy_test.easy_ut_026.runtime_npu import init_device_properties_triton
 
 import pytest
 

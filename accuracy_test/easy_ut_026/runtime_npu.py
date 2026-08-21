@@ -151,6 +151,36 @@ def synchronize() -> None:
     torch.npu.synchronize()
 
 
+def ensure_default_ascend_config() -> None:
+    """Pin vllm-ascend's config singleton to safe UT defaults if uninitialized.
+
+    ``vllm_ascend.sample.sampler._apply_top_k_top_p_pytorch`` reads
+    ``get_ascend_config().enable_reduce_sample`` on every call, but a UT
+    process never starts the engine, so the singleton is normally
+    uninitialized and ``get_ascend_config()`` would raise
+    ``RuntimeError: Ascend config is not initialized``. Install a minimal
+    default (``enable_reduce_sample=False`` -> single-card sampling path)
+    unless a real config is already present. Idempotent.
+    """
+    try:
+        from vllm_ascend import ascend_config
+    except ImportError:
+        return
+
+    config = getattr(ascend_config, "_ASCEND_CONFIG", None)
+    if config is not None and ascend_config._is_ascend_config_initialized(config):
+        return
+
+    # ``_is_ascend_config_initialized`` only checks the two attributes below,
+    # so this SimpleNamespace passes the guard while keeping the sampling
+    # path on the default (non-distributed) branch.
+    ascend_config._ASCEND_CONFIG = types.SimpleNamespace(
+        enable_reduce_sample=False,
+        ascend_compilation_config=None,
+        eplb_config=None,
+    )
+
+
 def _resolve_triton_ascend_op(op_name: str):
     """Resolve an Ascend helper, deferring errors until it is actually used."""
     try:

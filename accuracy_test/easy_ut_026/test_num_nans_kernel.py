@@ -29,6 +29,23 @@ import torch
 from accuracy_test.easy_ut_026.runtime_npu import init_device_properties_triton
 
 from vllm.triton_utils import tl, triton
+from vllm.v1.worker.gpu.metrics import logits as _metrics_logits
+
+# vllm-ascend PR #13159 adaptation: the upstream ``_num_nans_kernel`` imports
+# its libdevice from ``torch._inductor.runtime.triton_helpers``, which on Ascend
+# resolves ``libdevice.isnan`` to an unsupported CUDA symbol that returns None at
+# compile time (``AttributeError: 'NoneType' object has no attribute 'to'``).
+# Rebind the module-level libdevice to the CANN libdevice so ``isnan`` resolves
+# to a backend-supported symbol before the kernel is compiled.
+try:
+    _metrics_logits.libdevice = triton.language.extra.cann.libdevice
+except Exception as exc:  # noqa: BLE001
+    pytest.skip(
+        "triton.language.extra.cann.libdevice is unavailable on this host; "
+        f"_num_nans_kernel cannot compile: {exc}",
+        allow_module_level=True,
+    )
+
 from vllm.v1.worker.gpu.metrics.logits import _num_nans_kernel
 
 

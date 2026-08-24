@@ -15,16 +15,21 @@ Patch differences vs original vllm:
 - Applies bitmask via ((packed >> bit_idx) & 1) == 0 pattern
 - Stores -inf for blocked positions using mask pattern
 
-Kernel signature:
+Kernel signature (vLLM >= DSpark structured-output refactor, e.g. 0.26.1rc1.dev1130):
     _apply_grammar_bitmask_kernel(
         logits_ptr,         # [num_logits, vocab_size] fp32 logits
         logits_stride,      # stride(0) of logits
-        logits_indices_ptr, # [num_bitmasks] logits index for each bitmask
+        logits_indices_ptr, # [num_bitmasks] expanded mapping req_idx*MASK_STRIDE+position
+        cu_num_logits_ptr,  # [num_reqs+1] int32 cumulative logits offsets per request
         bitmask_ptr,        # [num_bitmasks, padded_vocab//32] packed bitmasks
         bitmask_stride,     # stride of bitmask (padded_vocab // 32)
         vocab_size,         # scalar: vocab size
+        MASK_STRIDE: tl.constexpr,  # max positions per request
         BLOCK_SIZE: tl.constexpr,   # block size (8192)
     )
+
+This UT uses MASK_STRIDE=1 with exactly one logit row per request, so the
+expanded mapping degenerates to the row index and cu_num_logits=[0..num_rows].
 
 For each bitmask, sets logits to -inf for positions where the bitmask is 0
 (blocked tokens).
@@ -76,13 +81,24 @@ class TestApplyGrammarBitmaskKernelPatch:
         vocab_size = logits.shape[1]
         num_blocks = triton.cdiv(vocab_size, self.BLOCK_SIZE)
 
+        # New (DSpark-era) kernel signature: pass the per-request cumulative
+        # logits offsets and MASK_STRIDE. With one logit row per request and
+        # MASK_STRIDE=1, the expanded mapping equals the row index, so the
+        # caller's logits_indices keep their original meaning.
+        MASK_STRIDE = 1
+        cu_num_logits = torch.arange(
+            logits.shape[0] + 1, dtype=torch.int32, device=logits.device
+        )
+
         _apply_grammar_bitmask_kernel[(num_bitmasks, num_blocks)](
             logits,
             logits.stride(0),
             logits_indices,
+            cu_num_logits,
             bitmask,
             bitmask.stride(0),
             vocab_size,
+            MASK_STRIDE=MASK_STRIDE,
             BLOCK_SIZE=self.BLOCK_SIZE,
         )
         torch.cuda.synchronize()

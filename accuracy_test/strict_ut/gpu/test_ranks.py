@@ -11,10 +11,15 @@ import torch
 
 try:
     from accuracy_test.strict_ut.runtime_gpu import init_device_properties_triton
-    from vllm.v1.worker.gpu.sample.logprob import compute_topk_logprobs
+    # Renamed compute_topk_logprobs -> compute_topk_scores (same first three
+    # positional args; returns the same LogprobsTensors fields).
+    try:
+        from vllm.v1.worker.gpu.sample.logprob import compute_topk_scores as compute_topk_logprobs
+    except ImportError:
+        from vllm.v1.worker.gpu.sample.logprob import compute_topk_logprobs
 except (ImportError, ModuleNotFoundError) as exc:
     pytest.skip(
-        f"installed vLLM-Ascend does not provide compute_topk_logprobs; precision was not tested: {exc}",
+        f"installed vLLM does not provide compute_topk_scores; precision was not tested: {exc}",
         allow_module_level=True,
     )
 
@@ -61,7 +66,9 @@ def test_compute_topk_logprobs(batch_size, vocab_size, num_logprobs):
     ref_logprobs = torch.gather(ref_all_logprobs, dim=1, index=ref_token_ids)
 
     sampled_logits = torch.gather(logits, 1, sampled_token_ids.unsqueeze(-1))
-    ref_ranks = (logits > sampled_logits).sum(dim=1).to(torch.int64)
+    # Upstream _ranks_kernel counts logits >= x (includes the token itself,
+    # i.e. 1-based rank); the old vllm-ascend kernel counted strictly greater.
+    ref_ranks = (logits >= sampled_logits).sum(dim=1).to(torch.int64)
 
     # ========== 4. Verify results ==========
     assert torch.equal(triton_output.logprob_token_ids, ref_token_ids), (

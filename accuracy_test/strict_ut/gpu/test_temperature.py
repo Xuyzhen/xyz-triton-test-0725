@@ -15,7 +15,7 @@ try:
     from vllm.v1.worker.gpu.sample.gumbel import apply_temperature
 except (ImportError, ModuleNotFoundError) as exc:
     pytest.skip(
-        f"installed vLLM-Ascend does not provide apply_temperature; precision was not tested: {exc}",
+        f"installed vLLM does not provide apply_temperature; precision was not tested: {exc}",
         allow_module_level=True,
     )
 

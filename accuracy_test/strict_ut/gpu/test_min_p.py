@@ -14,7 +14,7 @@ try:
     from vllm.v1.worker.gpu.sample.min_p import apply_min_p
 except (ImportError, ModuleNotFoundError) as exc:
     pytest.skip(
-        f"installed vLLM-Ascend does not provide apply_min_p; precision was not tested: {exc}",
+        f"installed vLLM does not provide apply_min_p; precision was not tested: {exc}",
         allow_module_level=True,
     )
 

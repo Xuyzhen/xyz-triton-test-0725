@@ -15,7 +15,7 @@ try:
     from vllm.v1.worker.gpu.sample.penalties import apply_penalties
 except (ImportError, ModuleNotFoundError) as exc:
     pytest.skip(
-        f"installed vLLM-Ascend does not provide apply_penalties; precision was not tested: {exc}",
+        f"installed vLLM does not provide apply_penalties; precision was not tested: {exc}",
         allow_module_level=True,
     )
 

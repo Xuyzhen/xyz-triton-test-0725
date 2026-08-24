@@ -18,7 +18,7 @@ try:
     from vllm.v1.worker.gpu.sample.bad_words import apply_bad_words
 except (ImportError, ModuleNotFoundError) as exc:
     pytest.skip(
-        f"installed vLLM-Ascend does not provide apply_bad_words; precision was not tested: {exc}",
+        f"installed vLLM does not provide apply_bad_words; precision was not tested: {exc}",
         allow_module_level=True,
     )
 

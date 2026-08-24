@@ -325,8 +325,9 @@ class TestPrepareDFlashInputsKernel:
         # Padded seq_lens should be 0
         for i in range(num_reqs, max_num_reqs):
             assert out_seq_lens[i].item() == 0, f"Padded seq_lens[{i}] should be 0"
-        # Padded sampling state must be untouched (still sentinel)
-        assert out_temperature[0].item() == 0.7
+        # Padded sampling state must be untouched (still sentinel).
+        # 0.7 is not exactly representable in fp32 -> compare with tolerance.
+        assert abs(out_temperature[0].item() - 0.7) < 1e-6
         assert out_seeds[0].item() == 1000
         for i in range(num_reqs, max_num_reqs):
             assert out_temperature[i].item() == -1.0, f"Padded temperature[{i}] untouched"

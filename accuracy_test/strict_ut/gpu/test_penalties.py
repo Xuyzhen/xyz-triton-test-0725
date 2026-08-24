@@ -154,10 +154,15 @@ def create_test_data(
     # Create token_ids for speculative decoding
     token_ids = torch.randint(0, vocab_size, (num_tokens,), device=device, dtype=torch.int32)
 
-    # Create expanded_local_pos (position within speculative decoding window)
+    # Create expanded_local_pos (position within speculative decoding window).
+    # Production invariant: a request's expanded tokens are contiguous in the
+    # batch and its first token has pos == 0, so token_idx - pos >= 0 always.
+    # The kernel's draft-lookback load (token_ids + token_idx - pos + ...) has
+    # no lower-bound guard; violating the invariant reads out of bounds and
+    # corrupts the counts. Cap pos at the token's own index to respect it.
     expanded_local_pos = torch.zeros(num_tokens, device=device, dtype=torch.int32)
     for i in range(num_tokens):
-        expanded_local_pos[i] = torch.randint(0, num_speculative_tokens + 1, (1,)).item()
+        expanded_local_pos[i] = torch.randint(0, min(i, num_speculative_tokens) + 1, (1,)).item()
 
     num_packed = (vocab_size + 31) // 32
     prompt_bin_mask = torch.zeros(num_status, num_packed, device=device, dtype=torch.int32)

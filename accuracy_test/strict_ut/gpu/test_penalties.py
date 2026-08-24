@@ -25,7 +25,7 @@ NUM_STATUS = [1, 4]
 NUM_SPECULATIVE_TOKENS = [0, 1, 3]
 DTYPES = [torch.bfloat16, torch.float16]
 SEEDS = [42]
-DEVICES = [f"npu:{0}"]
+DEVICES = ["cuda:0"]
 
 DEFAULT_ATOL = 1e-3
 DEFAULT_RTOL = 1e-3

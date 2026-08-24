@@ -24,6 +24,8 @@ Kernel signature:
         out_sample_indices_ptr,          # int32 output
         out_sample_pos_ptr,              # int64 output
         out_sample_idx_mapping_ptr,      # int32 output
+        out_temperature_ptr,             # float32 output [max_num_reqs]
+        out_seeds_ptr,                   # int64 output [max_num_reqs]
         target_positions_ptr,            # int64 input [num_tokens]
         target_query_start_loc_ptr,      # int32 input [num_reqs + 1]
         idx_mapping_ptr,                 # int32 input [num_reqs]
@@ -31,6 +33,8 @@ Kernel signature:
         next_prefill_tokens_ptr,         # int32 input [max_num_reqs]
         num_sampled_ptr,                 # int32 input [num_reqs]
         num_rejected_ptr,                # int32 input [num_reqs]
+        temperature_ptr,                 # float32 input [max_num_reqs]
+        seeds_ptr,                       # int64 input [max_num_reqs]
         block_table_ptr,                 # int64 input [max_num_reqs, max_num_blocks]
         block_table_stride,              # stride(0) of block_table
         parallel_drafting_token_id,      # scalar int32
@@ -40,8 +44,11 @@ Kernel signature:
         max_num_reqs,                    # scalar
         max_num_tokens,                  # scalar
         max_model_len,                   # scalar
+        cp_rank,                         # scalar (CP rank, 0 when CP unused)
         SAMPLE_FROM_ANCHOR: tl.constexpr,
         PAD_SLOT_ID: tl.constexpr,
+        CP_SIZE: tl.constexpr,           # 1 when CP unused
+        CP_INTERLEAVE: tl.constexpr,     # False when CP unused
         BLOCK_SIZE: tl.constexpr,
     )
 
@@ -99,6 +106,10 @@ class TestPrepareDFlashInputsKernel:
         num_rejected = torch.zeros(num_reqs, dtype=torch.int32, device=self.device)
         block_table = torch.randint(0, 100, (max_num_reqs, max_blocks), dtype=torch.int64, device=self.device)
 
+        # Sampling state copied per request (pass-through at req_state_idx).
+        temperature = torch.rand(max_num_reqs, dtype=torch.float32, device=self.device) * 1.5 + 0.5
+        seeds = torch.randint(0, 2**31, (max_num_reqs,), dtype=torch.int64, device=self.device)
+
         total_context = num_tokens
         total_query = num_reqs * num_query_per_req_val
 
@@ -113,6 +124,8 @@ class TestPrepareDFlashInputsKernel:
         out_sample_indices = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
         out_sample_pos = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int64, device=self.device)
         out_sample_idx_mapping = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
+        out_temperature = torch.full((max_num_reqs,), -1.0, dtype=torch.float32, device=self.device)
+        out_seeds = torch.full((max_num_reqs,), -1, dtype=torch.int64, device=self.device)
 
         max_tokens_per_req = num_ctx + num_query_per_req_val
         blk_size = min(256, triton.next_power_of_2(max(1, max_tokens_per_req)))
@@ -129,6 +142,8 @@ class TestPrepareDFlashInputsKernel:
             out_sample_indices,
             out_sample_pos,
             out_sample_idx_mapping,
+            out_temperature,
+            out_seeds,
             target_positions,
             target_query_start_loc,
             idx_mapping,
@@ -136,6 +151,8 @@ class TestPrepareDFlashInputsKernel:
             next_prefill_tokens,
             num_sampled,
             num_rejected,
+            temperature,
+            seeds,
             block_table,
             block_table.stride(0),
             parallel_drafting_token_id,
@@ -145,8 +162,11 @@ class TestPrepareDFlashInputsKernel:
             max_num_reqs,
             max_num_tokens,
             max_model_len,
+            cp_rank=0,
             SAMPLE_FROM_ANCHOR=sample_from_anchor,
             PAD_SLOT_ID=PAD_SLOT_ID_CONST,
+            CP_SIZE=1,
+            CP_INTERLEAVE=False,
             BLOCK_SIZE=blk_size,
         )
         torch.cuda.synchronize()
@@ -188,6 +208,14 @@ class TestPrepareDFlashInputsKernel:
             for j in range(ctx_len):
                 assert out_context_positions[qs + j].item() == target_positions[qs + j].item()
 
+            # Sampling state pass-through at req_state_idx
+            assert out_temperature[rs_idx].item() == temperature[rs_idx].item(), (
+                f"req {req_idx}: temperature pass-through mismatch"
+            )
+            assert out_seeds[rs_idx].item() == seeds[rs_idx].item(), (
+                f"req {req_idx}: seed pass-through mismatch"
+            )
+
             # Sample indices/pos/idx_mapping
             # When not SAMPLE_FROM_ANCHOR: sample from query_off >= 1
             for qoff in range(1, num_query_per_req_val):
@@ -225,6 +253,10 @@ class TestPrepareDFlashInputsKernel:
         num_rejected = torch.zeros(num_reqs, dtype=torch.int32, device=self.device)
         block_table = torch.zeros((max_num_reqs, max_blocks), dtype=torch.int64, device=self.device)
 
+        # Sampling state (pass-through at req_state_idx)
+        temperature = torch.full((max_num_reqs,), 0.7, dtype=torch.float32, device=self.device)
+        seeds = torch.arange(max_num_reqs, dtype=torch.int64, device=self.device) + 1000
+
         total_query = num_reqs * num_query_per_req_val
 
         out_input_ids = torch.full((total_query,), -1, dtype=torch.int32, device=self.device)
@@ -237,6 +269,8 @@ class TestPrepareDFlashInputsKernel:
         out_sample_indices = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
         out_sample_pos = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int64, device=self.device)
         out_sample_idx_mapping = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
+        out_temperature = torch.full((max_num_reqs,), -1.0, dtype=torch.float32, device=self.device)
+        out_seeds = torch.full((max_num_reqs,), -1, dtype=torch.int64, device=self.device)
 
         max_tokens_per_req = num_ctx + num_query_per_req_val
         blk_size = min(256, triton.next_power_of_2(max(1, max_tokens_per_req)))
@@ -253,6 +287,8 @@ class TestPrepareDFlashInputsKernel:
             out_sample_indices,
             out_sample_pos,
             out_sample_idx_mapping,
+            out_temperature,
+            out_seeds,
             target_positions,
             target_query_start_loc,
             idx_mapping,
@@ -260,6 +296,8 @@ class TestPrepareDFlashInputsKernel:
             next_prefill_tokens,
             num_sampled,
             num_rejected,
+            temperature,
+            seeds,
             block_table,
             block_table.stride(0),
             parallel_drafting_token_id,
@@ -269,8 +307,11 @@ class TestPrepareDFlashInputsKernel:
             max_num_reqs,
             max_num_tokens,
             max_model_len,
+            cp_rank=0,
             SAMPLE_FROM_ANCHOR=sample_from_anchor,
             PAD_SLOT_ID=PAD_SLOT_ID_CONST,
+            CP_SIZE=1,
+            CP_INTERLEAVE=False,
             BLOCK_SIZE=blk_size,
         )
         torch.cuda.synchronize()
@@ -284,6 +325,12 @@ class TestPrepareDFlashInputsKernel:
         # Padded seq_lens should be 0
         for i in range(num_reqs, max_num_reqs):
             assert out_seq_lens[i].item() == 0, f"Padded seq_lens[{i}] should be 0"
+        # Padded sampling state must be untouched (still sentinel)
+        assert out_temperature[0].item() == 0.7
+        assert out_seeds[0].item() == 1000
+        for i in range(num_reqs, max_num_reqs):
+            assert out_temperature[i].item() == -1.0, f"Padded temperature[{i}] untouched"
+            assert out_seeds[i].item() == -1, f"Padded seeds[{i}] untouched"
         # Padded sample slots
         pad_start = num_reqs * num_speculative_steps
         for i in range(pad_start, max_num_reqs * num_speculative_steps):
@@ -318,6 +365,10 @@ class TestPrepareDFlashInputsKernel:
         num_rejected = torch.zeros(num_reqs, dtype=torch.int32, device=self.device)
         block_table = torch.zeros((max_num_reqs, max_blocks), dtype=torch.int64, device=self.device)
 
+        # Sampling state (pass-through at req_state_idx)
+        temperature = torch.full((max_num_reqs,), 1.1, dtype=torch.float32, device=self.device)
+        seeds = torch.full((max_num_reqs,), 77, dtype=torch.int64, device=self.device)
+
         total_query = num_reqs * num_query_per_req_val
 
         out_input_ids = torch.full((total_query,), -1, dtype=torch.int32, device=self.device)
@@ -330,6 +381,8 @@ class TestPrepareDFlashInputsKernel:
         out_sample_indices = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
         out_sample_pos = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int64, device=self.device)
         out_sample_idx_mapping = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
+        out_temperature = torch.full((max_num_reqs,), -1.0, dtype=torch.float32, device=self.device)
+        out_seeds = torch.full((max_num_reqs,), -1, dtype=torch.int64, device=self.device)
 
         max_tokens_per_req = num_ctx + num_query_per_req_val
         blk_size = min(256, triton.next_power_of_2(max(1, max_tokens_per_req)))
@@ -346,6 +399,8 @@ class TestPrepareDFlashInputsKernel:
             out_sample_indices,
             out_sample_pos,
             out_sample_idx_mapping,
+            out_temperature,
+            out_seeds,
             target_positions,
             target_query_start_loc,
             idx_mapping,
@@ -353,6 +408,8 @@ class TestPrepareDFlashInputsKernel:
             next_prefill_tokens,
             num_sampled,
             num_rejected,
+            temperature,
+            seeds,
             block_table,
             block_table.stride(0),
             parallel_drafting_token_id,
@@ -362,8 +419,11 @@ class TestPrepareDFlashInputsKernel:
             max_num_reqs,
             max_num_tokens,
             max_model_len,
+            cp_rank=0,
             SAMPLE_FROM_ANCHOR=sample_from_anchor,
             PAD_SLOT_ID=PAD_SLOT_ID_CONST,
+            CP_SIZE=1,
+            CP_INTERLEAVE=False,
             BLOCK_SIZE=blk_size,
         )
         torch.cuda.synchronize()

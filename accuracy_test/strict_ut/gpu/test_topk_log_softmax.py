@@ -49,7 +49,8 @@ def test_topk_log_softmax_kernel(batch_size, vocab_size, num_logprobs):
     # Prepare output tensor
     triton_output = torch.empty(batch_size, num_logprobs, dtype=torch.float32, device="cuda")
 
-    # Invoke Triton kernel
+    # Invoke Triton kernel. TOPK_BLOCK_SIZE caps the per-iteration gather
+    # width (host wrapper: min(next_power_of_2(num_logprobs), 1024)).
     _topk_log_softmax_kernel[(batch_size,)](
         triton_output,
         logits,
@@ -58,7 +59,7 @@ def test_topk_log_softmax_kernel(batch_size, vocab_size, num_logprobs):
         num_logprobs,
         vocab_size,
         BLOCK_SIZE=1024,
-        PADDED_TOPK=max(triton.next_power_of_2(num_logprobs), 2),
+        TOPK_BLOCK_SIZE=min(triton.next_power_of_2(num_logprobs), 1024),
     )
     torch.cuda.synchronize()
 

@@ -467,11 +467,29 @@ class TestResampleKernel:
         torch.cuda.synchronize()
 
         # With temp=0 there is no Gumbel noise, so the result is exact.
-        expected_token = int(torch.argmax(target_logits[-1]).item())
-        assert resampled_local_argmax.cpu().item() == expected_token
+        # The kernel writes per-block local argmax in [num_reqs, num_blocks];
+        # compare every block instead of .item() (multi-block vocab would fail).
+        last_row = target_logits[-1].cpu()
+        ref_argmax = torch.zeros(resample_num_blocks, dtype=torch.int64)
+        ref_max = torch.zeros(resample_num_blocks, dtype=torch.float32)
+        for b in range(resample_num_blocks):
+            s = b * BLOCK_SIZE
+            e = min(s + BLOCK_SIZE, vocab_size)
+            block_slice = last_row[s:e]
+            ref_argmax[b] = s + int(block_slice.argmax())
+            ref_max[b] = float(block_slice.max())
         torch.testing.assert_close(
-            resampled_local_max.cpu().item(),
-            target_logits[-1, expected_token].cpu().item(),
+            resampled_local_argmax.cpu(),
+            ref_argmax.unsqueeze(0),
+            rtol=0,
+            atol=0,
+        )
+        torch.testing.assert_close(
+            resampled_local_max.cpu(),
+            ref_max.unsqueeze(0),
             rtol=1e-5,
             atol=1e-5,
         )
+        # The globally maximal block must hold the global argmax token.
+        best_block = int(ref_max.argmax())
+        assert int(ref_argmax[best_block]) == int(last_row.argmax())

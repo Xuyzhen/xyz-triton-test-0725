@@ -121,9 +121,12 @@ class TestPrepareDFlashInputsKernel:
         out_query_slot_mapping = torch.full((max_num_tokens,), -2, dtype=torch.int32, device=self.device)
         out_context_positions = torch.full((num_tokens,), -1, dtype=torch.int64, device=self.device)
         out_context_slot_mapping = torch.full((num_tokens,), -1, dtype=torch.int32, device=self.device)
-        out_sample_indices = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
-        out_sample_pos = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int64, device=self.device)
-        out_sample_idx_mapping = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
+        # Sample buffers must be sized at full CUDA-graph capacity
+        # (max_num_reqs * num_speculative_steps): the last active program pads
+        # this region (writing 0/0/-1) for graph safety.
+        out_sample_indices = torch.full((max_num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
+        out_sample_pos = torch.full((max_num_reqs * num_speculative_steps,), -1, dtype=torch.int64, device=self.device)
+        out_sample_idx_mapping = torch.full((max_num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
         out_temperature = torch.full((max_num_reqs,), -1.0, dtype=torch.float32, device=self.device)
         out_seeds = torch.full((max_num_reqs,), -1, dtype=torch.int64, device=self.device)
 
@@ -266,9 +269,12 @@ class TestPrepareDFlashInputsKernel:
         out_query_slot_mapping = torch.full((max_num_tokens,), -2, dtype=torch.int32, device=self.device)
         out_context_positions = torch.full((num_ctx,), -1, dtype=torch.int64, device=self.device)
         out_context_slot_mapping = torch.full((num_ctx,), -1, dtype=torch.int32, device=self.device)
-        out_sample_indices = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
-        out_sample_pos = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int64, device=self.device)
-        out_sample_idx_mapping = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
+        # Sample buffers must be sized at full CUDA-graph capacity
+        # (max_num_reqs * num_speculative_steps): the last active program pads
+        # this region (writing 0/0/-1) for graph safety.
+        out_sample_indices = torch.full((max_num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
+        out_sample_pos = torch.full((max_num_reqs * num_speculative_steps,), -1, dtype=torch.int64, device=self.device)
+        out_sample_idx_mapping = torch.full((max_num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
         out_temperature = torch.full((max_num_reqs,), -1.0, dtype=torch.float32, device=self.device)
         out_seeds = torch.full((max_num_reqs,), -1, dtype=torch.int64, device=self.device)
 
@@ -379,9 +385,12 @@ class TestPrepareDFlashInputsKernel:
         out_query_slot_mapping = torch.full((max_num_tokens,), -2, dtype=torch.int32, device=self.device)
         out_context_positions = torch.full((num_ctx,), -1, dtype=torch.int64, device=self.device)
         out_context_slot_mapping = torch.full((num_ctx,), -1, dtype=torch.int32, device=self.device)
-        out_sample_indices = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
-        out_sample_pos = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int64, device=self.device)
-        out_sample_idx_mapping = torch.full((num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
+        # Sample buffers must be sized at full CUDA-graph capacity
+        # (max_num_reqs * num_speculative_steps): the last active program pads
+        # this region (writing 0/0/-1) for graph safety.
+        out_sample_indices = torch.full((max_num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
+        out_sample_pos = torch.full((max_num_reqs * num_speculative_steps,), -1, dtype=torch.int64, device=self.device)
+        out_sample_idx_mapping = torch.full((max_num_reqs * num_speculative_steps,), -1, dtype=torch.int32, device=self.device)
         out_temperature = torch.full((max_num_reqs,), -1.0, dtype=torch.float32, device=self.device)
         out_seeds = torch.full((max_num_reqs,), -1, dtype=torch.int64, device=self.device)
 

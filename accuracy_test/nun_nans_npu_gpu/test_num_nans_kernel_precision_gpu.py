@@ -1,15 +1,21 @@
 # SPDX-License-Identifier: Apache-2.0
-# Replaces the generated strict UT for _num_nans_kernel in strict_ut_026/npu.
-# Provenance: accuracy_test/nun_nans_npu_gpu/test_num_nans_kernel_precision_npu.py
-# (hand-written extended-precision spec, verified on the NPU host).
-# Kernel source: vllm_ascend/ops/triton/v2/metrics/num_nans.py
-# Coverage: _num_nans_kernel (extended precision dimensions)
-"""
-Extended precision test for the Ascend-specific _num_nans_kernel.
+# Kernel source: inlined standalone CUDA copy of
+# vllm/vllm/v1/worker/gpu/metrics/logits.py::_num_nans_kernel, identical to
+# the kernel in test_num_nans_kernel_standalone_gpu.py.
+# Test spec mirrored 1:1 from test_num_nans_kernel_precision_npu.py: same
+# shapes, dtypes, layouts, seeds and data generation, so the CUDA and NPU
+# files execute identical cases on bitwise-identical inputs for GPU-NPU
+# precision comparison.
 
-The replaced generated file swept only num_reqs x vocab_size x frac_nan for
-FLOAT32 inputs with NaNs injected as a contiguous per-row prefix. This
-version adds the dimensions that sweep does not cover:
+"""
+Extended precision test for the standalone _num_nans_kernel on CUDA.
+
+GPU counterpart of test_num_nans_kernel_precision_npu.py (same kernel
+semantics, same test spec, same seed / data generation, same bitwise
+assertions). The base file test_num_nans_kernel_standalone_gpu.py sweeps
+num_reqs x vocab_size x frac_nan for FLOAT32 inputs with NaNs injected as a
+contiguous per-row prefix. This file adds the dimensions that sweep does not
+cover:
 
 1. dtype dimension (fp32 / bf16 / fp16): the kernel upcasts every loaded
    block via ``.to(tl.float32)`` before ``libdevice.isnan``. Production
@@ -22,7 +28,7 @@ version adds the dimensions that sweep does not cover:
    misclassification.
 3. Special-value interference: +Inf / -Inf / +0.0 / -0.0 / max-finite /
    min-normal / subnormal values tiled across the row must NOT be counted,
-   guarding against a CANN ``isnan`` that degenerates into an infinity or
+   guarding against a ``isnan`` that degenerates into an infinity or
    exponent-class check.
 
 Kernel signature (unchanged):
@@ -39,22 +45,12 @@ integer counts with no floating-point accumulation error.
 """
 
 import math
-import os
 
 import pytest
 import torch
-
-# Importing ``vllm_ascend.ops`` runs ``vllm_version_is("0.27.1")`` in
-# ``vllm_ascend/ops/fused_moe/fused_moe.py`` at import time. When ``vllm`` is
-# resolved as a PEP 420 namespace package (no top-level ``__init__.py``),
-# ``vllm.__version__`` is unavailable and that call raises AttributeError.
-# Setting VLLM_VERSION makes ``vllm_version_is`` use it instead of
-# ``vllm.__version__``. This must happen before the first ``vllm_ascend``
-# import below, and it must not override an explicitly exported value.
-os.environ.setdefault("VLLM_VERSION", "0.27.1")
-
-from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton  # noqa: E402
-from vllm_ascend.ops.triton.v2.metrics.num_nans import _num_nans_kernel  # noqa: E402
+import triton
+import triton.language as tl
+import triton.language.extra.libdevice as libdevice
 
 BLOCK_SIZE = 8192
 SEED = 42
@@ -65,6 +61,28 @@ SHAPE_CASES = [(1, 128), (2, 5000), (4, 8192), (8, 10000), (2, 16384)]
 DTYPES = [torch.float32, torch.bfloat16, torch.float16]
 LAYOUT_PREFIX = "prefix"
 LAYOUT_SCATTER = "scatter"
+
+
+@triton.jit
+def _num_nans_kernel(
+    logits_ptr,
+    logits_stride,
+    num_nans_ptr,
+    vocab_size,
+    BLOCK_SIZE: tl.constexpr,
+):
+    req_idx = tl.program_id(0)
+    num_nans = 0
+    for i in range(0, vocab_size, BLOCK_SIZE):
+        block = i + tl.arange(0, BLOCK_SIZE)
+        mask = block < vocab_size
+        logits = tl.load(
+            logits_ptr + req_idx * logits_stride + block, mask=mask, other=0
+        )
+        logits = logits.to(tl.float32)
+        is_nan = libdevice.isnan(logits).to(tl.int1)
+        num_nans += tl.sum(is_nan).to(tl.int32)
+    tl.store(num_nans_ptr + req_idx, num_nans)
 
 
 def _num_nans_ref(logits: torch.Tensor) -> torch.Tensor:
@@ -92,7 +110,7 @@ def _inject_nans(
 
 
 def _run_kernel(logits: torch.Tensor) -> torch.Tensor:
-    """Launch _num_nans_kernel on the NPU tensor and return the CPU counts."""
+    """Launch _num_nans_kernel on the CUDA tensor and return the CPU counts."""
     num_reqs, vocab_size = logits.shape
     num_nans = torch.empty(num_reqs, dtype=torch.int32, device=logits.device)
     _num_nans_kernel[(num_reqs,)](
@@ -102,19 +120,19 @@ def _run_kernel(logits: torch.Tensor) -> torch.Tensor:
         vocab_size,
         BLOCK_SIZE=BLOCK_SIZE,
     )
-    torch.npu.synchronize()
+    torch.cuda.synchronize()
     return num_nans.cpu()
 
 
 class TestNumNansKernelPrecision:
     @pytest.fixture(autouse=True)
     def setup(self):
-        init_device_properties_triton()
         torch.manual_seed(SEED)
-        self.device = "npu"
+        self.device = "cuda"
         # Dedicated generator: scatter positions are deterministic and, being
         # independent of the randn draws, identical across dtype variants of
-        # the same shape, isolating the dtype effect.
+        # the same shape, isolating the dtype effect. Same SEED as the NPU
+        # file, so both backends see bitwise-identical inputs.
         self.gen = torch.Generator().manual_seed(SEED)
 
     @pytest.mark.parametrize("dtype", DTYPES, ids=["fp32", "bf16", "fp16"])
@@ -125,7 +143,7 @@ class TestNumNansKernelPrecision:
         """Compare kernel NaN count with the CPU reference per dtype/layout.
 
         Data is built in fp32 on CPU, NaNs are injected, then the tensor is
-        converted to the target dtype and moved to NPU. The reference is
+        converted to the target dtype and moved to CUDA. The reference is
         computed on the post-conversion tensor, i.e. exactly the values the
         kernel sees, so any NaN loss/creation in the dtype cast would be
         caught instead of silently cancelling out.
@@ -133,11 +151,11 @@ class TestNumNansKernelPrecision:
         logits = torch.randn(num_reqs, vocab_size, dtype=torch.float32)
         num_nan = int(vocab_size * frac_nan)
         _inject_nans(logits, num_nan, layout, self.gen)
-        logits_npu = logits.to(dtype=dtype, device=self.device)
+        logits_gpu = logits.to(dtype=dtype, device=self.device)
 
-        num_nans = _run_kernel(logits_npu)
+        num_nans = _run_kernel(logits_gpu)
 
-        expected = _num_nans_ref(logits_npu.cpu())
+        expected = _num_nans_ref(logits_gpu.cpu())
         torch.testing.assert_close(num_nans, expected, rtol=0, atol=0)
 
     @pytest.mark.parametrize("dtype", DTYPES, ids=["fp32", "bf16", "fp16"])
@@ -175,6 +193,6 @@ class TestNumNansKernelPrecision:
         expected = _num_nans_ref(logits)
         assert expected.tolist() == [0, num_injected]
 
-        logits_npu = logits.to(device=self.device)
-        num_nans = _run_kernel(logits_npu)
+        logits_gpu = logits.to(device=self.device)
+        num_nans = _run_kernel(logits_gpu)
         torch.testing.assert_close(num_nans, expected, rtol=0, atol=0)

@@ -49,6 +49,7 @@ LEVELS = {
 }
 
 ADAPTED_NPU = {
+    "num_nans_kernel",
     "bad_words",
     "temperature",
     "gumbel_sample",

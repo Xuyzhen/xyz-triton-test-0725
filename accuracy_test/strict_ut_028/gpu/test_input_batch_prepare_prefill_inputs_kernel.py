@@ -1,7 +1,7 @@
 # GENERATED STRICT UT. Source: accuracy_test/codex/missing_accuracy_tests/test_prepare_prefill_inputs_kernel.py
 # Do not edit mechanically; update the reviewed Codex source or strict generator.
-from accuracy_test.strict_ut.runtime_npu import STRICT_DEVICE as _STRICT_DEVICE
-# vLLM vanilla kernel: _prepare_prefill_inputs_kernel from vllm/v1/worker/gpu/input_batch.py
+from accuracy_test.strict_ut.runtime_gpu import STRICT_DEVICE as _STRICT_DEVICE
+# vLLM vanilla kernel: _prepare_prefill_inputs_kernel from vllm/vllm/v1/worker/gpu/input_batch.py
 
 """
 Precision test for _prepare_prefill_inputs_kernel.
@@ -31,7 +31,7 @@ import torch
 
 from vllm.triton_utils import tl, triton
 from vllm.v1.worker.gpu.input_batch import _prepare_prefill_inputs_kernel
-from accuracy_test.strict_ut.runtime_npu import init_device_properties_triton
+from accuracy_test.strict_ut.runtime_gpu import init_device_properties_triton
 
 import pytest
 
@@ -81,7 +81,7 @@ class TestPreparePrefillInputsKernel:
     @pytest.fixture(autouse=True)
     def setup(self):
         init_device_properties_triton()
-        self.device = torch.device("npu")
+        self.device = torch.device("cuda")
 
     @pytest.mark.parametrize("num_reqs", [1, 2, 4])
     @pytest.mark.parametrize("query_len", [1, 4, 16])
@@ -115,7 +115,7 @@ class TestPreparePrefillInputsKernel:
             BLOCK_SIZE=1024,
             LOOKAHEAD_BLOCK=triton.next_power_of_2(num_lookahead),
         )
-        torch.npu.synchronize()
+        torch.cuda.synchronize()
 
         input_ids_exp, next_prefill_exp = _prepare_prefill_inputs_ref(
             torch.zeros(max_num_tokens, dtype=torch.int32),
@@ -160,7 +160,7 @@ class TestPreparePrefillInputsKernel:
             BLOCK_SIZE=1024,
             LOOKAHEAD_BLOCK=triton.next_power_of_2(num_lookahead),
         )
-        torch.npu.synchronize()
+        torch.cuda.synchronize()
 
         # req 0: prefill_lens[0]=10, num_computed[0]=20 -> done -> early return
         # req 1: prefill_lens[1]=20, num_computed[1]=15 -> still prefilling
@@ -204,7 +204,7 @@ class TestPreparePrefillInputsKernel:
             BLOCK_SIZE=1024,
             LOOKAHEAD_BLOCK=triton.next_power_of_2(num_lookahead),
         )
-        torch.npu.synchronize()
+        torch.cuda.synchronize()
 
         # num_computed=5, query_len=5, prefill_len=10 => next_pos=10 == prefill_len, no next stored
         expected_input_ids = torch.tensor([5, 6, 7, 8, 9], dtype=torch.int32)

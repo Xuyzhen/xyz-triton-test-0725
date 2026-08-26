@@ -169,6 +169,26 @@ def _num_nans_ref(logits: torch.Tensor) -> torch.Tensor:
     return out
 
 
+def _gen_logits(num_reqs: int, vocab_size: int, frac_nan: float, device) -> torch.Tensor:
+    """Deterministic, device-independent logits for cross-backend alignment.
+
+    A parameter-derived seed drives a CPU generator; the tensor is moved to
+    the target device only after generation (and after NaN injection), so the
+    CUDA and NPU test files see bitwise-identical inputs for the same
+    (num_reqs, vocab_size, frac_nan) combination.
+    """
+    seed = num_reqs * 1_000_003 + vocab_size * 8_191 + int(frac_nan * 10)
+    g = torch.Generator(device="cpu")
+    g.manual_seed(seed)
+    logits = torch.randn(num_reqs, vocab_size, dtype=torch.float32, generator=g)
+    # Inject NaNs at the requested fraction (on CPU, before the device copy).
+    num_nan = int(vocab_size * frac_nan)
+    if num_nan > 0:
+        for i in range(num_reqs):
+            logits[i, :num_nan] = float("nan")
+    return logits.to(device)
+
+
 class TestNumNansKernel:
 
     @pytest.fixture(autouse=True)
@@ -181,12 +201,7 @@ class TestNumNansKernel:
     @pytest.mark.parametrize("frac_nan", [0.0, 0.1, 0.5, 1.0])
     def test_num_nans(self, num_reqs, vocab_size, frac_nan):
         """Compare GPU kernel NaN count with CPU reference."""
-        logits = torch.randn(num_reqs, vocab_size, dtype=torch.float32, device=self.device)
-        # Inject NaNs at the requested fraction.
-        num_nan = int(vocab_size * frac_nan)
-        if num_nan > 0:
-            for i in range(num_reqs):
-                logits[i, :num_nan] = float("nan")
+        logits = _gen_logits(num_reqs, vocab_size, frac_nan, self.device)
 
         num_nans = torch.empty(num_reqs, dtype=torch.int32, device=self.device)
         _num_nans_kernel[(num_reqs,)](

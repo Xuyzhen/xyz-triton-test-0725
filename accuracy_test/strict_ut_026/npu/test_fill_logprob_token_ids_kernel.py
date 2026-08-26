@@ -1,14 +1,6 @@
-# GENERATED STRICT UT. Source: accuracy_test/codex/existing_accuracy_tests/from_vllm/test_fill_logprob_token_ids_kernel.py
-# Do not edit mechanically; update the reviewed Codex source or strict generator.
-from accuracy_test.strict_ut.runtime_npu import STRICT_DEVICE as _STRICT_DEVICE
-# Standalone Ascend A3 adaptation of an upstream vLLM accuracy path.
-# Accuracy UT source: vllm/tests/v1/sample/test_logprobs.py
-# Kernel source: vllm/vllm/v1/worker/gpu/sample/logprob.py
+# SPDX-License-Identifier: Apache-2.0
+# Kernel source: vllm_ascend/ops/triton/v2/sample/fill_logprob_token_idx.py
 # Coverage: _fill_logprob_token_ids_kernel
-
-# vLLM vanilla kernel: _fill_logprob_token_ids_kernel from
-# vllm/vllm/v1/worker/gpu/sample/logprob.py
-
 """
 Precision test for _fill_logprob_token_ids_kernel.
 
@@ -35,14 +27,11 @@ Fills logprob token IDs matrix:
   otherwise top-k indices.
 """
 
+import pytest
 import torch
 
-from vllm.triton_utils import tl, triton
-from vllm.v1.worker.gpu.sample.logprob import _fill_logprob_token_ids_kernel
-from accuracy_test.strict_ut.runtime_npu import init_device_properties_triton
-
-import pytest
-
+from vllm_ascend.ops.triton.triton_utils import init_device_properties_triton
+from vllm_ascend.ops.triton.v2.sample.fill_logprob_token_idx import _fill_logprob_token_ids_kernel
 
 MAX_LOGPROB_TOKEN_IDS = 128
 
@@ -84,75 +73,59 @@ def _fill_logprob_token_ids_ref(
 
 
 class TestFillLogprobTokenIdsKernel:
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        init_device_properties_triton()
-        self.device = torch.device("npu")
-
     @pytest.mark.parametrize("batch_size", [1, 4, 8])
     @pytest.mark.parametrize("topk", [0, 3, 5])
     def test_custom_token_ids(self, batch_size, topk):
         """Test with per-request custom token IDs."""
+        init_device_properties_triton()
+        torch.manual_seed(42)
+        device = "npu"
+
         num_reqs = 4
         PADDED_COLS = 16
         NUM_TOPK = topk
 
-        sampled_token_ids = torch.randint(0, 1000, (batch_size,), dtype=torch.int64, device=self.device)
+        sampled_token_ids = torch.randint(0, 1000, (batch_size,), dtype=torch.int64, device=device)
         # Production converts top-k IDs to int32 before launching this kernel.
         topk_indices = torch.randint(
             0,
             1000,
             (batch_size, max(NUM_TOPK, 1)),
             dtype=torch.int32,
-            device=self.device,
+            device=device,
         )
         # Deterministically include request 0, which owns the custom token IDs.
-        expanded_idx_mapping = (
-            torch.arange(batch_size, dtype=torch.int32, device=self.device)
-            % num_reqs
-        )
+        expanded_idx_mapping = torch.arange(batch_size, dtype=torch.int32, device=device) % num_reqs
 
         # Some requests get custom token IDs, others don't
-        num_per_req_token_ids = torch.zeros(num_reqs, dtype=torch.int32, device=self.device)
-        per_req_token_ids = torch.zeros(num_reqs, MAX_LOGPROB_TOKEN_IDS, dtype=torch.int32, device=self.device)
+        num_per_req_token_ids = torch.zeros(num_reqs, dtype=torch.int32, device=device)
+        per_req_token_ids = torch.zeros(num_reqs, MAX_LOGPROB_TOKEN_IDS, dtype=torch.int32, device=device)
         # Request 0 has custom tokens
         num_per_req_token_ids[0] = 3
         per_req_token_ids[0, 0] = 100
         per_req_token_ids[0, 1] = 200
         per_req_token_ids[0, 2] = 300
 
-        out_token_ids = torch.zeros(batch_size, 1 + PADDED_COLS, dtype=torch.int64, device=self.device)
-        out_valid_mask = torch.zeros(batch_size, 1 + PADDED_COLS, dtype=torch.bool, device=self.device)
+        out_token_ids = torch.zeros(batch_size, 1 + PADDED_COLS, dtype=torch.int64, device=device)
+        out_valid_mask = torch.zeros(batch_size, 1 + PADDED_COLS, dtype=torch.bool, device=device)
 
-        # Soft-assert: collect all per-batch mismatches, continue checking
-        # every batch, then report all diagnostics at the end. This avoids
-        # stopping on the first mismatch and gives full visibility into which
-        # batches/branches diverged in a single run.
-        errors: list[str] = []
+        _fill_logprob_token_ids_kernel[(batch_size,)](
+            out_token_ids,
+            out_token_ids.stride(0),
+            out_valid_mask,
+            out_valid_mask.stride(0),
+            sampled_token_ids,
+            topk_indices,
+            topk_indices.stride(0),
+            expanded_idx_mapping,
+            num_per_req_token_ids,
+            per_req_token_ids,
+            per_req_token_ids.stride(0),
+            NUM_TOPK=NUM_TOPK,
+            PADDED_COLS=PADDED_COLS,
+        )
+        torch.npu.synchronize()
 
-        # Stage 1: kernel launch (catch execution errors without aborting)
-        try:
-            _fill_logprob_token_ids_kernel[(batch_size,)](
-                out_token_ids,
-                out_token_ids.stride(0),
-                out_valid_mask,
-                out_valid_mask.stride(0),
-                sampled_token_ids,
-                topk_indices,
-                topk_indices.stride(0),
-                expanded_idx_mapping,
-                num_per_req_token_ids,
-                per_req_token_ids,
-                per_req_token_ids.stride(0),
-                NUM_TOPK=NUM_TOPK,
-                PADDED_COLS=PADDED_COLS,
-            )
-            torch.npu.synchronize()
-        except Exception as exc:  # noqa: BLE001
-            errors.append(f"kernel launch failed: {exc!r}")
-
-        # Stage 2: CPU reference (always computable)
         expected_ids, expected_mask = _fill_logprob_token_ids_ref(
             batch_size,
             sampled_token_ids.cpu(),
@@ -164,66 +137,30 @@ class TestFillLogprobTokenIdsKernel:
             PADDED_COLS,
         )
 
-        # Stage 3: per-batch comparison (continue on mismatch, collect all)
-        if not errors:
-            out_token_ids_cpu = out_token_ids.cpu()
-            out_valid_mask_cpu = out_valid_mask.cpu()
-
-            overall_match = torch.equal(out_token_ids_cpu, expected_ids) and torch.equal(
-                out_valid_mask_cpu, expected_mask
-            )
-
-            if not overall_match:
-                lines = ["_fill_logprob_token_ids_kernel mismatch diagnostic:"]
-                for b in range(batch_size):
-                    req_idx = expanded_idx_mapping.cpu()[b].item()
-                    num_custom = num_per_req_token_ids.cpu()[req_idx].item()
-                    expected_branch = "custom" if num_custom > 0 else "topk"
-                    ids_match = torch.equal(
-                        out_token_ids_cpu[b], expected_ids[b]
-                    )
-                    mask_match = torch.equal(
-                        out_valid_mask_cpu[b], expected_mask[b]
-                    )
-                    status = "OK" if (ids_match and mask_match) else "MISMATCH"
-                    lines.append(
-                        f"  batch={b} req_state_idx={req_idx} num_custom={num_custom} "
-                        f"expected_branch={expected_branch} status={status}"
-                    )
-                    if status == "MISMATCH":
-                        lines.append(
-                            f"    out_token_ids[b]={out_token_ids_cpu[b].tolist()}"
-                        )
-                        lines.append(
-                            f"    expected_ids[b]={expected_ids[b].tolist()}"
-                        )
-                        lines.append(
-                            f"    out_valid_mask[b]={out_valid_mask_cpu[b].tolist()}"
-                        )
-                        lines.append(
-                            f"    expected_mask[b]={expected_mask[b].tolist()}"
-                        )
-                errors.append("\n".join(lines))
-
-        # Stage 4: report all collected errors at the end (single failure point)
-        if errors:
-            pytest.fail("\n\n".join(errors), pytrace=False)
+        assert torch.equal(out_token_ids.cpu(), expected_ids), (
+            f"Token IDs do not match for batch_size={batch_size}, topk={topk}."
+        )
+        assert torch.equal(out_valid_mask.cpu(), expected_mask), (
+            f"Valid mask do not match for batch_size={batch_size}, topk={topk}."
+        )
 
     def test_no_custom_no_topk(self):
         """When both custom and topk are empty, only sampled token is written."""
+        init_device_properties_triton()
+        torch.manual_seed(42)
+        device = "npu"
+
         batch_size = 2
         NUM_TOPK = 0
         PADDED_COLS = 8
-        sampled_token_ids = torch.tensor([42, 77], dtype=torch.int64, device=self.device)
-        topk_indices = torch.zeros(
-            batch_size, 1, dtype=torch.int32, device=self.device
-        )
-        expanded_idx_mapping = torch.tensor([0, 1], dtype=torch.int32, device=self.device)
-        num_per_req_token_ids = torch.zeros(2, dtype=torch.int32, device=self.device)
-        per_req_token_ids = torch.zeros(2, MAX_LOGPROB_TOKEN_IDS, dtype=torch.int32, device=self.device)
+        sampled_token_ids = torch.tensor([42, 77], dtype=torch.int64, device=device)
+        topk_indices = torch.zeros(batch_size, 1, dtype=torch.int32, device=device)
+        expanded_idx_mapping = torch.tensor([0, 1], dtype=torch.int32, device=device)
+        num_per_req_token_ids = torch.zeros(2, dtype=torch.int32, device=device)
+        per_req_token_ids = torch.zeros(2, MAX_LOGPROB_TOKEN_IDS, dtype=torch.int32, device=device)
 
-        out_token_ids = torch.zeros(batch_size, 1 + PADDED_COLS, dtype=torch.int64, device=self.device)
-        out_valid_mask = torch.zeros(batch_size, 1 + PADDED_COLS, dtype=torch.bool, device=self.device)
+        out_token_ids = torch.zeros(batch_size, 1 + PADDED_COLS, dtype=torch.int64, device=device)
+        out_valid_mask = torch.zeros(batch_size, 1 + PADDED_COLS, dtype=torch.bool, device=device)
 
         _fill_logprob_token_ids_kernel[(batch_size,)](
             out_token_ids,

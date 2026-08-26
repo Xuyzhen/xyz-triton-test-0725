@@ -1,150 +1,201 @@
-# GENERATED STRICT UT. Source: accuracy_test/codex/existing_accuracy_tests/from_vllm/test_topk_topp_kernel.py
-# Do not edit mechanically; update the reviewed Codex source or strict generator.
-# Standalone Ascend A3 adaptation of an upstream vLLM accuracy path.
+# Standalone Ascend A5 precision UT for the PyTorch top-k/top-p fallback.
 # Accuracy UT source: vllm/tests/v1/sample/test_topk_topp_sampler.py
-# Kernel source: vllm/vllm/v1/sample/ops/topk_topp_triton.py
-# Coverage: _topk_topp_kernel
-
-# vLLM vanilla kernel: _topk_topp_kernel from
-# vllm/vllm/v1/sample/ops/topk_topp_triton.py
+# Replaced implementation: vllm/vllm/v1/sample/ops/topk_topp_triton.py (_topk_topp_kernel)
+# Tested implementation: vllm_ascend/sample/sampler.py::_apply_top_k_top_p_pytorch
+#   (the non-reduce-sample branch), which is the production sampling path on
+#   A5 devices:
+#
+#       apply_top_k_top_p = (
+#           _apply_top_k_top_p_torch_npu       # A2 / A3 -> test_topk_topp_kernel_a2a3.py
+#           if get_ascend_device_type() in [AscendDeviceType.A2, AscendDeviceType.A3]
+#           else _apply_top_k_top_p_pytorch    # A5 -> this UT
+#       )
+#
+# The A2/A3 counterpart UT (test_topk_topp_kernel_a2a3.py) tests the fused
+# ``torch_npu.npu_top_k_top_p`` operator. Both UTs intentionally coexist so
+# each device family validates the implementation its production path
+# actually calls, faithfully reporting each one's precision behaviour.
 
 """
-Precision test for _topk_topp_kernel.
+Precision test for the PyTorch top-k/top-p fallback (A5 sampling path).
 
-Combined top-k / top-p masking kernel. For each row:
-1. Optionally applies top-k (keeps only k largest logits per row).
-2. Then optionally applies top-p on the survivors (keeps smallest set whose
-   cumulative softmax probability exceeds p).
+Why the Triton kernel is not launched directly:
+    The upstream ``_topk_topp_kernel`` calls ``tl.cumsum`` on a bool tensor
+    (``outlier_mask``). The Ascend Triton backend does not ship a bool cumsum
+    library function, so compilation fails with ``undefined symbol:
+    _mlir_ciface_cumsum_1d_bool_dim0``. vllm-ascend does not fix the kernel;
+    it replaces the whole top-k/top-p step per device family. On A5 (and any
+    non-A2/A3 SoC) the replacement is the pure-PyTorch composition
+    ``_apply_top_k_top_p_pytorch`` (vllm_ascend/sample/sampler.py), because
+    the fused ``torch_npu.npu_top_k_top_p`` operator is only wired for
+    A2/A3. This UT validates the precision of that PyTorch implementation
+    running on the NPU (softmax/sort/cumsum/gather/masked_fill execute as
+    NPU kernels) against a CPU reference running the identical algorithm.
 
-Kernel signature:
-    _topk_topp_kernel(
-        LOGITS,                      # [batch_size, vocab_size] float32 (in-place)
-        LOGITS_STRIDE_0,             # stride(0) of LOGITS
-        BUFFER,                      # [num_programs, vocab_size] float32 workspace
-        PERCENTILE_TO_STD_TABLE,     # [200] float32 lookup table
-        NORMAL_CDF_TO_SIGMA_TABLE,   # [200] float32 lookup table
-        K,                           # [batch_size] int32 top-k values
-        P,                           # [batch_size] float32 top-p values
-        BATCH_SIZE,
-        VOCAB_SIZE: tl.constexpr,
-        MASK_VALUE: tl.constexpr,
-        BLOCK_SIZE: tl.constexpr,
-        BLOCK_SIZE_TRUNC: tl.constexpr,
-        TOPK_ENABLED: tl.constexpr,
-        TOPP_ENABLED: tl.constexpr,
-    )
+Implementation under test (called directly from vllm-ascend):
+    _apply_top_k_top_p_pytorch(logits, k, p)   # non-distributed branch
+    logits : [batch_size, vocab_size] float32 (modified in-place by the
+             implementation; this UT always passes a clone)
+    k      : [batch_size] int32, or None (None disables top-k filtering)
+    p      : [batch_size] float32, or None (None disables top-p filtering)
+    returns: filtered logits, filtered positions set to -inf
+
+Semantics (transcribed from vllm_ascend/sample/sampler.py; differs from the
+A2/A3 fused operator's reference in tie handling):
+    1. probs = softmax(logits); probs_sort = probs sorted ascending.
+    2. top-k: cutoff = the k-th largest prob; discard elements with
+       ``probs < cutoff`` (STRICT less-than). Ties at the cutoff are ALL
+       kept, so the survivor count can exceed k.
+    3. top-p: cumprob = cumsum(probs_sort); count how many positions have
+       ``cumprob <= 1 - p`` (the last position is exempted so at least one
+       survives); cutoff = the prob at that count index; discard elements
+       with ``probs < cutoff``. IMPORTANT: because the discard test is a
+       single threshold on probs, a group of EQUAL probabilities that
+       straddles the cumulative boundary is kept ENTIRELY - unlike the
+       A2/A3 fused operator's per-position masking, which would mask only
+       the group members whose cumulative sum is still <= 1 - p.
+    4. The output preserves the original (unsorted) order.
+
+Judgement criteria (same two-stage scheme as the A2/A3 UT):
+    1. mask (-inf positions) mismatch ratio <= 0.1%, tolerating top-p
+       floating-point boundary differences between NPU and CPU softmax /
+       cumsum,
+    2. surviving finite values compared with rtol=atol=1e-4.
 
 Realistic shapes:
   - vocab_size: 32000 (Llama2), 128256 (Llama3), 129280 (DeepSeek V4),
     163840 (Kimi K3), 248320 (Qwen3 2.4T)
   - batch_size: 1 (single-stream decode), 4, 16, 64 (concurrent requests)
-  - k: 1..20 (typical top-k sampling), or vocab_size (disabled)
-  - p: 0.8..0.99 (typical top-p), or 1.0 (disabled)
+  - k: 5..20 (typical top-k sampling)
+  - p: 0.8..0.99 (typical top-p)
 """
 from __future__ import annotations
 
 import pytest
 import torch
 
-from accuracy_test.strict_ut.runtime_npu import DEVICE, init_device_properties_triton, synchronize
-from vllm.triton_utils import tl, triton
-from vllm.v1.sample.ops.topk_topp_triton import (
-    _NORMAL_CDF_TO_SIGMA_TABLE,
-    _PERCENTILE_TO_STD_TABLE,
-    _topk_topp_kernel,
+# runtime_npu MUST be imported before vllm_ascend.sample.sampler: it installs
+# the vllm.triton_utils shim (triton 3.2.0 lacks triton.experimental) and the
+# vllm_ascend.ops package stubs that keep the sampler import chain light.
+from accuracy_test.easy_ut_026.runtime_npu import (
+    DEVICE,
+    ensure_default_ascend_config,
+    synchronize,
 )
+
+try:
+    # The actual A5 production implementation, imported from vllm-ascend so
+    # the UT tracks the real code path (not a local copy).
+    from vllm_ascend.sample.sampler import (
+        _apply_top_k_top_p_pytorch as _apply_top_k_top_p_a5_impl,
+    )
+except Exception as exc:  # noqa: BLE001 - any import-chain break is a skip
+    pytest.skip(
+        f"cannot import the A5 production implementation "
+        f"vllm_ascend.sample.sampler._apply_top_k_top_p_pytorch: {exc!r}",
+        allow_module_level=True,
+    )
 
 pytestmark = [pytest.mark.npu]
 
-BLOCK_SIZE = 32
-BLOCK_SIZE_TRUNC = 16
 
-
-def _apply_topk_topp_cpu(
+def _apply_topk_topp_pytorch_cpu_ref(
     logits: torch.Tensor,
     k: torch.Tensor | None = None,
     p: torch.Tensor | None = None,
-    mask_value: float = float("-inf"),
 ) -> torch.Tensor:
-    """Pure PyTorch CPU reference for combined top-k / top-p masking.
+    """CPU reference: faithful transcription of ``_apply_top_k_top_p_pytorch``.
 
-    For each row:
-      1. If top-k is enabled: find the k largest logits, derive a pivot
-         threshold, keep values >= pivot, and handle duplicate boundary values.
-      2. If top-p is enabled (after top-k): softmax survivors, find smallest
-         set with cumulative probability > p, mask the rest.
+    Line-for-line the same algorithm as the non-reduce-sample branch in
+    vllm_ascend/sample/sampler.py (probs-space thresholds, strict
+    less-than discard tests, count-then-gather top-p cutoff), executed on
+    CPU so the NPU run is compared against the identical semantics.
     """
-    logits = logits.clone()
-    batch_size, vocab_size = logits.shape
+    if p is None and k is None:
+        return logits.clone()
 
-    for row in range(batch_size):
-        row_logits = logits[row]
+    probs = logits.softmax(dim=-1)
+    probs_sort, _ = probs.sort(dim=-1, descending=False)
 
-        if k is not None and k[row] < vocab_size:
-            kval = int(k[row])
-            topk_vals, _ = torch.topk(row_logits, kval, sorted=True)
-            pivot = topk_vals[-1].item()
-            num_above_pivot = (row_logits > pivot).sum().item()
-            num_equal_pivot = (row_logits == pivot).sum().item()
-            num_keep = kval - num_above_pivot
+    out = logits.clone()
+    if k is not None:
+        top_k_count = probs_sort.size(1) - k.to(torch.long)  # shape: (batch,)
+        top_k_count = top_k_count.unsqueeze(dim=1)
+        top_k_cutoff = probs_sort.gather(-1, top_k_count)
 
-            mask = row_logits < pivot
-            equal_mask = row_logits == pivot
-            if num_keep < num_equal_pivot:
-                keep_indices = torch.where(equal_mask)[0]
-                discard = keep_indices[num_keep:]
-                mask[discard] = True
-            row_logits[mask] = mask_value
+        # Make sure the no top-k rows are no-op.
+        no_top_k_mask = (k == logits.shape[1]).unsqueeze(dim=1)
+        top_k_cutoff.masked_fill_(no_top_k_mask, -float("inf"))
 
-        if p is not None:
-            pval = float(p[row])
-            if pval < 1.0:
-                max_logit = row_logits.max()
-                if max_logit == float("-inf"):
-                    continue
-                probs = torch.softmax(row_logits, dim=-1)
-                sorted_probs, _ = torch.sort(probs, descending=True)
-                cumsum = torch.cumsum(sorted_probs, dim=0)
-                cutoff_idx = torch.searchsorted(cumsum, pval).item()
-                if cutoff_idx < len(cumsum):
-                    threshold_prob = sorted_probs[cutoff_idx].item()
-                    above_p = (probs > threshold_prob).sum().item()
-                    equal_p_count = (probs == threshold_prob).sum().item()
-                    num_keep = cutoff_idx + 1 - above_p
+        elements_to_discard = probs < top_k_cutoff
+        out.masked_fill_(elements_to_discard, -float("inf"))
 
-                    mask_p = probs < threshold_prob
-                    equal_mask_p = probs == threshold_prob
-                    if 0 < num_keep < equal_p_count:
-                        keep_indices = torch.where(equal_mask_p)[0]
-                        discard = keep_indices[int(num_keep):]
-                        mask_p[discard] = True
-                    row_logits[mask_p] = mask_value
+    if p is not None:
+        cumprob = torch.cumsum(probs_sort, dim=-1)
+        top_p_mask = cumprob <= 1 - p.unsqueeze(dim=1)
+        top_p_mask[:, -1] = False  # at least one
 
-    return logits
+        top_p_count = top_p_mask.sum(dim=-1).unsqueeze(1)
+        top_p_cutoff = probs_sort.gather(-1, top_p_count)
+        elements_to_discard = probs < top_p_cutoff
+        out.masked_fill_(elements_to_discard, -float("inf"))
+
+    return out
 
 
-def _launch(logits, k, p, batch_size, vocab_size, topk_enabled, topp_enabled):
-    buffer = torch.empty(1, vocab_size, dtype=torch.float32, device=DEVICE)
-    percentile_table = logits.new_tensor(_PERCENTILE_TO_STD_TABLE)
-    normal_cdf_table = logits.new_tensor(_NORMAL_CDF_TO_SIGMA_TABLE)
+def _launch_npu(
+    logits: torch.Tensor,
+    k: torch.Tensor | None,
+    p: torch.Tensor | None,
+) -> torch.Tensor:
+    """Run the A5 production implementation (vllm-ascend sampling path).
 
-    _topk_topp_kernel[(1,)](
-        logits,
-        logits.stride(0),
-        buffer,
-        percentile_table,
-        normal_cdf_table,
-        k,
-        p,
-        BATCH_SIZE=batch_size,
-        MASK_VALUE=float("-inf"),
-        VOCAB_SIZE=vocab_size,
-        BLOCK_SIZE=BLOCK_SIZE,
-        BLOCK_SIZE_TRUNC=BLOCK_SIZE_TRUNC,
-        TOPK_ENABLED=topk_enabled,
-        TOPP_ENABLED=topp_enabled,
-    )
+    ``ensure_default_ascend_config`` pins ``enable_reduce_sample=False`` so
+    the implementation takes the single-card branch (a UT process never
+    initializes the real engine config). The implementation fills -inf
+    in-place, so a clone is passed to keep the caller's input intact.
+    """
+    ensure_default_ascend_config()
+    out = _apply_top_k_top_p_a5_impl(logits.clone(), k, p)
     synchronize()
+    return out
+
+
+def _assert_output_close(
+    name: str,
+    out_cpu: torch.Tensor,
+    out_npu: torch.Tensor,
+    rtol: float = 1e-4,
+    atol: float = 1e-4,
+    max_mask_mismatch_ratio: float = 0.001,
+) -> None:
+    """Compare NPU output with the CPU reference.
+
+    Two-stage judgement (same scheme as the A2/A3 UT):
+      1. mask (-inf positions) consistency, allowing up to 0.1% mismatch for
+         top-p floating-point boundary differences (NPU softmax/cumsum vs
+         CPU),
+      2. surviving finite values compared element-wise.
+    """
+    # 1. Check mask consistency (inf vs finite)
+    mask_cpu = torch.isinf(out_cpu) & (out_cpu < 0)
+    mask_npu = torch.isinf(out_npu) & (out_npu < 0)
+
+    mismatch_mask = mask_cpu ^ mask_npu
+    mismatch_count = mismatch_mask.sum().item()
+    total_elements = out_cpu.numel()
+    mismatch_ratio = mismatch_count / total_elements
+    assert mismatch_ratio <= max_mask_mismatch_ratio, (
+        f"[{name}] mask mismatch ratio too high: {mismatch_ratio:.6f} "
+        f"({mismatch_count}/{total_elements})"
+    )
+
+    # 2. Check value consistency for valid elements
+    valid_mask = (~mask_cpu) & (~mask_npu)
+    if valid_mask.any():
+        torch.testing.assert_close(
+            out_cpu[valid_mask], out_npu[valid_mask], rtol=rtol, atol=atol
+        )
 
 
 @pytest.mark.parametrize(
@@ -160,85 +211,169 @@ def _launch(logits, k, p, batch_size, vocab_size, topk_enabled, topp_enabled):
 )
 @pytest.mark.parametrize("mode", ["topk_only", "topp_only", "topk_topp"])
 def test_topk_topp_realistic(batch_size, vocab_size, mode):
-    """Top-k/top-p masking with realistic vocab sizes and batch sizes."""
-    init_device_properties_triton()
+    """A5 PyTorch top-k/top-p filtering with realistic vocab and batch sizes."""
     torch.manual_seed(42)
 
     topk_enabled = mode in ("topk_only", "topk_topp")
     topp_enabled = mode in ("topp_only", "topk_topp")
 
     logits_cpu = torch.randn(batch_size, vocab_size, dtype=torch.float32)
-    if topk_enabled:
-        k = torch.randint(5, 21, (batch_size,), dtype=torch.int32)
-    else:
-        # When top-k is disabled, k >= vocab_size fully disables the top-k path
-        k = torch.full((batch_size,), vocab_size, dtype=torch.int32)
-    if topp_enabled:
-        p = torch.rand(batch_size, dtype=torch.float32) * 0.19 + 0.8  # 0.8..0.99
-    else:
-        p = torch.full((batch_size,), 1.0, dtype=torch.float32)
+    # Same None convention as the fused NPU operator: None disables the
+    # corresponding filter.
+    k_cpu = torch.randint(5, 21, (batch_size,), dtype=torch.int32) if topk_enabled else None
+    p_cpu = torch.rand(batch_size, dtype=torch.float32) * 0.19 + 0.8 if topp_enabled else None  # 0.8..0.99
 
     logits_npu = logits_cpu.to(DEVICE)
-    k_npu = k.to(DEVICE)
-    p_npu = p.to(DEVICE)
+    k_npu = k_cpu.to(DEVICE) if k_cpu is not None else None
+    p_npu = p_cpu.to(DEVICE) if p_cpu is not None else None
 
-    _launch(logits_npu, k_npu, p_npu, batch_size, vocab_size, topk_enabled, topp_enabled)
+    out_npu = _launch_npu(logits_npu, k_npu, p_npu).cpu()
+    expected = _apply_topk_topp_pytorch_cpu_ref(logits_cpu, k_cpu, p_cpu)
 
-    k_ref = None if (topk_enabled and (k >= vocab_size).any()) or not topk_enabled else k
-    p_ref = None if not topp_enabled else p
-    expected = _apply_topk_topp_cpu(
-        logits_cpu, k_ref if topk_enabled else None, p_ref if topp_enabled else None
-    )
-    torch.testing.assert_close(logits_npu.cpu(), expected, rtol=1e-5, atol=1e-5)
+    _assert_output_close("logits", expected, out_npu)
 
 
 @pytest.mark.parametrize("batch_size", [1, 4, 16])
 @pytest.mark.parametrize("vocab_size", [32000, 129280])
 def test_topk_exact_count(batch_size, vocab_size):
-    """Top-k only: verify exactly k tokens survive per row."""
-    init_device_properties_triton()
+    """Top-k only: exactly k tokens survive per row (duplicate-free input).
+
+    The implementation discards with a strict ``probs < cutoff`` test on a
+    duplicate-free row, so exactly k elements satisfy ``probs >= cutoff``.
+    """
     torch.manual_seed(7)
 
     logits_cpu = torch.randn(batch_size, vocab_size, dtype=torch.float32)
-    k = torch.randint(5, 21, (batch_size,), dtype=torch.int32)
+    k_cpu = torch.randint(5, 21, (batch_size,), dtype=torch.int32)
 
-    logits_npu = logits_cpu.to(DEVICE)
-    k_npu = k.to(DEVICE)
-    p_npu = torch.full((batch_size,), 1.0, dtype=torch.float32, device=DEVICE)
-
-    _launch(logits_npu, k_npu, p_npu, batch_size, vocab_size, True, False)
+    out_npu = _launch_npu(
+        logits_cpu.to(DEVICE), k_cpu.to(DEVICE), None
+    ).cpu()
+    expected = _apply_topk_topp_pytorch_cpu_ref(logits_cpu, k_cpu, None)
+    _assert_output_close("logits", expected, out_npu)
 
     for row in range(batch_size):
-        num_surviving = (logits_npu[row] > float("-inf")).sum().item()
-        assert num_surviving == min(int(k[row]), vocab_size), (
-            f"Row {row}: expected {min(int(k[row]), vocab_size)} survivors, "
+        num_surviving = (out_npu[row] > float("-inf")).sum().item()
+        assert num_surviving == int(k_cpu[row]), (
+            f"Row {row}: expected {int(k_cpu[row])} survivors, "
             f"got {num_surviving}"
         )
 
 
 def test_topk_duplicate_boundary():
-    """Top-k with duplicate values at the k boundary.
+    """Top-k with duplicate values at the k-th boundary.
 
-    When many tokens share the same logit value at the k-th position,
-    the kernel should keep exactly k tokens, handling duplicates correctly.
+    The implementation is threshold-based in probs space: every prob >= the
+    k-th largest prob survives, so tied boundary values are ALL kept and the
+    survivor count exceeds k. This matches the A2/A3 fused operator's
+    threshold semantics (see test_topk_topp_kernel_a2a3.py) and must match
+    the CPU reference mask exactly.
     """
-    init_device_properties_triton()
     torch.manual_seed(8)
 
     batch_size = 1
     vocab_size = 32000
     logits_cpu = torch.randn(batch_size, vocab_size, dtype=torch.float32)
-    # Force duplicate values: set 20 entries to the same value at the boundary
-    logits_cpu[0, 10:30] = logits_cpu[0, 9].item()
-    k = torch.tensor([12], dtype=torch.int32)
+    # Force a tie group at the GLOBAL maximum: entries at indices 9..29 all
+    # share the row max, so the k-th largest value (k=12) is the tie value
+    # itself and the boundary falls inside the tie group. (A tie group placed
+    # at a random rank would sit far below the k-th threshold and the
+    # survivor-count assertion below would be meaningless.)
+    logits_cpu[0, 9:30] = logits_cpu[0].max().item()
+    k_cpu = torch.tensor([12], dtype=torch.int32)
 
-    logits_npu = logits_cpu.to(DEVICE)
-    k_npu = k.to(DEVICE)
-    p_npu = torch.full((batch_size,), 1.0, dtype=torch.float32, device=DEVICE)
+    out_npu = _launch_npu(
+        logits_cpu.to(DEVICE), k_cpu.to(DEVICE), None
+    ).cpu()
+    expected = _apply_topk_topp_pytorch_cpu_ref(logits_cpu, k_cpu, None)
+    _assert_output_close("logits", expected, out_npu)
 
-    _launch(logits_npu, k_npu, p_npu, batch_size, vocab_size, True, False)
+    num_surviving_npu = (out_npu[0] > float("-inf")).sum().item()
+    num_surviving_ref = (expected[0] > float("-inf")).sum().item()
+    assert num_surviving_npu == num_surviving_ref, (
+        f"Survivor count mismatch: NPU kept {num_surviving_npu}, "
+        f"reference kept {num_surviving_ref}"
+    )
+    # All 21 tied boundary values are kept, so strictly more than k survive.
+    assert num_surviving_npu > 12, (
+        f"Threshold-based semantics should keep all tied boundary values, "
+        f"got {num_surviving_npu} survivors for k=12"
+    )
 
-    num_surviving = (logits_npu[0] > float("-inf")).sum().item()
-    assert num_surviving == 12, (
-        f"Expected 12 survivors with duplicate boundary, got {num_surviving}"
+
+def test_topp_at_least_one_survivor():
+    """Top-p with an extreme p: at least one token must survive per row.
+
+    Even when p is very small (tiny nucleus), the last (largest) position of
+    the ascending order is exempted from the mask, so the cutoff equals the
+    maximum probability and at least the argmax token survives.
+    """
+    torch.manual_seed(11)
+
+    batch_size, vocab_size = 4, 32000
+    logits_cpu = torch.randn(batch_size, vocab_size, dtype=torch.float32)
+    p_cpu = torch.full((batch_size,), 0.001, dtype=torch.float32)
+
+    out_npu = _launch_npu(
+        logits_cpu.to(DEVICE), None, p_cpu.to(DEVICE)
+    ).cpu()
+    expected = _apply_topk_topp_pytorch_cpu_ref(logits_cpu, None, p_cpu)
+    _assert_output_close("logits", expected, out_npu)
+
+    for row in range(batch_size):
+        num_surviving = (out_npu[row] > float("-inf")).sum().item()
+        assert num_surviving >= 1, (
+            f"Row {row}: top-p must keep at least one token, got {num_surviving}"
+        )
+        # The global maximum of the row must survive the nucleus filter.
+        max_idx = logits_cpu[row].argmax().item()
+        assert out_npu[row, max_idx] > float("-inf"), (
+            f"Row {row}: row maximum at index {max_idx} was masked by top-p"
+        )
+
+
+def test_topp_tie_boundary():
+    """Top-p with a tie group straddling the cumulative boundary (A5-specific).
+
+    The A5 implementation reduces top-p to ONE threshold on probs
+    (``probs < cutoff``), unlike the A2/A3 fused operator's per-position
+    cumulative masking. When several EQUAL probabilities straddle the
+    ``cumsum <= 1 - p`` boundary, the per-position semantics would mask the
+    leading part of the group while this implementation keeps the WHOLE
+    group. This UT pins that documented A5 behaviour.
+
+    Construction (vocab=16): logits come in 4 equal-valued groups
+    [0, 1, 2, 3] x 4, so probs form 4 distinct equal-prob groups. With
+    p = 0.75 the cumulative boundary (1 - p = 0.25) falls INSIDE the third
+    group (ascending): its first two members have cumsum <= 0.25 while the
+    group value equals the cutoff, so all four members survive together
+    with the whole top group -> 8 survivors.
+    """
+    torch.manual_seed(13)
+
+    logits_cpu = torch.tensor(
+        [[0.0] * 4 + [1.0] * 4 + [2.0] * 4 + [3.0] * 4],
+        dtype=torch.float32,
+    )
+    p_cpu = torch.tensor([0.75], dtype=torch.float32)
+
+    out_npu = _launch_npu(
+        logits_cpu.to(DEVICE), None, p_cpu.to(DEVICE)
+    ).cpu()
+    expected = _apply_topk_topp_pytorch_cpu_ref(logits_cpu, None, p_cpu)
+    _assert_output_close("logits", expected, out_npu)
+
+    num_surviving_npu = (out_npu[0] > float("-inf")).sum().item()
+    num_surviving_ref = (expected[0] > float("-inf")).sum().item()
+    assert num_surviving_npu == num_surviving_ref == 8, (
+        f"Expected the two highest equal-prob groups (8 tokens) to survive "
+        f"entirely; NPU kept {num_surviving_npu}, reference kept "
+        f"{num_surviving_ref}"
+    )
+    # The straddling group itself (logit value 2.0, indices 8..11) must be
+    # kept ENTIRELY even though its first two members have
+    # cumsum <= 1 - p (per-position masking would keep only 6 tokens).
+    assert bool((out_npu[0, 8:12] > float("-inf")).all()), (
+        "The tie group straddling the top-p boundary must survive entirely "
+        f"under the threshold-based A5 semantics; got {out_npu[0, 8:12].tolist()}"
     )

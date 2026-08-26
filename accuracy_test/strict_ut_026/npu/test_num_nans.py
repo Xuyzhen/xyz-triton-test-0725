@@ -1,15 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
-# Replaces the generated strict UT for _num_nans_kernel in strict_ut_026/npu.
-# Provenance: accuracy_test/nun_nans_npu_gpu/test_num_nans_kernel_precision_npu.py
-# (hand-written extended-precision spec, verified on the NPU host).
 # Kernel source: vllm_ascend/ops/triton/v2/metrics/num_nans.py
-# Coverage: _num_nans_kernel (extended precision dimensions)
+# Coverage: _num_nans_kernel 
 """
 Extended precision test for the Ascend-specific _num_nans_kernel.
 
-The replaced generated file swept only num_reqs x vocab_size x frac_nan for
-FLOAT32 inputs with NaNs injected as a contiguous per-row prefix. This
-version adds the dimensions that sweep does not cover:
+Companion to test_num_nans_kernel.py (same kernel, same import path, same
+production-aligned architecture). The base file sweeps num_reqs x vocab_size
+x frac_nan for FLOAT32 inputs with NaNs injected as a contiguous per-row
+prefix. This file adds the dimensions that sweep does not cover:
 
 1. dtype dimension (fp32 / bf16 / fp16): the kernel upcasts every loaded
    block via ``.to(tl.float32)`` before ``libdevice.isnan``. Production
@@ -77,7 +75,7 @@ def _inject_nans(
 ) -> None:
     """Inject ``num_nan`` NaNs into every row of a CPU tensor, in place.
 
-    ``prefix`` mirrors the base UT (contiguous head of each row);
+    ``prefix`` writes a contiguous block at the head of each row;
     ``scatter`` draws a different pseudo-random position set per row.
     """
     if num_nan <= 0:

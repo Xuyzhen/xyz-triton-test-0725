@@ -1,10 +1,11 @@
 # strict_ut 精度 UT 失败原因分析（026 批次，修复后归档于 028）
 
-> 本文记录 strict_ut_026 快照中 5 个精度 UT 失败实例（4 个用例）的完整根因分析，
+> 本文记录 strict_ut_026 快照中 6 个精度 UT 失败实例（5 个用例）的完整根因分析，
 > 明确每一处是**上游（vLLM 主仓）**还是**下游（vllm-ascend 适配仓）**的变更引起，
 > 以及对应的修复方式。所有修复已落入本目录（strict_ut_028）。
 >
-> 所有 PR 编号与合入日期均取自本地 vllm / vllm-ascend 仓 git log（2026-08-26 查证）。
+> 所有 PR 编号与合入日期均取自本地 vllm / vllm-ascend 仓 git log
+> （2026-08-26 查证；#5 于 2026-08-27 补录）。
 
 ---
 
@@ -12,10 +13,12 @@
 
 | 合入日期 | 仓 | PR | 标题 | 对本批 UT 的影响 |
 |---|---|---|---|---|
+| 2026-06-03 | 上游 vllm | [#43241](https://github.com/vllm-project/vllm/pull/43241) | [Model Runner V2][Spec Decode] Add Gemma4 MTP support | 引入 `_prepare_decode_inputs_kernel`（失败 #5 的被测对象，时为旧语义） |
 | 2026-06-27 | 上游 vllm | [#46878](https://github.com/vllm-project/vllm/pull/46878) | [Model Runner V2][Spec Decode] Use fp32 uniform threshold for acceptance | 引入 fp32 均匀阈值概率采样（`tl_rand32`），"恒接受"简化实现的消除自此开始 |
 | 2026-06-30 | 上游 vllm | [#46781](https://github.com/vllm-project/vllm/pull/46781) | [Model Runner V2][Spec Decode] Implement block verification for rejection sampling | 引入 `_compute_local_logits_stats_kernel`（失败 #1 的被测对象） |
 | 2026-07-13 | 下游 vllm-ascend | [#11765](https://github.com/vllm-ascend/vllm-ascend/pull/11765) | [Feature] Add qwen/glm dspark for mrv1 | DSpark kernel 引入，`ops/triton/spec_decode/utils` modern 路径的前身 |
 | 2026-07-24 | 下游 vllm-ascend | [#12612](https://github.com/vllm-ascend/vllm-ascend/pull/12612) | [Bugfix] Fix multi dp in dspark | DSpark 演进 |
+| 2026-07-27 | 上游 vllm | [#47920](https://github.com/vllm-project/vllm/pull/47920) | [Tests][Spec Decode] Add gemma4 MTP acceptance rates test | 顺带把 `_prepare_decode_inputs_kernel` 的 seq_lens 写出移出 `ADVANCE_DRAFT_POSITIONS` 块 → **失败 #5** |
 | 2026-07-28 | 下游 vllm-ascend | [#12791](https://github.com/vllm-ascend/vllm-ascend/pull/12791) | [CI] Add full ut protection for dspark | DSpark kernel 定型为 `copy_and_expand_dflash_and_dspark_inputs_kernel_single_grid` |
 | 2026-07-30 | 上游 vllm | [#48892](https://github.com/vllm-project/vllm/pull/48892) | [Model Runner V2][Spec Decode] Add multi-layer MTP speculator | `_prepare_prefill_inputs_kernel` 新增 lookahead 参数 → **失败 #2** |
 | 2026-08-05 | 上游 vllm | [#50910](https://github.com/vllm-project/vllm/pull/50910) | [Model Runner V2] Cache draft logits in model's LM head dtype | draft logits 改存除温前值，kernel 加载后 `/ temp` → **失败 #1** |
@@ -56,6 +59,7 @@
 | 3a | `TestPrepareDFlashInputsKernelAscendPatch::test_prepare_dflash_inputs[False-3-1]` | 环境兼容性失败（探测不到 kernel） | 下游模块重组 + kernel 符号重命名，UT 探测列表过旧；旧 vLLM 环境缺新模块 | **下游 vllm-ascend** PR #13191（2026-08-14 合入）等 DSpark 系列 | UT 的 kernel 符号探测列表 |
 | 3b | `TestPrepareDFlashInputsKernelAscendPatch::test_prepare_dflash_inputs[False-3-1]` | `TypeError: dynamic_func() missing 3 required positional arguments: 'cp_rank', 'CP_SIZE', 'CP_INTERLEAVE'` | 上游 PR #52188 给 kernel 新增 DCP 参数，下游为 main2main 兼容跟进签名 | **上游 vLLM** PR #52188（2026-08-17 合入），下游 #14746（2026-08-24 main2main 跟进） | UT 参数探测 + 动态传参 |
 | 4 | `TestProbabilisticRejectionKernelPatch::test_non_greedy_always_accept` | `AssertionError: Expected 2 accepted, got 1` | 下游 kernel 从"u=0 恒接受"简化实现改为真实概率采样（对齐上游 `tl_rand32` 语义）；另发现下游漏除温缺陷 | **下游 vllm-ascend** PR #13470（2026-08-18 合入，对齐上游 #46878/#46781 的 2026-06-27/06-30 语义）+ 下游缺陷 | UT 的 CPU 参考 + 测试数据；**kernel 侧补 / temp** |
+| 5 | `TestPrepareDecodeInputsKernel::test_prepare_decode_inputs[False-1]` | `AssertionError: Tensor-likes are not equal!`（diff 17 @ index 0） | 上游把 seq_lens 写出移出 `ADVANCE_DRAFT_POSITIONS` 块（恒写出），NPU 版 CPU 参考仍按旧行为（False 时保持 -1）；GPU 参照已是新语义，属 NPU 侧未同步 | **上游 vLLM** PR #47920（2026-07-27 合入，kernel 引入于 #43241 2026-06-03） | 仅 NPU UT 的 CPU 参考实现 |
 
 ---
 
@@ -95,6 +99,7 @@
 | `test_input_batch_prepare_prefill_inputs_kernel.py` | `_prepare_prefill_inputs_kernel` ← `vllm.v1.worker.gpu.input_batch` | 上游 |
 | `test_prepare_dflash_inputs_kernel.py` | `_prepare_dflash_inputs_kernel_ascend` ← `vllm_ascend.worker.v2.spec_decode.dflash.speculator` | 下游（签名跟随上游 PR #52188） |
 | `test_rejection_kernel.py` | `_probabilistic_rejection_kernel` ← `vllm_ascend.worker.v2.spec_decode.rejection_sampler_utils` | 下游（语义对齐上游 `_rejection_kernel`） |
+| `test_prepare_decode_inputs_kernel.py` | `_prepare_decode_inputs_kernel` ← `vllm.v1.worker.gpu.spec_decode.autoregressive.speculator` | 上游 |
 
 ---
 
@@ -308,7 +313,7 @@ u = tl_rand32(seed, pos, includes_zero=False)   # 真实均匀随机数
 （2026-08-05）先给 `_rejection_kernel` / `_resample_kernel` 的 draft logit 加了
 `/ temp`；下游 #13470（2026-08-18）重写 NPU kernel 对齐采样语义时，两处 draft
 logit 加载都漏了 `/ temp`——即下游在追赶上游 06-27/06-30 语义时，漏同步了上游
-08-05 的除温约定。**已直接修复 kernel**（本批 5 个失败中唯一的非 UT 修复）：
+08-05 的除温约定。**已直接修复 kernel**（本批 6 个失败中唯一的非 UT 修复）：
 
 ```python
 # vllm_ascend/worker/v2/spec_decode/rejection_sampler_utils.py（修复后）
@@ -359,6 +364,71 @@ def test_non_greedy_always_accept(self):
 
 ---
 
+### 3.5 `test_prepare_decode_inputs[False-1]` — 上游：seq_lens 写出移出 flag 块（2026-08-27 补录）
+
+**变更来源：上游 vLLM PR [#47920](https://github.com/vllm-project/vllm/pull/47920)**
+（[Tests][Spec Decode] Add gemma4 MTP acceptance rates test，**2026-07-27 合入**，
+commit `272abd5f48`；kernel 本身由 PR
+[#43241](https://github.com/vllm-project/vllm/pull/43241) 2026-06-03 引入）。
+
+**被测对象**：[vllm/v1/worker/gpu/spec_decode/autoregressive/speculator.py](file:///c:/Users/x30084275/Desktop/git/024/vllm/vllm/v1/worker/gpu/spec_decode/autoregressive/speculator.py#L775-L821)
+的 `_prepare_decode_inputs_kernel`（自回归草稿器的 decode 输入准备）。
+
+**变更内容**：#43241 引入时，seq_lens 的计算与写出**都在 `if ADVANCE_DRAFT_POSITIONS:` 块内**；
+#47920 把 `target_seq_len` 加载、`seq_len = target_seq_len - num_rejected` 和
+`tl.store(seq_lens_ptr + req_idx, seq_len)` **移到 if 块外**：
+
+```python
+# PR #47920 后的上游行为
+target_seq_len = tl.load(target_seq_lens_ptr + req_idx)   # ← 移出 if 块
+seq_len = target_seq_len - num_rejected                   # ← 移出
+if ADVANCE_DRAFT_POSITIONS:
+    position = tl.minimum(position + 1, max_model_len - 1)
+    tl.store(positions_ptr + req_idx, position)
+    seq_len = tl.minimum(seq_len + 1, max_model_len)      # 只剩 +1 与 clamp 在 if 内
+tl.store(seq_lens_ptr + req_idx, seq_len)                 # ← 移出：恒写出
+```
+
+**新语义**：`seq_lens[req]` 无论 flag 与否都写出 = `target_seq_lens - num_rejected`；
+flag 只门控 position 前进与"+1 draft 领先"。这是合理修正——不前进时 draft seq_lens
+也应镜像 target 的已验证长度，而不是留陈旧值。
+
+**失败机理**（仅 `advance_pos=False` 的参数组合触发）：
+
+```
+kernel：  seq_lens[0] = target_seq_lens[0] - 0 = 16   （恒写出，新行为）
+NPU ref： seq_lens[0] = -1（初始化值，"False 时 kernel 不写"的旧假设）
+                       ↓
+        diff = 16 - (-1) = 17  → 与报错 "Greatest absolute difference:
+        17 at index (0,), Mismatched 1/8" 完全吻合（padding 位双方都写 0）
+```
+
+NPU 版 UT 里还留着旧语义的化石注释：
+`# NOTE: the kernel only writes seq_lens[req_idx] when ADVANCE_DRAFT_POSITIONS is True`。
+
+**与前 4 例的不同点**：**GPU 参照已是正确的新语义**（恒写出），本次属于
+**NPU 侧未同步 GPU 参照**，而非两侧同时过期——所以修复只动 NPU 一个文件，
+对齐后两侧参考实现逐行同构。
+
+**修复**（仅 [npu/test_prepare_decode_inputs_kernel.py](npu/test_prepare_decode_inputs_kernel.py)）：
+
+```python
+# CPU 参考：对齐 PR #47920 后的 kernel —— seq_lens 恒写出
+for req_idx in range(num_reqs):
+    expected_input_ids[req_idx] = draft_tokens[req_idx, 0].item()
+    seq_len = target_seq_lens[req_idx].item() - num_rejected[req_idx].item()
+    if advance_pos:
+        expected_positions[req_idx] = min(old_pos + 1, max_model_len - 1)
+        seq_len += 1
+    expected_seq_lens[req_idx] = min(seq_len, max_model_len)  # ← 移出 if，恒写入
+```
+
+`[True-*]` 新旧行为重合（`min(tsl - nr + 1, max_model_len)`）所以原本就通过；
+`test_with_rejected_tokens` / `test_model_len_clamp` 均为 True 路径，不受影响；
+positions 断言仍只在 True 分支校验（kernel 的 position 写出依旧受 flag 门控）。
+
+---
+
 ## 4. GPU 参照用例统一情况（合规性检查结论）
 
 用户要求"检查对应 GPU 精度参照用例是否合规统一"，逐项核对结果：
@@ -369,6 +439,7 @@ def test_non_greedy_always_accept(self):
 | `test_input_batch_prepare_prefill_inputs_kernel.py` | 三处调用同步改为新签名（含 `LOOKAHEAD_BLOCK`） | ✅ 两侧一致 |
 | `test_rejection_kernel.py` | 新增 `_run_non_greedy_kernel` 辅助函数统一非贪婪调用路径；新增 `test_non_greedy_always_accept` / `test_non_greedy_always_reject`，与 NPU 侧 near-one-hot 场景**镜像** | ✅ 两侧一致 |
 | `test_prepare_dflash_inputs_kernel.py` | dflash 为 NPU 专属 kernel（下游仓），GPU 侧无对应参照用例 | ➖ 不适用 |
+| `test_prepare_decode_inputs_kernel.py` | GPU 参照**原本就是** PR #47920 后的新语义（恒写出），无需修改；NPU 版 CPU 参考同步为同一结构（#5） | ✅ 修复后两侧一致（GPU 无改动） |
 
 ---
 
@@ -383,6 +454,7 @@ def test_non_greedy_always_accept(self):
 | `npu/test_prepare_dflash_inputs_kernel.py` | kernel 符号多路径降级探测；DCP 参数探测 + 动态传 `cp_rank=0, CP_SIZE=1, CP_INTERLEAVE=False` |
 | `npu/test_rejection_kernel.py` | 重写 `_non_greedy_accept_cpu_ref`（确定性极端评估）；`test_non_greedy_always_accept` 等改 near-one-hot 确定性构造 |
 | `gpu/test_rejection_kernel.py` | 新增 `_run_non_greedy_kernel` + always_accept / always_reject 镜像用例 |
+| `npu/test_prepare_decode_inputs_kernel.py`（#5，仅 NPU） | CPU 参考：`seq_len = tsl - nr` 计算与 `expected_seq_lens` 写出移出 `if advance_pos:`（恒写出，对齐 PR #47920）；更新过时的 NOTE 注释 |
 
 **kernel 侧（vllm-ascend 仓，本批唯一的 kernel 修复）**：
 

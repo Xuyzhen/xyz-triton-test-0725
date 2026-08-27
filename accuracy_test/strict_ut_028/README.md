@@ -99,6 +99,25 @@ python precision/compare_results.py        # 数值比对 -> report/compare_<时
 python precision/shape_audit.py --list     # 查看注册表与 case_id
 ```
 
+### 文本通道变体（服务器间只能复制粘贴时）
+
+当 GPU/NPU 服务器之间没有 scp/git 通道、只有文本粘贴时：
+
+```bash
+# 每台服务器各自跑（inputs/ 会按种子在本侧重新生成，无需传输）：
+python precision/run_capture.py --side gpu        # GPU 服务器
+python precision/run_capture.py --side npu        # NPU 服务器
+# 各自导出 digest 表（纯文本，几 KB）：
+python precision/digest_report.py --side gpu      # -> results/gpu/digest_table.txt
+python precision/digest_report.py --side npu      # -> results/npu/digest_table.txt
+# 把两张表粘贴到同一台机器（或贴给分析者），比对：
+python precision/digest_report.py --compare results/gpu/digest_table.txt results/npu/digest_table.txt
+```
+
+digest MATCH = 输出逐位一致（强于任何容差判定）；IN MISMATCH = 种子重生成不变式被破坏；
+DIFF/NORM 的 case 再单独走 tensor 级比对（仅该 case 的 .pt 需要传，
+`base64 results/npu/cases/<kernel>/<cid>.pt` 粘贴传输后 `base64 -d` 还原）。
+
 退出码非 0 = 有问题（shape_audit：缺失/形状不一致；compare_results：FAIL/ERROR/MISSING）。
 
 ### 判定标准（precision/compare_metrics.py）

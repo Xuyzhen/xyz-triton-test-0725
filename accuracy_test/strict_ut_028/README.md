@@ -123,6 +123,11 @@ NPU 侧乘回 temperature 后两侧才可比。
    - `run(side, tensors, params)`：按 side 懒加载 GPU `vllm...` / NPU `vllm_ascend...` API；
    - `CASES`：声明 `params`、`stochastic`、每个输出的 `output_modes`，需要时挂 `normalize`。
 2. 在 `precision/kernel_cases/__init__.py` 的 `REGISTRY` 注册一行。
+
+当前已注册 kernel（11 个，覆盖双标杆浮点算子 + 整数/搬移类样本）：
+`expand_idx_mapping`、`penalties`、`gumbel_sample`、`temperature`、`min_p`、
+`topk_log_softmax`、`compute_local_logits_stats`、`update_min_larger_stats`、
+`selective_scan_update`、`bias`、`bad_words`。
 3. 阶段 1 → 同步 → 阶段 2 → 同步 → 对账 + 比对。
 
 注意生产不变式（历史踩坑）：penalties 的 `expanded_local_pos` 必须满足

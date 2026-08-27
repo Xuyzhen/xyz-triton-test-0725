@@ -1,4 +1,36 @@
 #!/usr/bin/env bash
+# One-click GPU-side run: capture all cases + generate the digest table.
+#
+# Usage (on the GPU server, repo root = .../accuracy_test/strict_ut_028):
+#   bash run_gpu.sh                          # capture + digest table
+#   bash run_gpu.sh compare <npu_table.txt>  # additionally compare with an NPU table
+#
+# The table is also printed to stdout at the end: copy-paste it to the
+# Windows machine (or the other server) - no git/scp needed.
 set -euo pipefail
 cd "$(dirname "$0")"
-python -m pytest -c pytest.ini gpu -m gpu -v --tb=short "$@"
+SIDE=gpu
+PY=${PYTHON:-python}
+
+# 2026-08-28 migration: gumbel cases renamed to 1:1 token<->request mapping
+# (determinism fix). Drop stale artifacts; inputs regenerate deterministically
+# from the fixed seed on both sides, so no manual transfer is needed.
+rm -rf inputs/gumbel_sample "results/$SIDE/cases/gumbel_sample"
+
+echo "== [$SIDE] capturing all cases (one subprocess per case) =="
+"$PY" precision/run_capture.py --side "$SIDE" \
+  || echo "WARNING: some cases failed above; building the table for the captured ones"
+
+echo "== [$SIDE] generating digest table =="
+"$PY" precision/digest_report.py --side "$SIDE"
+
+LATEST=$(ls -t "results/$SIDE"/digest_table_${SIDE}_*.txt | head -n 1)
+echo "== done: $LATEST =="
+echo "---- table content (copy from here) ----"
+cat "$LATEST"
+echo "---- end of table ----"
+
+if [[ "${1:-}" == "compare" && -n "${2:-}" ]]; then
+  echo "== comparing $LATEST vs $2 =="
+  "$PY" precision/digest_report.py --compare "$LATEST" "$2"
+fi

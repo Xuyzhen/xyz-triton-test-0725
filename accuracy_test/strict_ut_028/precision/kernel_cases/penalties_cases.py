@@ -77,6 +77,12 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
         from vllm_ascend.worker.v2.sample.penalties import apply_penalties
 
     logits = t["logits"].clone()
+    # output_bin_counts is an in/out tensor: the kernel updates it in place.
+    # Pass a clone so the recorded IN digest reflects the true pre-run input
+    # (the harness computes digests AFTER run(); without the clone the IN
+    # digest silently captured the post-kernel counts and lit up as a fake
+    # IN MISMATCH, plus the in-memory input was polluted).
+    bin_counts = t["output_bin_counts"].clone()
     apply_penalties(
         logits,
         t["idx_mapping"],
@@ -86,7 +92,7 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
         t["frequency_penalty"],
         t["presence_penalty"],
         t["prompt_bin_mask"],
-        t["output_bin_counts"],
+        bin_counts,
     )
     if side == "gpu":
         torch.cuda.synchronize()

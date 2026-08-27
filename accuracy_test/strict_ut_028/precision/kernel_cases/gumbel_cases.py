@@ -12,6 +12,12 @@ Compare basis: PRE-temperature logits. The normalize hook multiplies the NPU
 cache rows back by their per-request temperature (temp==0 rows were never
 divided, factor stays 1). The `sampled` token ids depend on per-device RNG
 streams and are declared MODE_SKIP.
+
+Determinism invariant: every case uses a 1:1 token->request mapping
+(permutation). With a random many-to-one mapping, several tokens write the
+same cache row (all at column 0), the surviving row depends on write order,
+and the logits_cache digest drifts run-to-run on BOTH platforms (verified
+2026-08-27/28 on GPU 010925/030652 and NPU 171050/173219/175106).
 """
 
 from __future__ import annotations
@@ -26,7 +32,10 @@ def build_inputs(params: dict, seed: int) -> dict[str, torch.Tensor]:
     g = torch.Generator(device="cpu").manual_seed(seed)
     n_tok, n_req, vocab = params["num_tokens"], params["num_reqs"], params["vocab_size"]
     logits = torch.randn(n_tok, vocab, generator=g, dtype=torch.float32)
-    mapping = torch.randint(0, n_req, (n_tok,), generator=g, dtype=torch.int32)
+    # 1:1 permutation mapping: each cache row is written by exactly one token
+    # -> deterministic logits_cache regardless of kernel write order.
+    assert n_tok == n_req, "gumbel cases require 1:1 token<->request mapping"
+    mapping = torch.randperm(n_req, generator=g).to(torch.int32)
     temperature = torch.rand(n_req, generator=g, dtype=torch.float32) * 1.5 + 0.5
     temperature[0] = 1.0  # exercise the no-op divide path on both sides
     seed_t = torch.randint(0, 2**31, (n_req,), generator=g, dtype=torch.int64)
@@ -86,6 +95,6 @@ def _mk(name: str, n_tok: int, n_req: int, vocab: int) -> CaseSpec:
 
 CASES = [
     _mk("basic_4t_4r_32000v", 4, 4, 32000),
-    _mk("batch_8t_4r_32000v", 8, 4, 32000),
+    _mk("batch_8t_8r_32000v", 8, 8, 32000),
     _mk("deepseek_2t_2r_129280v", 2, 2, 129280),
 ]

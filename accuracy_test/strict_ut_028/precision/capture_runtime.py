@@ -78,10 +78,15 @@ def tensor_digest(t: torch.Tensor) -> str:
     t = t.detach().cpu().contiguous()
     if t.numel() == 0:
         return "empty"
+    dtype_label = str(t.dtype)
+    if t.dtype == torch.bfloat16:
+        # numpy has no bfloat16; hash the raw 16-bit payload bit-exactly
+        # (device-independent, so both sides digest identically).
+        t = t.view(torch.uint16)
     h = hashlib.sha256()
-    h.update(str(t.dtype).encode())
+    h.update(dtype_label.encode())
     h.update(str(tuple(t.shape)).encode())
-    h.update(t.numpy().tobytes() if not t.is_floating_point() else t.numpy().tobytes())
+    h.update(t.numpy().tobytes())
     return h.hexdigest()[:16]
 
 

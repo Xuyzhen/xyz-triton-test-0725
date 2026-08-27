@@ -42,10 +42,11 @@ _NORM_KERNELS = {"gumbel_sample"}
 
 
 def build_table(side: str, results_root: Path) -> str:
+    import time
     cases_dir = results_root / side / "cases"
     if not cases_dir.exists():
         sys.exit(f"ERROR: no captured results under {cases_dir}; run --side {side} capture first")
-    lines = [f"# digest table side={side}"]
+    lines = [f"# digest table side={side} generated={time.strftime('%Y-%m-%d %H:%M:%S')}"]
     for meta_path in sorted(cases_dir.rglob("*.json")):
         meta = json.loads(meta_path.read_text())
         kernel, cid, case = meta["kernel"], meta["case_id"], meta["case"]
@@ -121,9 +122,11 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.side:
+        import time
         results_root = SUITE_ROOT / "results"
         table = build_table(args.side, results_root)
-        out = results_root / args.side / "digest_table.txt"
+        stamp = time.strftime("%Y%m%d_%H%M%S")
+        out = results_root / args.side / f"digest_table_{args.side}_{stamp}.txt"
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(table, encoding="utf-8")
         print(table)

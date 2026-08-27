@@ -107,11 +107,11 @@ python precision/shape_audit.py --list     # 查看注册表与 case_id
 # 每台服务器各自跑（inputs/ 会按种子在本侧重新生成，无需传输）：
 python precision/run_capture.py --side gpu        # GPU 服务器
 python precision/run_capture.py --side npu        # NPU 服务器
-# 各自导出 digest 表（纯文本，几 KB）：
-python precision/digest_report.py --side gpu      # -> results/gpu/digest_table.txt
-python precision/digest_report.py --side npu      # -> results/npu/digest_table.txt
+# 各自导出 digest 表（纯文本，几 KB，文件名含侧别+时间戳）：
+python precision/digest_report.py --side gpu      # -> results/gpu/digest_table_gpu_<时间戳>.txt
+python precision/digest_report.py --side npu      # -> results/npu/digest_table_npu_<时间戳>.txt
 # 把两张表粘贴到同一台机器（或贴给分析者），比对：
-python precision/digest_report.py --compare results/gpu/digest_table.txt results/npu/digest_table.txt
+python precision/digest_report.py --compare results/gpu/digest_table_gpu_<时间戳>.txt results/npu/digest_table_npu_<时间戳>.txt
 ```
 
 digest MATCH = 输出逐位一致（强于任何容差判定）；IN MISMATCH = 种子重生成不变式被破坏；

@@ -53,7 +53,12 @@ def build_inputs(params: dict, seed: int) -> dict[str, torch.Tensor]:
     output_bin_counts = torch.zeros(n_status, vocab, dtype=torch.int32)
     n_out = max(1, vocab // 20)
     for s in range(n_status):
-        toks = torch.randint(0, vocab, (n_out,), generator=g)
+        # Unique indices (randperm): a scatter with duplicated indices is
+        # officially non-deterministic in PyTorch, and torch 2.10 vs 2.13
+        # resolve the 660 duplicate writes differently (probe 2026-08-28:
+        # identical nonzero bins, different surviving counts). Unique
+        # indices make the result independent of write order on any build.
+        toks = torch.randperm(vocab, generator=g)[:n_out]
         cnts = torch.randint(1, 10, (n_out,), generator=g)
         output_bin_counts[s, toks] = cnts.to(torch.int32)
 

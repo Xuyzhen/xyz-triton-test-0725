@@ -130,7 +130,10 @@ def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
         # scalar per (batch, head): dt[..., 0] and A[h, 0, 0]
         dtv = dt[..., 0] + dt_bias[..., 0]                      # [b, h]
         dtv = torch.where(dtv <= 20.0, torch.log(torch.exp(dtv) + 1.0), dtv)
-        dA = torch.exp(A[None, :, 0, 0] * dtv[..., None])       # [b, h, 1]
+        # A[:, 0, 0] is [h]; [1, h, 1] * [b, h, 1] broadcasts to [b, h, 1].
+        # (A[None, :, 0, 0] * dtv[..., None] would broadcast [1,h]*[b,h,1]
+        # into [b, h, h] - wrong ranks, blows up against state [b,h,d,n].)
+        dA = torch.exp(A[:, 0, 0][None, :, None] * dtv[..., None])  # [b, h, 1]
         dB_scalar = B.repeat_interleave(ratio, dim=1) * dtv[..., None]  # [b, h, n]
         new_state = state * dA.unsqueeze(-1) + dB_scalar.unsqueeze(2) * x.unsqueeze(-1)
     else:

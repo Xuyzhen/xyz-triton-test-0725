@@ -119,7 +119,7 @@ def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
     n_tok, vocab = logits.shape
     mapping = t["idx_mapping"].long()
     token_ids = t["token_ids"].long()
-    pos_t = t["pos"].long()
+    pos_t = t["expanded_local_pos"].long()
     rep = t["repetition_penalty"].to(torch.float64)
     freq = t["frequency_penalty"].to(torch.float64)
     pres = t["presence_penalty"].to(torch.float64)

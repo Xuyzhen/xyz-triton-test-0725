@@ -8,10 +8,15 @@ API divergence (verified on both checkouts):
                 [R, V], output_processed_logits_col=...) -> cache stores
                 POST-temperature logits (divided inside the kernel).
 
-Compare basis: PRE-temperature logits. The normalize hook multiplies the NPU
-cache rows back by their per-request temperature (temp==0 rows were never
-divided, factor stays 1). The `sampled` token ids depend on per-device RNG
-streams and are declared MODE_SKIP.
+Compare basis: POST-temperature logits (what the NPU kernel actually stores).
+GPU caches PRE-temperature logits, so the normalize hook divides the GPU cache
+rows by their per-request temperature in fp32 (a correctly-rounded division,
+i.e. exactly what a division-performing fp32 implementation yields); the NPU
+cache needs no transform. temp==0 rows were never divided on either side and
+stay raw. The previous PRE-temperature basis (multiply NPU back by temp)
+round-tripped (x/t)*t in fp32 and cost 1-2 ulp that the ratio metric amplified
+to ~128x vs the bitwise-exact GPU baseline - a basis artifact, not an NPU
+precision defect (verified 2026-08-28: POST basis gives ratios 1.02-1.27, L2).
 
 Determinism invariant: every case uses a 1:1 token->request mapping
 (permutation). With a random many-to-one mapping, several tokens write the
@@ -75,23 +80,33 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
 
 def normalize(output_name: str, side: str, tensor: torch.Tensor,
               inputs: dict[str, torch.Tensor], params: dict) -> torch.Tensor:
-    """Bring both sides to the PRE-temperature compare basis."""
-    if output_name != "logits_cache" or side != "npu":
+    """Bring both sides to the POST-temperature compare basis.
+
+    GPU caches PRE-temperature logits: divide by the per-request temperature
+    in fp32 (correctly-rounded, mirroring a division-performing fp32 kernel).
+    NPU already stores POST-temperature logits: no transform. temp==0 rows
+    were never divided on either side.
+    """
+    if output_name != "logits_cache" or side != "gpu":
         return tensor
     temp = inputs["temperature"].to(torch.float32)
     factor = torch.where(temp == 0.0, torch.ones_like(temp), temp)
-    return tensor.to(torch.float32) * factor.view(-1, 1)
+    return tensor.to(torch.float32) / factor.view(-1, 1)
 
 
 def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
-    """Golden: logits_cache rows written by each token = that token's input
-    logits row (PRE-temperature compare basis). 'sampled' is stochastic
-    (MODE_SKIP) and is intentionally omitted."""
+    """Golden: logits_cache row r (written by exactly one token thanks to the
+    1:1 mapping) holds that token's input logits row divided by the request's
+    temperature, i.e. the POST-temperature value the NPU kernel stores.
+    Computed in fp64 (exact division of the fp32-exact inputs). 'sampled' is
+    stochastic (MODE_SKIP) and is intentionally omitted."""
     mapping = t["expanded_idx_mapping"].long()
     # 1:1 token->request mapping: inverse permutation recovers the writer row
     inv = torch.argsort(mapping)
-    cache = t["logits"][inv].to(torch.float64)
-    return {"logits_cache": cache}
+    rows = t["logits"][inv].to(torch.float64)
+    temp = t["temperature"].to(torch.float64)
+    factor = torch.where(temp == 0.0, torch.ones_like(temp), temp)
+    return {"logits_cache": rows / factor.view(-1, 1)}
 
 
 def _mk(name: str, n_tok: int, n_req: int, vocab: int) -> CaseSpec:

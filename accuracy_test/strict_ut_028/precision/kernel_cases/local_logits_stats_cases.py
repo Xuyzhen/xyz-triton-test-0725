@@ -98,6 +98,11 @@ def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
       else:             target stats over target_logits[row, block]
                         draft stats over draft_logits[req, local_pos, block]
                         / temp (per-request temperature)
+    NOTE: the kernel only stores target_local_argmax in the greedy branch
+    (temp==0); the non-greedy branch writes max/sumexp only, leaving argmax
+    at its zero-initialized value. ref() must mirror that or every non-greedy
+    case fails with a full argmax mismatch (verified 2026-08-28: gpu/npu
+    argmax were all 0 while the old ref wrote real indices).
     Rows with local_pos == n_spec (bonus) write nothing: outputs stay at their
     zero-initialized values.
     """
@@ -132,7 +137,6 @@ def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
                 t_mx[li, b] = seg.max()
             else:
                 m = seg.max()
-                t_am[li, b] = b * BLOCK + int(seg.argmax())
                 t_mx[li, b] = m
                 t_se[li, b] = torch.exp(seg - m).sum()
                 dseg = draft[r, p, b * BLOCK:(b + 1) * BLOCK] / tp

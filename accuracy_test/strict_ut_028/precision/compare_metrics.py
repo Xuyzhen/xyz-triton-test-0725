@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 import torch
 
-from capture_runtime import MODE_INT_EXACT, TOLERANCES
+from capture_runtime import MODE_INT_EXACT, MODE_SKIP, TOLERANCES
 
 WARN_MISMATCH_RATIO = 1e-3     # <=0.1% mismatched elements may downgrade to WARN
 WARN_TOL_FACTOR = 10.0         # max_err <= 10x tolerance may downgrade to WARN
@@ -64,6 +64,10 @@ def compare_float(a: torch.Tensor, b: torch.Tensor, mode: str) -> CompareResult:
 
 
 def compare_output(mode: str, a: torch.Tensor, b: torch.Tensor) -> CompareResult:
+    if mode == MODE_SKIP:
+        # Stochastic outputs (per-device RNG streams, e.g. sampled token ids):
+        # differing values are expected, not graded.
+        return CompareResult("SKIP", "stochastic output, not compared")
     if mode == MODE_INT_EXACT:
         return compare_int(a, b)
     return compare_float(a, b, mode)

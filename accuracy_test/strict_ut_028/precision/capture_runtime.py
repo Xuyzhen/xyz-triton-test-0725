@@ -148,6 +148,8 @@ def collect_env(side: str) -> dict[str, Any]:
             env["device"] = torch.npu.get_device_name(0)
     elif side == "gpu" and torch.cuda.is_available():
         env["device"] = torch.cuda.get_device_name(0)
+    elif side == "cpu":
+        env["device"] = "cpu (fp64 golden reference)"
     return env
 
 
@@ -177,10 +179,14 @@ def save_case_result(
     (case_dir / f"{cid}.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False))
 
     # Float outputs are stored upcast to fp32 for a stable compare basis;
-    # integer outputs keep their dtype.
+    # integer outputs keep their dtype. The cpu side IS the golden reference:
+    # keep fp64 so the ratio metrics are anchored to full-precision truth.
     stored = {}
     for k, v in outputs.items():
-        stored[k] = v.detach().cpu().to(torch.float32) if v.is_floating_point() else v.detach().cpu()
+        if v.is_floating_point():
+            stored[k] = v.detach().cpu().to(torch.float64 if side == "cpu" else torch.float32)
+        else:
+            stored[k] = v.detach().cpu()
     torch.save(stored, case_dir / f"{cid}.pt")
 
     _update_manifest(results_root, side, env=None)

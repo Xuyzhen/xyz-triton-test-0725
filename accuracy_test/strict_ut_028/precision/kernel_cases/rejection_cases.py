@@ -217,6 +217,67 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
     }
 
 
+def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
+    """fp64 golden mirroring _rejection_kernel (SYNTHETIC_MODE=False,
+    USE_BLOCK_VERIFICATION=False, HAS_DRAFT_LOGITS=True).
+
+    Per request, walk the n_spec draft positions:
+      greedy (temp==0): accepted = (target row argmax == draft token);
+                        sampled[i] = draft if accepted else target argmax;
+                        lse outputs stay 0 (greedy branch never computes them)
+      non-greedy:       ratio test p(x) > u*q(x); case construction plants
+                        p/q far from 1 (logit +-100), so the u-dependence
+                        vanishes: accept iff log_p >= log_q.
+                        lse outputs = LSE values of the LAST verified step
+                        (target row / draft row / temp).
+    rejected_steps = accepted_length. sampled[bonus] stays 0 (never written).
+    """
+    n_req, n_spec = params["num_reqs"], params["num_speculative_steps"]
+    f64 = torch.float64
+    target = t["target_logits"].to(f64)
+    draft = t["draft_logits"].to(f64)
+    draft_sampled = t["draft_sampled"].long()
+    temp = t["temperature"].to(f64)
+
+    sampled = torch.zeros(n_req, n_spec + 1, dtype=torch.int64)
+    rejected_steps = torch.zeros(n_req, dtype=torch.int32)
+    t_lse = torch.zeros(n_req, dtype=f64)
+    d_lse = torch.zeros(n_req, dtype=f64)
+
+    for ri in range(n_req):
+        start = ri * (n_spec + 1)
+        tp = float(temp[ri])
+        greedy = tp == 0.0
+        accepted_length = 0
+        tl_val, dl_val = 0.0, 0.0
+        verifying = True
+        for i in range(n_spec):
+            if not verifying:
+                break
+            li = start + i
+            dtok = int(draft_sampled[li + 1])
+            if greedy:
+                t_am = int(target[li].argmax())
+                accepted = t_am == dtok
+                sampled[ri, i] = dtok if accepted else t_am
+            else:
+                trow = target[li]
+                tl_val = float(torch.logsumexp(trow, dim=-1))
+                drow = draft[ri, i] / tp
+                dl_val = float(torch.logsumexp(drow, dim=-1))
+                accepted = bool(trow[dtok] - tl_val >= drow[dtok] - dl_val)
+                sampled[ri, i] = dtok
+            verifying = accepted
+            accepted_length += int(accepted)
+        rejected_steps[ri] = accepted_length
+        if not greedy:
+            t_lse[ri] = tl_val
+            d_lse[ri] = dl_val
+    return {"sampled": sampled, "rejected_steps": rejected_steps,
+            "target_rejected_logsumexp": t_lse,
+            "draft_rejected_logsumexp": d_lse}
+
+
 def _mk(name: str, n_req: int, n_spec: int, vocab: int, mode: str) -> CaseSpec:
     greedy = mode.startswith("greedy")
     return CaseSpec(

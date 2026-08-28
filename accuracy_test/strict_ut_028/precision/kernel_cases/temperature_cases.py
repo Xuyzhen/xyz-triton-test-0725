@@ -47,6 +47,16 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
     return {"logits": logits}
 
 
+def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
+    """fp64 golden: divide by per-request temperature; temp 0/1 rows unchanged
+    (kernel early-returns on both, see _temperature_kernel)."""
+    logits = t["logits"].to(torch.float64)
+    temp = t["temperature"].to(torch.float64)
+    temp = torch.where(temp == 0.0, torch.ones_like(temp), temp)
+    out = logits / temp[t["expanded_idx_mapping"].long()].unsqueeze(-1)
+    return {"logits": out}
+
+
 def _mk(name: str, n_tok: int, n_req: int, vocab: int, dtype: str) -> CaseSpec:
     return CaseSpec(
         kernel="temperature", name=name,

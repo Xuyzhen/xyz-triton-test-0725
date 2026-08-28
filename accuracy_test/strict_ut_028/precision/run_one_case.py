@@ -38,7 +38,7 @@ def execute_case(side: str, kernel: str, cid: str) -> int:
     """Run a single case in the current process. Returns exit code."""
     import torch
 
-    device = "cuda" if side == "gpu" else "npu"
+    device = {"gpu": "cuda", "npu": "npu", "cpu": "cpu"}[side]
     if side == "npu":
         _install_npu_runtime()
 
@@ -57,7 +57,15 @@ def execute_case(side: str, kernel: str, cid: str) -> int:
         # workflow normally does this, but allow either side to bootstrap).
         cr.save_inputs(inputs_root, spec, mod.build_inputs(spec.params, spec.seed))
     tensors = cr.load_inputs(inputs_root, spec, device)
-    outputs = mod.run(side, tensors, spec.params)
+    if side == "cpu":
+        # Golden reference: pure-torch fp64 implementation of the kernel
+        # semantics (no vllm / triton import needed).
+        if not hasattr(mod, "ref"):
+            print(f"ERROR: {kernel} has no ref() CPU golden implementation", file=sys.stderr)
+            return 3
+        outputs = mod.ref(tensors, spec.params)
+    else:
+        outputs = mod.run(side, tensors, spec.params)
     cr.save_case_result(results_root, side, spec, outputs, tensors)
     print(f"OK {kernel}/{cid} ({spec.name}) -> results/{side}/")
     return 0
@@ -65,7 +73,7 @@ def execute_case(side: str, kernel: str, cid: str) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--side", choices=["gpu", "npu"], required=True)
+    parser.add_argument("--side", choices=["gpu", "npu", "cpu"], required=True)
     parser.add_argument("--kernel", required=True)
     parser.add_argument("--case-id", required=True)
     args = parser.parse_args()

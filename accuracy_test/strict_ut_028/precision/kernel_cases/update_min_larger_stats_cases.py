@@ -108,6 +108,33 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
     return {"min_larger": min_larger, "num_min_larger": num_min_larger}
 
 
+def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
+    """fp64 golden for the _update_min_larger_stats merge rule:
+      tile_min = min(where(mask, data, inf))
+      new = min(running, tile_min); count replaced on strictly-smaller,
+      accumulated when |tile_min - running| < 1e-9, else kept.
+    """
+    data = t["data"].to(torch.float64)
+    mask = t["above_mask"].bool()
+    sentinel = float("inf")
+
+    tile_min = torch.where(mask, data, torch.full_like(data, sentinel)).min()
+    tile_eq = mask & (torch.abs(data - tile_min) < 1e-9)
+    tile_cnt = int(tile_eq.sum())
+
+    min_larger = t["min_larger"].to(torch.float64).clone()
+    num_min_larger = t["num_min_larger"].clone()
+
+    is_new = bool(tile_min < min_larger)
+    is_same = bool(torch.abs(tile_min - min_larger) < 1e-9)
+    if is_new:
+        num_min_larger[0] = tile_cnt
+    elif is_same:
+        num_min_larger[0] = int(num_min_larger[0]) + tile_cnt
+    min_larger[0] = torch.minimum(min_larger[0], tile_min)
+    return {"min_larger": min_larger, "num_min_larger": num_min_larger}
+
+
 def _mk(name: str, pattern: str, block: int) -> CaseSpec:
     return CaseSpec(
         kernel="update_min_larger_stats", name=name,

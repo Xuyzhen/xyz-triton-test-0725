@@ -163,6 +163,52 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
     }
 
 
+def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
+    """fp64 golden mirroring _resample_kernel for the temp==0 paths this
+    capture covers (per the module docstring, temp!=0 adds per-device philox
+    Gumbel noise and is not cross-platform comparable):
+
+      bonus      : resample_token_idx == end-1 -> residual logits are the raw
+                   target row; per-block plain argmax (no noise at temp 0).
+                   token_id = block*BLOCK_SIZE + local argmax; value = max.
+      greedy_noop: temp==0 and non-bonus -> kernel early-returns, outputs
+                   keep the -1 sentinel.
+
+    Blocks >= num_blocks (padding to next_power_of_2) also keep -1: the grid
+    only launches num_blocks blocks.
+    """
+    n_req, n_spec, vocab = params["num_reqs"], params["num_speculative_steps"], params["vocab_size"]
+    block_size = RESAMPLE_BLOCK_SIZE
+    num_blocks = (vocab + block_size - 1) // block_size
+    padded = 1
+    while padded < num_blocks:
+        padded *= 2
+
+    argmax_out = -torch.ones(n_req, padded, dtype=torch.int64)
+    max_out = -torch.ones(n_req, padded, dtype=torch.float64)
+
+    if params["scenario"] == "bonus":
+        target = t["target_logits"].to(torch.float64)
+        temp = t["temperature"].to(torch.float64)
+        rejected_step = t["rejected_step"].long()
+        mapping = t["expanded_idx_mapping"].long()
+        for ri in range(n_req):
+            start = ri * (n_spec + 1)
+            end = start + n_spec + 1
+            ridx = int(rejected_step[ri])
+            tok_idx = start + ridx
+            is_bonus = tok_idx == end - 1
+            tp = float(temp[int(mapping[tok_idx])])
+            if tp == 0.0 and not is_bonus:
+                continue  # greedy no-op guard: keep -1 sentinel
+            row = target[tok_idx]
+            for b in range(num_blocks):
+                seg = row[b * block_size:(b + 1) * block_size]
+                argmax_out[ri, b] = b * block_size + int(seg.argmax())
+                max_out[ri, b] = seg.max()
+    return {"resampled_local_argmax": argmax_out, "resampled_local_max": max_out}
+
+
 def _mk(name: str, n_req: int, n_spec: int, vocab: int, scenario: str,
         has_draft: bool) -> CaseSpec:
     return CaseSpec(

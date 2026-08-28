@@ -49,6 +49,20 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
     return {"expanded_idx_mapping": out_map, "expanded_local_pos": out_pos}
 
 
+def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
+    """Golden: out_map[start+j] = idx[r], out_pos[start+j] = j per request."""
+    idx, cu = t["idx_mapping"].long(), t["cu_num_logits"].long()
+    num_reqs = idx.shape[0]
+    total = int(cu[-1].item())
+    out_map = torch.empty(total, dtype=torch.int64)
+    out_pos = torch.empty(total, dtype=torch.int32)
+    for r in range(num_reqs):
+        s, e = int(cu[r]), int(cu[r + 1])
+        out_map[s:e] = idx[r]
+        out_pos[s:e] = torch.arange(e - s, dtype=torch.int32)
+    return {"expanded_idx_mapping": out_map, "expanded_local_pos": out_pos}
+
+
 def _mk(name: str, params: dict) -> CaseSpec:
     return CaseSpec(
         kernel="expand_idx_mapping",

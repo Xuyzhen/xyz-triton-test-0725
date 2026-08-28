@@ -99,6 +99,38 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
     return {"logits": logits}
 
 
+def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
+    """fp64 golden mirroring _apply_token_bias_kernel (order: allowed ->
+    logit_bias -> min_tokens_stop):
+      1. allowed_token_ids[r] non-empty: save those logits, set row -inf, restore
+      2. add bias[r] at bias_token_ids[r]
+      3. pos+1 < min_lens[r]: set stop_token_ids[r] to -inf
+    """
+    logits = t["logits"].to(torch.float64).clone()
+    n_tok = logits.shape[0]
+    mapping = t["expanded_idx_mapping"].long()
+    for tok in range(n_tok):
+        r = int(mapping[tok])
+        num_allowed = int(t["num_allowed_token_ids"][r])
+        if num_allowed > 0:
+            allowed = t["allowed_token_ids"][r, :num_allowed].long()
+            saved = logits[tok, allowed].clone()
+            logits[tok, :] = float("-inf")
+            logits[tok, allowed] = saved
+        num_bias = int(t["num_logit_bias"][r])
+        if num_bias > 0:
+            # sequential adds so duplicate token ids accumulate exactly like
+            # the kernel's load-add-store per (tok, bias) pair
+            for j in range(num_bias):
+                tid = int(t["bias_token_ids"][r, j])
+                logits[tok, tid] = logits[tok, tid] + float(t["bias"][r, j])
+        num_stops = int(t["num_stop_token_ids"][r])
+        if num_stops > 0 and int(t["pos"][tok]) + 1 < int(t["min_lens"][r]):
+            stops = t["stop_token_ids"][r, :num_stops].long()
+            logits[tok, stops] = float("-inf")
+    return {"logits": logits}
+
+
 def _mk(name: str, n_tok: int, vocab: int, n_req: int, features: list[str]) -> CaseSpec:
     return CaseSpec(
         kernel="bias", name=name,

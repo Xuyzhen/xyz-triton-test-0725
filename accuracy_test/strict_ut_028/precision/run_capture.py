@@ -3,10 +3,12 @@
     python precision/run_capture.py --side gpu                 # stage 1: baseline
     python precision/run_capture.py --side npu                 # stage 2: per-case subprocess
     python precision/run_capture.py --side gpu --kernels penalties,gumbel_sample
+    python precision/run_capture.py --side cpu                 # stage 0: fp64 golden (ref())
 
 GPU runs in-process (fast). NPU always spawns run_one_case.py per case so a
-kernel crash or poisoned device context cannot abort the whole sweep. Shared
-inputs/ and results/ live at the suite root.
+kernel crash or poisoned device context cannot abort the whole sweep. CPU
+(golden reference) runs in-process: it is pure torch fp64, no device needed.
+Shared inputs/ and results/ live at the suite root.
 """
 
 from __future__ import annotations
@@ -62,14 +64,14 @@ def run_side(side: str, kernels: list[str] | None, inproc: bool) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--side", choices=["gpu", "npu"], required=True)
+    parser.add_argument("--side", choices=["gpu", "npu", "cpu"], required=True)
     parser.add_argument("--kernels", default=None, help="comma-separated subset, default all")
     parser.add_argument("--inproc", action="store_true",
                         help="run in-process even on npu (debug only; a crash takes down the sweep)")
     args = parser.parse_args()
 
     kernels = args.kernels.split(",") if args.kernels else None
-    inproc = args.inproc or args.side == "gpu"
+    inproc = args.inproc or args.side in ("gpu", "cpu")
     return run_side(args.side, kernels, inproc)
 
 

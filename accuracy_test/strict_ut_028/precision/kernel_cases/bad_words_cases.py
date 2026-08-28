@@ -101,6 +101,57 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
     return {"logits": logits}
 
 
+def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
+    """fp64 golden mirroring _apply_bad_words_kernel match rule:
+      prefix_len = word_len - 1; skip if prefix_len > effective_len
+      effective_len = output_len + pos, output_len = total_len - prompt_len
+      actual_pos = effective_len - prefix_len + i
+      from_spec_input = actual_pos >= output_len  -> input_ids[base + spec_off + 1]
+      else                                        -> all_token_ids[r, prompt_len + actual_pos]
+      all prefix tokens match -> logits[tok, last_token] = -inf
+    """
+    logits = t["logits"].to(torch.float64).clone()
+    n_tok = logits.shape[0]
+    mapping = t["expanded_idx_mapping"].long()
+    pos_all = t["expanded_local_pos"].long()
+    bw_ids = t["bad_word_token_ids"].long()
+    bw_off = t["bad_word_offsets"].long()
+    num_bw = t["num_bad_words"].long()
+    all_ids = t["all_token_ids"].long()
+    prompt_len = t["prompt_len"].long()
+    total_len = t["total_len"].long()
+    input_ids = t["input_ids"].long()
+
+    for tok in range(n_tok):
+        r = int(mapping[tok])
+        if int(num_bw[r]) == 0:
+            continue
+        pos = int(pos_all[tok])
+        base = tok - pos
+        out_len = int(total_len[r] - prompt_len[r])
+        eff = out_len + pos
+        for bw in range(int(num_bw[r])):
+            start, end = int(bw_off[r, bw]), int(bw_off[r, bw + 1])
+            bw_len = end - start
+            prefix_len = bw_len - 1
+            if prefix_len > eff:
+                continue
+            last = int(bw_ids[r, end - 1])
+            matched = True
+            for i in range(prefix_len):
+                actual_pos = eff - prefix_len + i
+                if actual_pos >= out_len:
+                    actual = int(input_ids[base + (actual_pos - out_len) + 1])
+                else:
+                    actual = int(all_ids[r, int(prompt_len[r]) + actual_pos])
+                if actual != int(bw_ids[r, start + i]):
+                    matched = False
+                    break
+            if matched:
+                logits[tok, last] = float("-inf")
+    return {"logits": logits}
+
+
 def _mk(name: str, n_tok: int, vocab: int, n_req: int, n_bw: int, bw_len: int) -> CaseSpec:
     return CaseSpec(
         kernel="bad_words", name=name,

@@ -106,6 +106,52 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
     return {"logits": logits}
 
 
+def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
+    """fp64 golden mirroring _apply_penalties_kernel:
+      early-out unless rep != 1 or freq != 0 or pres != 0
+      oc = output_bin_counts[r] + count(this step's committed tokens at
+          base + spec_offset + 1 = already sampled draft tokens)
+      rep: logits *= (logits > 0) ? 1/rep : rep   on oc>0 | prompt_mask
+      logits -= freq * oc;  logits -= pres * (oc > 0)
+    prompt_bin_mask is unpacked little-endian per 32-token block.
+    """
+    logits = t["logits"].to(torch.float64).clone()
+    n_tok, vocab = logits.shape
+    mapping = t["idx_mapping"].long()
+    token_ids = t["token_ids"].long()
+    pos_t = t["pos"].long()
+    rep = t["repetition_penalty"].to(torch.float64)
+    freq = t["frequency_penalty"].to(torch.float64)
+    pres = t["presence_penalty"].to(torch.float64)
+    packed = t["prompt_bin_mask"].long()                       # [s, num_packed]
+    counts = t["output_bin_counts"].long()                     # [s, vocab]
+
+    bits = (packed.unsqueeze(-1) >> torch.arange(32)) & 1      # [s, p, 32]
+    prompt_mask = bits.reshape(packed.shape[0], -1)[:, :vocab].bool()
+
+    for tok in range(n_tok):
+        r = int(mapping[tok])
+        use_rep = rep[r] != 1.0
+        use_freq = freq[r] != 0.0
+        use_pres = pres[r] != 0.0
+        if not (use_rep or use_freq or use_pres):
+            continue
+        pos = int(pos_t[tok])
+        base = tok - pos
+        oc = counts[r].clone()
+        for pp in range(pos):
+            oc[int(token_ids[base + pp + 1])] += 1
+        omask = oc > 0
+        row = logits[tok]
+        if use_rep:
+            scale = torch.where(prompt_mask[r] | omask, rep[r], torch.ones_like(rep[r]))
+            row = row * torch.where(row > 0, 1.0 / scale, scale)
+        row = row - freq[r] * oc.to(torch.float64)
+        row = row - pres[r] * omask.to(torch.float64)
+        logits[tok] = row
+    return {"logits": logits}
+
+
 def _mk(name: str, n_tok: int, vocab: int, n_status: int, n_spec: int, dtype: str) -> CaseSpec:
     params = {"num_tokens": n_tok, "vocab_size": vocab, "num_status": n_status,
               "num_speculative_tokens": n_spec, "dtype": dtype}

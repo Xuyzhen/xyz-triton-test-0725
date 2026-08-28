@@ -89,6 +89,61 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
     }
 
 
+def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
+    """fp64 golden mirroring _compute_local_logits_stats_kernel.
+
+    For each verified row (local_pos < n_spec) and each vocab block b:
+      greedy (temp==0): target_am = block-global argmax, target_max = max,
+                        sums stay 0, draft stats stay 0
+      else:             target stats over target_logits[row, block]
+                        draft stats over draft_logits[req, local_pos, block]
+                        / temp (per-request temperature)
+    Rows with local_pos == n_spec (bonus) write nothing: outputs stay at their
+    zero-initialized values.
+    """
+    BLOCK = VOCAB_BLOCK_SIZE
+    n_logits = params["num_logits"]
+    vocab = params["vocab_size"]
+    n_spec = params["num_speculative_steps"]
+    n_blocks = (vocab + BLOCK - 1) // BLOCK
+
+    target = t["target_logits"].to(torch.float64)
+    draft = t["draft_logits"].to(torch.float64)
+    mapping = t["expanded_idx_mapping"].long()
+    pos = t["expanded_local_pos"].long()
+    temp = t["temperature"].to(torch.float64)
+
+    t_am = torch.zeros(n_logits, n_blocks, dtype=torch.int64)
+    t_mx = torch.zeros(n_logits, n_blocks, dtype=torch.float64)
+    t_se = torch.zeros(n_logits, n_blocks, dtype=torch.float64)
+    d_mx = torch.zeros(n_logits, n_blocks, dtype=torch.float64)
+    d_se = torch.zeros(n_logits, n_blocks, dtype=torch.float64)
+
+    for li in range(n_logits):
+        p = int(pos[li])
+        if p >= n_spec:
+            continue
+        r = int(mapping[li])
+        tp = float(temp[r])
+        for b in range(n_blocks):
+            seg = target[li, b * BLOCK:(b + 1) * BLOCK]
+            if tp == 0.0:
+                t_am[li, b] = b * BLOCK + int(seg.argmax())
+                t_mx[li, b] = seg.max()
+            else:
+                m = seg.max()
+                t_am[li, b] = b * BLOCK + int(seg.argmax())
+                t_mx[li, b] = m
+                t_se[li, b] = torch.exp(seg - m).sum()
+                dseg = draft[r, p, b * BLOCK:(b + 1) * BLOCK] / tp
+                dm = dseg.max()
+                d_mx[li, b] = dm
+                d_se[li, b] = torch.exp(dseg - dm).sum()
+    return {"target_local_argmax": t_am, "target_local_max": t_mx,
+            "target_local_sumexp": t_se, "draft_local_max": d_mx,
+            "draft_local_sumexp": d_se}
+
+
 def _mk(name: str, n_logits: int, vocab: int, n_spec: int) -> CaseSpec:
     return CaseSpec(
         kernel="compute_local_logits_stats", name=name,

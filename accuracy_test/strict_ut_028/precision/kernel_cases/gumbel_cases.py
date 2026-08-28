@@ -83,6 +83,17 @@ def normalize(output_name: str, side: str, tensor: torch.Tensor,
     return tensor.to(torch.float32) * factor.view(-1, 1)
 
 
+def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
+    """Golden: logits_cache rows written by each token = that token's input
+    logits row (PRE-temperature compare basis). 'sampled' is stochastic
+    (MODE_SKIP) and is intentionally omitted."""
+    mapping = t["expanded_idx_mapping"].long()
+    # 1:1 token->request mapping: inverse permutation recovers the writer row
+    inv = torch.argsort(mapping)
+    cache = t["logits"][inv].to(torch.float64)
+    return {"logits_cache": cache}
+
+
 def _mk(name: str, n_tok: int, n_req: int, vocab: int) -> CaseSpec:
     return CaseSpec(
         kernel="gumbel_sample", name=name, stochastic=True,

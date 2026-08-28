@@ -43,6 +43,19 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
     return {"logits": logits}
 
 
+def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
+    """fp64 golden: logits < row_max + log(min_p) -> -inf; min_p == 0 unchanged
+    (mirrors _min_p_kernel)."""
+    logits = t["logits"].to(torch.float64)
+    min_p = t["min_p"].to(torch.float64)
+    row_min_p = min_p[t["expanded_idx_mapping"].long()].unsqueeze(-1)
+    max_val = logits.max(dim=-1, keepdim=True).values
+    threshold = max_val + torch.log(row_min_p)
+    out = torch.where((row_min_p == 0.0) | (logits >= threshold), logits,
+                      torch.full_like(logits, float("-inf")))
+    return {"logits": out}
+
+
 def _mk(name: str, n_req: int, vocab: int) -> CaseSpec:
     return CaseSpec(
         kernel="min_p", name=name,

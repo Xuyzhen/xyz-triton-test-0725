@@ -104,6 +104,50 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
     return {"out": out, "state": state}
 
 
+def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
+    """fp64 golden for one selective-scan update step.
+
+    Mirrors _selective_scan_update_kernel:
+      dt = softplus(dt + dt_bias), softplus(x) = log(exp(x)+1) if x <= 20 else x
+      dA = exp(A * dt)                (TIE_HDIM: scalar A[h,0,0] * dt[b,h,0])
+      state = state * dA + (B * dt) * x
+      out = sum(state * C, -1) + D * x;  HAS_Z: out *= z * sigmoid(z)
+    B/C use group pid_h // (nheads // ngroups)  -> repeat_interleave.
+    """
+    f64 = torch.float64
+    state = t["state"].to(f64)
+    x = t["x"].to(f64)
+    A = t["A"].to(f64)
+    B = t["B"].to(f64)
+    C = t["C"].to(f64)
+    D = t["D"].to(f64)
+    dt = t["dt"].to(f64)
+    dt_bias = t["dt_bias"].to(f64)
+    nheads, ngroups = params["nheads"], params["ngroups"]
+    ratio = nheads // ngroups
+
+    if params["tie_hdim"]:
+        # scalar per (batch, head): dt[..., 0] and A[h, 0, 0]
+        dtv = dt[..., 0] + dt_bias[..., 0]                      # [b, h]
+        dtv = torch.where(dtv <= 20.0, torch.log(torch.exp(dtv) + 1.0), dtv)
+        dA = torch.exp(A[None, :, 0, 0] * dtv[..., None])       # [b, h, 1]
+        dB_scalar = B.repeat_interleave(ratio, dim=1) * dtv[..., None]  # [b, h, n]
+        new_state = state * dA.unsqueeze(-1) + dB_scalar.unsqueeze(2) * x.unsqueeze(-1)
+    else:
+        dtv = dt + dt_bias.unsqueeze(0)                          # [b, h, d]
+        dtv = torch.where(dtv <= 20.0, torch.log(torch.exp(dtv) + 1.0), dtv)
+        dA = torch.exp(A.unsqueeze(0) * dtv.unsqueeze(-1))       # [b, h, d, n]
+        Bh = B.repeat_interleave(ratio, dim=1).unsqueeze(2)      # [b, h, 1, n]
+        new_state = state * dA + Bh * x.unsqueeze(-1)
+
+    Ch = C.repeat_interleave(ratio, dim=1).unsqueeze(2)          # [b, h, 1, n]
+    out = (new_state * Ch).sum(dim=-1) + D.unsqueeze(0) * x
+    if "z" in t:
+        z = t["z"].to(f64)
+        out = out * z * torch.sigmoid(z)
+    return {"out": out, "state": new_state}
+
+
 def _mk(name: str, batch: int, nheads: int, dim: int, dstate: int,
         ngroups: int, has_z: bool, tie_hdim: bool = False) -> CaseSpec:
     return CaseSpec(

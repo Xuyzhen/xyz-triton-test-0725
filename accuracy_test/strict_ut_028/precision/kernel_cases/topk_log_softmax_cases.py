@@ -54,6 +54,16 @@ def run(side: str, t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.
     return {"logprobs": out}
 
 
+def ref(t: dict[str, torch.Tensor], params: dict) -> dict[str, torch.Tensor]:
+    """fp64 golden: logprob = logit[token_id] - row_max - log(sum(exp(row - row_max)))
+    (mirrors _topk_log_softmax_kernel)."""
+    logits = t["logits"].to(torch.float64)
+    max_val = logits.max(dim=-1, keepdim=True).values
+    lse = torch.log(torch.exp(logits - max_val).sum(dim=-1, keepdim=True))
+    gathered = torch.gather(logits, -1, t["token_ids"].long())
+    return {"logprobs": gathered - max_val - lse}
+
+
 def _mk(name: str, batch: int, vocab: int, k: int) -> CaseSpec:
     return CaseSpec(
         kernel="topk_log_softmax", name=name,

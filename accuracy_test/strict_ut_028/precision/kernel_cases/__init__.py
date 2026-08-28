@@ -28,6 +28,8 @@ REGISTRY = {
     "selective_scan_update": "kernel_cases.selective_scan_cases",
     "bias": "kernel_cases.bias_cases",
     "bad_words": "kernel_cases.bad_words_cases",
+    "rejection": "kernel_cases.rejection_cases",
+    "resample": "kernel_cases.resample_cases",
 }
 
 

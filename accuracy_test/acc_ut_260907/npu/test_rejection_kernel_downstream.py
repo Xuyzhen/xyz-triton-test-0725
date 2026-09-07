@@ -11,8 +11,10 @@ Precision test for patched _probabilistic_rejection_kernel (Ascend NPU version).
 This replaces `_rejection_kernel` on Ascend NPU (renamed/reimplemented).
 
 Patch differences vs original vllm _rejection_kernel:
-- No synthetic_conditional_rates_ptr, cumulative_log_p_ptr, local_residual_mass_ptr
-- No SYNTHETIC_MODE or USE_BLOCK_VERIFICATION constexpr parameters
+- No cumulative_log_p_ptr or local_residual_mass_ptr
+- SYNTHETIC_MODE support added by 637417dbd (2026-09-03) via a new
+  synthetic_conditional_rates_ptr argument + SYNTHETIC_MODE constexpr; this test
+  uses the standard path (SYNTHETIC_MODE=False, rates=None), unchanged behavior
 - Draws u ~ U(0,1) via philox: u_seed = tl.randint(seed, int32(pos)), then
   u = tl.rand(u_seed, arange(0,1)) clamped to [2^-31, 1) (upstream uses
   tl_rand64/tl_rand32; NPU Triton lacks float64 tl_rand64 and scalar tl.rand,
@@ -53,9 +55,11 @@ Kernel signature:
         temp_ptr,                           # [max_num_reqs] fp32 temperatures
         seed_ptr,                           # [max_num_reqs] int64 seeds
         pos_ptr,                            # [num_logits] int64 positions
+        synthetic_conditional_rates_ptr,    # [num_spec_steps] fp32 or None
         vocab_num_blocks,                   # scalar: num blocks
         PADDED_VOCAB_NUM_BLOCKS: tl.constexpr,
         HAS_DRAFT_LOGITS: tl.constexpr,
+        SYNTHETIC_MODE: tl.constexpr,
     )
 
 Iterates over each request's draft tokens, computing acceptance:
@@ -310,9 +314,11 @@ class TestProbabilisticRejectionKernelPatch:
             draft_local_max, draft_local_max.stride(0),
             draft_local_sumexp, draft_local_sumexp.stride(0),
             cu_num_logits, idx_mapping, temperature, seeds, pos,
+            None,  # synthetic_conditional_rates_ptr (SYNTHETIC_MODE=False)
             vocab_num_blocks,
             PADDED_VOCAB_NUM_BLOCKS=padded_vocab_num_blocks,
             HAS_DRAFT_LOGITS=has_draft_logits,
+            SYNTHETIC_MODE=False,
             num_warps=1,
         )
         torch.npu.synchronize()
@@ -509,9 +515,11 @@ class TestProbabilisticRejectionKernelPatch:
             draft_local_max, draft_local_max.stride(0),
             draft_local_sumexp, draft_local_sumexp.stride(0),
             cu_num_logits, idx_mapping, temperature, seeds, pos,
+            None,  # synthetic_conditional_rates_ptr (SYNTHETIC_MODE=False)
             vocab_num_blocks,
             PADDED_VOCAB_NUM_BLOCKS=padded_vocab_num_blocks,
             HAS_DRAFT_LOGITS=False,
+            SYNTHETIC_MODE=False,
             num_warps=1,
         )
         torch.npu.synchronize()
@@ -796,9 +804,11 @@ class TestProbabilisticRejectionKernelPatch:
             draft_local_max, draft_local_max.stride(0),
             draft_local_sumexp, draft_local_sumexp.stride(0),
             cu_num_logits, idx_mapping, temperature, seeds, pos,
+            None,  # synthetic_conditional_rates_ptr (SYNTHETIC_MODE=False)
             vocab_num_blocks,
             PADDED_VOCAB_NUM_BLOCKS=padded_vocab_num_blocks,
             HAS_DRAFT_LOGITS=True,
+            SYNTHETIC_MODE=False,
             num_warps=1,
         )
         torch.npu.synchronize()

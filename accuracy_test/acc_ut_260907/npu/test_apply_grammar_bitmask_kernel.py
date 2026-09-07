@@ -2,15 +2,20 @@
 # Do not edit mechanically; update the reviewed Codex source or strict generator.
 from accuracy_test.acc_ut_260907.runtime_npu import STRICT_DEVICE as _STRICT_DEVICE
 # vLLM-Ascend patched kernel: _apply_grammar_bitmask_kernel from
-# vllm-ascend/vllm_ascend/worker/v2/structured_outputs.py:35
+# vllm-ascend/vllm_ascend/ops/triton/v2/apply_grammar_bitmask.py
+# (moved from vllm_ascend/worker/v2/structured_outputs.py by commit f8c81e379,
+# 2026-08-31; see doc/api_change_20260907_vllm_ascend_pull.md)
 # PATCH NOTE: This is an Ascend NPU adaptation of the original vLLM Triton kernel
 
 """
 Precision test for patched _apply_grammar_bitmask_kernel (Ascend NPU version).
 
 Patch differences vs original vllm:
-- Uses BLOCK_SIZE_SUB=1024 sub-block tiling to avoid UB overflow with BLOCK_SIZE=8192
-- Iterates over sub-blocks with tl.range for NPU compatibility
+- Rewritten (commit f8c81e379) as a 1D-grid kernel _apply_grammar_bitmask_kernel_impl
+  launched via _ApplyGrammarBitmaskKernelLauncher, which maps the upstream 2D grid
+  (num_masks, num_vocab_blocks) onto the Ascend VectorCore 1D launch grid; older
+  releases used BLOCK_SIZE_SUB=1024 sub-block tiling inside a 2D grid
+- multibuffer disabled to better utilize the UB buffer on A2/A3
 - Uses packed bitmask with word-level loading (32 bits per word)
 - Applies bitmask via ((packed >> bit_idx) & 1) == 0 pattern
 - Stores -inf for blocked positions using mask pattern
@@ -67,10 +72,14 @@ class TestApplyGrammarBitmaskKernelPatch:
         init_device_properties_triton()
         self.device = torch.device("npu")
         self.BLOCK_SIZE = 8192
-        self.BLOCK_SIZE_SUB = 1024
 
     def _run_kernel(self, logits, logits_indices, bitmask):
-        from vllm_ascend.worker.v2.structured_outputs import _apply_grammar_bitmask_kernel
+        # f8c81e379 (2026-08-31) moved the kernel to vllm_ascend/ops/triton/v2;
+        # older releases keep it in vllm_ascend/worker/v2/structured_outputs.
+        try:
+            from vllm_ascend.ops.triton.v2.apply_grammar_bitmask import _apply_grammar_bitmask_kernel
+        except (ImportError, ModuleNotFoundError):
+            from vllm_ascend.worker.v2.structured_outputs import _apply_grammar_bitmask_kernel
 
         num_bitmasks = logits_indices.shape[0]
         vocab_size = logits.shape[1]

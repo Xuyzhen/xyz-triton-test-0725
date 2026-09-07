@@ -11,13 +11,16 @@ Precision test for patched _probabilistic_rejection_kernel (Ascend NPU version).
 This replaces `_rejection_kernel` on Ascend NPU (renamed/reimplemented).
 
 Patch differences vs original vllm _rejection_kernel:
-- No synthetic_conditional_rates_ptr, cumulative_log_p_ptr, local_residual_mass_ptr
-- No SYNTHETIC_MODE or USE_BLOCK_VERIFICATION constexpr parameters
-- Uses u = tl.full([], 0.0, dtype=tl.float32) instead of tl_rand32 (NPU does not
-  support tl_rand64 / float64) -- always accepts draft token on non-greedy paths
+- No cumulative_log_p_ptr or local_residual_mass_ptr
+- SYNTHETIC_MODE support added by 637417dbd (2026-09-03) via a new
+  synthetic_conditional_rates_ptr argument + SYNTHETIC_MODE constexpr; this test
+  uses the standard path (SYNTHETIC_MODE=False, rates=None), unchanged behavior
+- Draws u ~ U(0,1) via philox: u_seed = tl.randint(seed, int32(pos)), then
+  u = tl.rand(u_seed, arange(0,1)) clamped to [2^-31, 1) (upstream vllm uses
+  tl_rand64/tl_rand32; NPU Triton lacks float64 tl_rand64 and scalar tl.rand)
 - Greedy path loads blocks and computes argmax inline with tl.argmax over blocks
 - Non-greedy path computes LSE with _compute_global_lse helper
-- Rejection uses target_log_prob > tl.log(u) + draft_log_prob (with u=0 always true)
+- Rejection uses target_log_prob > tl.log(u) + draft_log_prob, u ~ U(0,1) philox-clamped
 - HAS_DRAFT_LOGITS switches between draft-logits path and one-hot (zero log prob)
 - Extra draft_logits_stride_0 and draft_logits_stride_1 in kernel signature directly
 
@@ -49,15 +52,18 @@ Kernel signature:
         temp_ptr,                           # [max_num_reqs] fp32 temperatures
         seed_ptr,                           # [max_num_reqs] int64 seeds
         pos_ptr,                            # [num_logits] int64 positions
+        synthetic_conditional_rates_ptr,    # [num_spec_steps] fp32 or None
         vocab_num_blocks,                   # scalar: num blocks
         PADDED_VOCAB_NUM_BLOCKS: tl.constexpr,
         HAS_DRAFT_LOGITS: tl.constexpr,
+        SYNTHETIC_MODE: tl.constexpr,
     )
 
 Iterates over each request's draft tokens, computing acceptance:
 - Greedy (temp=0): accept iff draft token equals target argmax
-- Non-greedy (draft logits available): accept with u=0 (always accept on NPU)
-- Non-greedy (one-hot draft): accept (draft_log_prob=0, u=0)
+- Non-greedy (draft logits available): accept iff
+  target_log_prob > log(u) + draft_log_prob, u ~ U(0,1) philox-clamped
+- Non-greedy (one-hot draft): accept iff target_log_prob > log(u)
 Stores accepted draft tokens into sampled_ptr and the number accepted.
 Stores target and draft logsumexp from the rejection step for resampling.
 """
@@ -265,9 +271,11 @@ class TestProbabilisticRejectionKernelPatch:
             draft_local_max, draft_local_max.stride(0),
             draft_local_sumexp, draft_local_sumexp.stride(0),
             cu_num_logits, idx_mapping, temperature, seeds, pos,
+            None,  # synthetic_conditional_rates_ptr (SYNTHETIC_MODE=False)
             vocab_num_blocks,
             PADDED_VOCAB_NUM_BLOCKS=padded_vocab_num_blocks,
             HAS_DRAFT_LOGITS=has_draft_logits,
+            SYNTHETIC_MODE=False,
             num_warps=1,
         )
         torch.npu.synchronize()
@@ -464,9 +472,11 @@ class TestProbabilisticRejectionKernelPatch:
             draft_local_max, draft_local_max.stride(0),
             draft_local_sumexp, draft_local_sumexp.stride(0),
             cu_num_logits, idx_mapping, temperature, seeds, pos,
+            None,  # synthetic_conditional_rates_ptr (SYNTHETIC_MODE=False)
             vocab_num_blocks,
             PADDED_VOCAB_NUM_BLOCKS=padded_vocab_num_blocks,
             HAS_DRAFT_LOGITS=False,
+            SYNTHETIC_MODE=False,
             num_warps=1,
         )
         torch.npu.synchronize()
@@ -661,9 +671,11 @@ class TestProbabilisticRejectionKernelPatch:
             draft_local_max, draft_local_max.stride(0),
             draft_local_sumexp, draft_local_sumexp.stride(0),
             cu_num_logits, idx_mapping, temperature, seeds, pos,
+            None,  # synthetic_conditional_rates_ptr (SYNTHETIC_MODE=False)
             vocab_num_blocks,
             PADDED_VOCAB_NUM_BLOCKS=padded_vocab_num_blocks,
             HAS_DRAFT_LOGITS=True,
+            SYNTHETIC_MODE=False,
             num_warps=1,
         )
         torch.npu.synchronize()

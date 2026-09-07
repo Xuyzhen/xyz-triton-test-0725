@@ -123,6 +123,10 @@ class TestComputeBlockMaxAndSumexp:
             num_speculative_steps,
             BLOCK_SIZE=VOCAB_BLOCK_SIZE,
             HAS_DRAFT_LOGITS=True,
+            # TODO: Remove this workaround after the Triton Ascend AutoBlockify
+            # bug for max-with-index reductions is fixed (mirrors vllm-ascend
+            # 4e6fb74b2; see doc/api_change_20260907_vllm_ascend_pull.md).
+            has_auto_blockify_blacklist_op=True,
         )
         torch.npu.synchronize()
 
@@ -201,6 +205,10 @@ class TestComputeBlockMaxAndSumexp:
             num_speculative_steps,
             BLOCK_SIZE=VOCAB_BLOCK_SIZE,
             HAS_DRAFT_LOGITS=True,
+            # TODO: Remove this workaround after the Triton Ascend AutoBlockify
+            # bug for max-with-index reductions is fixed (mirrors vllm-ascend
+            # 4e6fb74b2; see doc/api_change_20260907_vllm_ascend_pull.md).
+            has_auto_blockify_blacklist_op=True,
         )
         torch.npu.synchronize()
 

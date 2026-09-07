@@ -77,6 +77,10 @@ def test_compute_block_max_and_sumexp_via_ascend_parent(vocab_size):
         1,
         BLOCK_SIZE=block_size,
         HAS_DRAFT_LOGITS=False,
+        # TODO: Remove this workaround after the Triton Ascend AutoBlockify
+        # bug for max-with-index reductions is fixed (mirrors vllm-ascend
+        # 4e6fb74b2; see doc/api_change_20260907_vllm_ascend_pull.md).
+        has_auto_blockify_blacklist_op=True,
     )
     torch.npu.synchronize()
 

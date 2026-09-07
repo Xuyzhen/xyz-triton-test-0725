@@ -260,3 +260,147 @@ site-packages 安装版本为准；UT 通过 launcher（7 参）调用，不受�
    未来再发生路径迁移时将以 SKIP 而非 FAIL 暴露；
 3. 节点 vllm / vllm-ascend 安装版本建议固定（如 pip freeze 快照），
    避免共享目录代码与 site-packages 悄然错配。
+
+---
+
+## 9. 第二轮观测：test_all_neg_inf_blocks 失败（2026-09-07 复测发现）
+
+### 9.1 现象与定性：非精度回归
+
+- 现象：`npu/test_compute_global_logsumexp_downstream.py::test_all_neg_inf_blocks`
+  全 `-inf` block max 输入，kernel 返回 `nan`，UT 断言期望 `-inf`。
+- **同文件 7 个有限值域用例（parametrize 6 + single_block）在 rtol/atol=1e-5
+  下全部通过**——失败仅出现在退化输入域用例，故不是数值精度漂移。
+- 数学根因：kernel 裸公式
+  `global_max + log(sum(sumexp*exp(maxes-global_max)))` 在全 `-inf` 时
+  `maxes - global_max = -inf - (-inf) = NaN`（IEEE754），**CPU 上同样为 nan，
+  与硬件无关**。UT 的 CPU 参考实现了 `global_max > -inf` 特判，kernel 没有
+  → 期望与实现不匹配。
+
+### 9.2 版本错配排查（本地 git 证据）
+
+| 检查项 | 结果 |
+|---|---|
+| `git log -L 21,44`（vllm 该函数完整谱系） | 仅两次变更：04-07 `5daf62271d` 引入即裸公式；06-30 `db808b3961` 仅改名 `_compute_global_lse→_compute_global_logsumexp`。**任何版本均无 -inf 特判** |
+| `git log -S "tl.where(global_max"` / `-S "isinf"`（vllm 该文件） | 零命中 |
+| vllm-ascend 侧 `_compute_global_lse` 来源 | 07-06 `cd76505e8` 起为对 vllm 的**纯 re-export**，无本地实现 |
+| 节点可运行性反推 | UT 未 skip 且已执行 ⇒ 节点安装版 vllm ≥ 06-30（重命名后）⇒ 该函数与本地 checkout 逐字相同 |
+| 结论 | **版本错配无法解释该 nan**：不存在任何"全 -inf 返回 -inf"的可安装版本。节点 site-packages 无法本地直接检查，留探针实锤（见 9.3） |
+
+注：仓库中确实存在一处已知版本错配——本地 vllm checkout（HEAD `2cf0a6915c`，
+08-23）的 `structured_outputs.py` kernel 为 8 参，而 vllm-ascend 09-07 的
+launcher 为 7 参——但那是 grammar 模块，与本失败（rejection_sampler_utils）
+无关，且 grammar UT 经 launcher 调用不受影响。
+
+### 9.3 探针
+
+新增 [probe/probe_global_lse.py](../probe/probe_global_lse.py)
+（standalone，仅依赖 vllm/vllm-ascend/torch/triton）：
+
+```bash
+cd accuracy_test/acc_ut_260907
+python probe/probe_global_lse.py               # NPU 节点全量探针
+python probe/probe_global_lse.py --device cpu  # 仅环境 + CPU 数学对照
+```
+
+输出分四节，判读：
+
+| 节 | 回答 | 判读要点 |
+|---|---|---|
+| `[ENV]` | Q2 静态部分 | vllm / vllm-ascend 版本与 `__file__`（site-packages 还是源码目录） |
+| `[IDENTITY]` | Q2 | `vllm_ascend._compute_global_lse is vllm._compute_global_logsumexp` 为 True = 纯 re-export |
+| `[SOURCE]` | Q2 | dump 节点实际参与 JIT 编译的 helper 源码（看有无 -inf 特判） |
+| `[CPU]` | Q1 | 公式逐项分解：全 -inf 时 CPU 同样 nan，与硬件无关 |
+| `[KERNEL]` | Q1+Q3 | 安装版 helper vs 裸公式参考 kernel 四场景对比（A 全 -inf / B 混合 / C 全有限 / D 单块）；两者一致（A 均 nan）→ 固有行为非错配；helper 在 A 返回 -inf → 节点安装版与共享目录代码不一致，错配实锤 |
+
+### 9.4 处置（待定，2026-09-07 已撤回 xfail 标记）
+
+节点实测确认：`test_compute_global_logsumexp_downstream.py` 与
+`_upstream.py` 的 `test_all_neg_inf_blocks` 均失败（两个文件测的是同一
+kernel 对象：upstream 直连 vllm 实现，downstream 走 vllm-ascend
+re-export），其余 14 个有限值域用例全部 1e-5 通过。
+
+曾按方案 A 给两个用例标注 `@pytest.mark.xfail(strict=True)`，
+经确认后已撤回，测试文件保持原断言不变。后续处置待定：
+
+| 方案 | 做法 | 说明 |
+|---|---|---|
+| A | 用例标 `xfail` 并注明原因 | 保留边界覆盖痕迹："上游 vllm 裸公式固有行为（04-07 引入起无 -inf 特判），GPU/NPU/CPU 一致为 nan" |
+| B | 断言放宽为 `nan or -inf` | 不区分"数学正确"与"实现行为" |
+| C | 删除该用例 | 信息丢失最多，不推荐 |
+| D | 改 kernel 加特判 | **违反"不改原文件"约束，排除** |
+
+探针 `probe/probe_global_lse.py` 保留在位，随时可在节点实锤
+（判读表见 9.3）。
+
+---
+
+## 10. 变更四：AutoBlockify 规避选项（UT 侧缺失导致 248320 档失败）
+
+### 10.1 现象
+
+2026-09-07 全量跑 [16/69] `npu/test_compute_local_logits_stats_kernel.py`
+出现 4 个 FAIL，全部为 `vocab_size=248320` 档：
+
+```
+[False-2-248320-4] / [False-2-248320-8] / [False-3-248320-4] / [False-3-248320-8]
+（has_draft_logits=False, num_spec_steps=2/3, num_reqs=4/8）
+Expected 3.77 ~ 4.02 but got 0.0   ← greedy 分支 target_local_max
+```
+
+### 10.2 根因
+
+**commit `4e6fb74b2`（2026-09-02，在本次 pull 区间内）**：
+*"[Bugfix][Spec Decode] Disable AutoBlockify for rejection sampling (#15118)"*。
+commit 说明原文：*"AutoBlockify can corrupt the max-with-index reductions
+used by `_compute_block_stats_kernel` and `_resample_kernel`, which can
+produce an incorrect argmax/token ID even when the input logits are finite."*
+
+- **位置不变、签名不变**，仅生产调用点新增 launcher 选项
+  `has_auto_blockify_blacklist_op=True`（vllm-ascend
+  `rejection_sampler_utils.py:437` stats kernel、`:512` resample kernel 两处），
+  并附 TODO：Triton Ascend 修复 max-with-index 归约的 AutoBlockify bug 后移除。
+- 被破坏的正是 stats kernel greedy 分支的 `tl.max(..., return_indices=True)`
+  （max-with-index 归约）——`got 0.0` 是归约结果被 AutoBlockify 改写，不是算错。
+- **UT 直接 launch kernel 对象**（绕过 vllm-ascend `rejection_sample()` 包装），
+  生产侧的规避选项没被带上 → 大 grid 档被 AutoBlockify 破坏。
+
+失败模式与 AutoBlockify 启发式触发条件完全吻合（按 grid 规模/内核复杂度决定
+是否启用）：
+
+| 观察 | 解释 |
+|---|---|
+| 仅 248320（31 blocks）失败，129280（16 blocks）通过 | grid 第二维超过启发式阈值 |
+| 仅 has_draft_logits=False 失败 | True 编译变体代码量大，AutoBlockify 不启用 |
+| 仅 num_reqs≥4 且 steps≥2（grid ≥ 12×31=372 programs）失败 | 总 program 数超过阈值 |
+| got 0.0（非近似值） | 归约被破坏，非数值精度漂移 |
+
+### 10.3 修复（2026-09-07 已执行：全量对齐生产）
+
+按生产配置给 UT 侧这两个 kernel 的**全部 18 处 launch**（9 个文件）补
+`has_auto_blockify_blacklist_op=True`，附 TODO 注释引用 `4e6fb74b2`：
+
+| 文件 | 处数 |
+|---|---|
+| test_compute_local_logits_stats_kernel.py | 2 |
+| test_compute_block_stats_kernel_upstream.py | 1 |
+| test_compute_block_stats_kernel_downstream.py | 2 |
+| test_compute_block_max_and_sumexp_upstream.py | 2 |
+| test_compute_block_max_and_sumexp_downstream.py | 1 |
+| test_rejection_kernel_downstream.py | 3 |
+| test_rejection_kernel_upstream.py | 3 |
+| test_resample_kernel_downstream.py | 2 |
+| test_resample_kernel_upstream.py | 2 |
+
+其中 rejection（vocab 参数含 248320）与 resample（同）的 10 处为**预防性修复**
+——生产 commit 明确两个 kernel 都受影响，本轮跑到必然同样失败；
+其余小 grid 文件（vocab ≤ 8192，单 block）为一致性对齐（生产无条件规避，
+AutoBlockify 对小 grid 不启用，该选项无副作用）。
+
+**不在范围内**：`test_insert_resampled_kernel.py`（`_insert_resampled_kernel`
+不在生产规避清单）；`_probabilistic_rejection_kernel`（生产未规避，无
+max-with-index 归约）。
+
+**验证方式**：节点重跑
+`pytest npu/test_compute_local_logits_stats_kernel.py -k 248320`
+（预期 4 FAIL 全部转 PASS），以及 rejection/resample 文件的 248320 档。

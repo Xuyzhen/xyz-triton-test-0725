@@ -8,6 +8,7 @@ import torch
 
 from accuracy_test.acc_ut_260907.metrics import assert_exact
 from accuracy_test.acc_ut_260907.runtime_npu import DEVICE, synchronize
+from vllm.triton_utils import triton
 from vllm.v1.worker.gpu.block_table import (
     _compute_slot_mappings_kernel as _upstream_kernel,
 )
@@ -119,6 +120,14 @@ def test_compute_slot_mappings(
     )
     if "TOTAL_BLOCK_SIZE" in tuple(KERNEL.arg_names):
         kwargs["TOTAL_BLOCK_SIZE"] = 4096
+    if "BLOCK_TABLE_PAD_SIZE" in tuple(KERNEL.arg_names):
+        # Compile-time power-of-two upper bound for the block-table row load
+        # (tl.arange requirement); the runtime stride mask trims to the actual
+        # row. Mirrors AscendBlockTables.__init__ (next_power_of_2(stride(0)))
+        # in vllm_ascend/worker/v2/block_table.py.
+        kwargs["BLOCK_TABLE_PAD_SIZE"] = triton.next_power_of_2(
+            block_table.stride(0)
+        )
 
     KERNEL[(1, num_reqs + 1)](
         max_num_tokens,

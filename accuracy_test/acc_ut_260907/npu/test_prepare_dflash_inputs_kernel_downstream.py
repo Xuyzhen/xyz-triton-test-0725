@@ -94,11 +94,21 @@ if _prepare_dflash_inputs_kernel_ascend is None:
     try:
         from vllm_ascend.ops.triton.spec_decode import utils as _dflash_utils
 
+        # vllm-ascend acbd2bb28 (#13191, 2026-08-14) renamed
+        # copy_and_expand_dflash_and_dspark_inputs_kernel_single_grid to
+        # copy_and_expand_dflash_and_dspark_inputs_kernel. Probe the current
+        # name first; keep the pre-rename names as older-release fallbacks.
         _modern_dflash_inputs_kernel = getattr(
             _dflash_utils,
-            "copy_and_expand_dflash_and_dspark_inputs_kernel_single_grid",
+            "copy_and_expand_dflash_and_dspark_inputs_kernel",
             None,
         )
+        if _modern_dflash_inputs_kernel is None:
+            _modern_dflash_inputs_kernel = getattr(
+                _dflash_utils,
+                "copy_and_expand_dflash_and_dspark_inputs_kernel_single_grid",
+                None,
+            )
         if _modern_dflash_inputs_kernel is not None:
             _modern_dflash_supports_sample_from_anchor = True
         else:
@@ -163,9 +173,9 @@ def _dflash_environment_diagnostics():
 
     runtime_details = []
     modern_module_name = "vllm_ascend.ops.triton.spec_decode.utils"
-    expected_symbol = (
-        "copy_and_expand_dflash_and_dspark_inputs_kernel_single_grid"
-    )
+    # Current export name since acbd2bb28 (#13191) dropped the _single_grid
+    # suffix during the grid-stride rewrite.
+    expected_symbol = "copy_and_expand_dflash_and_dspark_inputs_kernel"
     try:
         modern_module = importlib.import_module(modern_module_name)
         modern_path = Path(modern_module.__file__).resolve()

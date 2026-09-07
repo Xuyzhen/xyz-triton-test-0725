@@ -313,25 +313,24 @@ python probe/probe_global_lse.py --device cpu  # 仅环境 + CPU 数学对照
 | `[CPU]` | Q1 | 公式逐项分解：全 -inf 时 CPU 同样 nan，与硬件无关 |
 | `[KERNEL]` | Q1+Q3 | 安装版 helper vs 裸公式参考 kernel 四场景对比（A 全 -inf / B 混合 / C 全有限 / D 单块）；两者一致（A 均 nan）→ 固有行为非错配；helper 在 A 返回 -inf → 节点安装版与共享目录代码不一致，错配实锤 |
 
-### 9.4 处置（待定，2026-09-07 已撤回 xfail 标记）
+### 9.4 处置（已定：保持现状，持续 FAIL 作为已知问题跟踪）
 
 节点实测确认：`test_compute_global_logsumexp_downstream.py` 与
 `_upstream.py` 的 `test_all_neg_inf_blocks` 均失败（两个文件测的是同一
 kernel 对象：upstream 直连 vllm 实现，downstream 走 vllm-ascend
 re-export），其余 14 个有限值域用例全部 1e-5 通过。
 
-曾按方案 A 给两个用例标注 `@pytest.mark.xfail(strict=True)`，
-经确认后已撤回，测试文件保持原断言不变。后续处置待定：
+曾按方案 A 给两个用例标注 `@pytest.mark.xfail(strict=True)`，经确认后
+已撤回。**最终决策（2026-09-07）：保持现状**——测试文件保持原始严格
+断言不动，该用例（两个文件共 2 个）在全量跑中持续 FAIL，作为已知问题
+由本节跟踪。判读基线：
 
-| 方案 | 做法 | 说明 |
-|---|---|---|
-| A | 用例标 `xfail` 并注明原因 | 保留边界覆盖痕迹："上游 vllm 裸公式固有行为（04-07 引入起无 -inf 特判），GPU/NPU/CPU 一致为 nan" |
-| B | 断言放宽为 `nan or -inf` | 不区分"数学正确"与"实现行为" |
-| C | 删除该用例 | 信息丢失最多，不推荐 |
-| D | 改 kernel 加特判 | **违反"不改原文件"约束，排除** |
-
-探针 `probe/probe_global_lse.py` 保留在位，随时可在节点实锤
-（判读表见 9.3）。
+- 全量跑中这两个 FAIL = 本已知问题，无需重新排查；
+- 若其余 14 个有限值域用例出现任何失败 = 新问题，需排查；
+- 根因定性不变：非精度回归（kernel 裸公式 IEEE754 固有行为，
+  CPU/GPU/NPU 一致为 nan，任何 vllm 版本均无 -inf 特判）；
+- 探针 `probe/probe_global_lse.py` 保留在位，随时可在节点实锤
+  （判读表见 9.3）。
 
 ---
 
@@ -404,3 +403,203 @@ max-with-index 归约）。
 **验证方式**：节点重跑
 `pytest npu/test_compute_local_logits_stats_kernel.py -k 248320`
 （预期 4 FAIL 全部转 PASS），以及 rejection/resample 文件的 248320 档。
+
+---
+
+## 11. 变更五：`_compute_slot_mappings_kernel` 新增 `BLOCK_TABLE_PAD_SIZE`（Ascend 适配版）
+
+### 11.1 现象
+
+2026-09-07 全量跑 `npu/test_compute_slot_mappings_kernel.py` 4 个用例全部
+FAIL，报错一致：
+
+```
+TypeError: dynamic_func() missing 1 required positional argument: 'BLOCK_TABLE_PAD_SIZE'
+```
+
+（绑定阶段即失败，非数值错误。）
+
+### 11.2 根因（代码证据）
+
+**算子位置不变**：`vllm_ascend/ops/triton/v2/block_table/compute_slot_mappings.py`
+（经 `vllm_ascend/worker/v2/block_table.py` re-export，UT 走该入口）。
+
+签名变化（仅 vllm-ascend 适配版；vllm 上游 kernel 无此参数，fallback 路径
+不受影响）：
+
+```python
+# 旧版（UT 生成时基线）：TOTAL_BLOCK_SIZE（UT 已有探测分支）
+# 新版（09-07 HEAD）：
+def _compute_slot_mappings_kernel(
+    ..., cp_rank,
+    CP_SIZE: tl.constexpr,
+    CP_INTERLEAVE: tl.constexpr,
+    PAD_ID: tl.constexpr,
+    TRITON_BLOCK_SIZE: tl.constexpr,
+    BLOCK_TABLE_PAD_SIZE: tl.constexpr,   # ← 新增必填 constexpr
+)
+```
+
+- 语义：`tl.arange(0, BLOCK_TABLE_PAD_SIZE)` 需要编译期 2 的幂长度，
+  作为各 KV cache group block table 行加载的上界；运行时用
+  `mask=offsets < block_table_stride` 收敛到实际行宽。
+- 生产取值（`AscendBlockTables.__init__`，worker/v2/block_table.py:63）：
+  `next_power_of_2(max(block_table.stride(0)))`，launch 时以
+  `BLOCK_TABLE_PAD_SIZE=self._block_table_pad_size` 传入（L102）。
+- UT 直接 launch kernel，原有探测分支只覆盖 `TOTAL_BLOCK_SIZE`
+  （旧参数名），新参数未传 → 绑定失败。
+- 位置参数（max_num_tokens … cp_rank）新旧完全一致，无需调整。
+
+具体引入 commit 可在节点用
+`git log -S BLOCK_TABLE_PAD_SIZE -- vllm_ascend/ops/triton/v2/block_table/`
+确认（属 pull 区间 80c833fb8..78cd10dec 内变更）。
+
+### 11.3 修复（2026-09-07 已执行）
+
+扩展 UT 既有探测分支（保留 `TOTAL_BLOCK_SIZE` 分支兼容旧版）：
+
+```python
+if "BLOCK_TABLE_PAD_SIZE" in tuple(KERNEL.arg_names):
+    kwargs["BLOCK_TABLE_PAD_SIZE"] = triton.next_power_of_2(block_table.stride(0))
+```
+
+- 取值镜像生产 `AscendBlockTables.__init__`（单 group 场景
+  `max(stride(0))` = `stride(0)`）；
+- 节点 ascend_adapted 路径下 `block_table.stride(0)=4096`（2 的幂）→
+  `PAD_SIZE=4096`，与运行时 stride mask（4096）一致，整行可载；
+- upstream fallback 路径：vllm kernel 无此参数，分支不触发，行为不变。
+
+**验证方式**：节点重跑
+`pytest npu/test_compute_slot_mappings_kernel.py -v`
+（预期 4 FAIL 全部转 PASS；期望值无需调整——slot 计算逻辑未变）。
+
+---
+
+## 12. 变更六（环境级）：vllm / vllm-ascend 版本错配实锤（dflash 无法 import）
+
+### 12.1 现象
+
+2026-09-07 全量跑 dflash 两个 UT 文件
+（`test_prepare_dflash_inputs_kernel_downstream.py` / `_upstream.py`），
+`TestPrepareDFlashInputsKernelAscendPatch` 全部参数化用例 FAIL，报错为
+测试自带的 revision=2 环境诊断：
+
+```
+DFlash environment compatibility failure; this is not a precision failure
+and no kernel was tested.
+diagnostic revision=2
+vllm=0.28.0+empty
+vllm-ascend=0.19.1rc2.dev1959+g78cd10dec
+import errors=legacy worker-v2: No module named 'vllm.v1.attention.ops.pcp';
+  modern spec-decode utils: neither the combined DFlash/DSpark kernel
+  nor the legacy DFlash kernel is exported
+modern related exports=copy_and_expand_dflash_and_dspark_inputs_kernel,
+  dflash2_greedy_selector_walk_kernel
+modern source contains expected symbol=False
+dflash proposer import failed=No module named 'vllm.v1.attention.ops.pcp'
+```
+
+诊断显示**两条探测路径同时失败，且失败原因不同**（详见 12.2 两层根因）。
+
+### 12.2 根因（§5 预警的版本错配首次实际咬人）
+
+**环境组合错配**：节点 vllm 为 08-23 checkout（2cf0a6915c，0.28.0），
+vllm-ascend 为 09-07 HEAD（78cd10dec，main2main 配套 vllm 0828）。
+完整断链证据：
+
+```
+import vllm_ascend.worker.v2.spec_decode.dflash.speculator   # kernel 本体在 L161
+  └→ L19  vllm_ascend.worker.v2.attn_utils
+       └→ L46  vllm_ascend.attention.attention_v1
+            └→ L40  from vllm.v1.attention.ops.pcp import _gather_prefill_cache_inputs
+                  ← ModuleNotFoundError：pcp.py 仅存在于 0828+ 的 vllm main
+```
+
+- vllm-ascend 侧三处硬依赖（attention_v1.py:40 / mla_v1.py:22 /
+  sfa_cp.py:12），均带 `# type: ignore[import-not-found]`——开发者预期
+  只在配套 vllm 版本下运行；
+- 本地 vllm checkout `vllm/v1/attention/ops/` 下确认无 `pcp.py`；
+- **kernel 本体未丢失**：`_prepare_dflash_inputs_kernel_ascend` 仍在
+  speculator.py:161，纯粹是模块 import 链断裂导致测试拿不到符号；
+- 测试的 revision=2 诊断逻辑（多路径探测 + pytest.fail 带完整报告）
+  按设计如实报告了环境问题，非测试 bug，非 kernel 精度问题。
+
+**第二层根因（modern fallback 路径失效，独立于 pcp）**：
+legacy 失效后，测试按设计回落到 modern 路径
+（`vllm_ascend.ops.triton.spec_decode.utils`）。该模块本身 import 干净
+（不经过 pcp 依赖链），但测试探测的符号名已过时：
+
+| 符号 | 引入 / 移除 | 说明 |
+|---|---|---|
+| `copy_and_expand_dflash_and_dspark_inputs_kernel_single_grid` | `41ff81e1a`（07-13，#11765）引入；`acbd2bb28`（08-14，#13191）改名 | 测试的 modern 首选探测目标 |
+| `copy_and_expand_dflash_inputs_kernel_single_grid` | 早期版本 | 测试的 modern 次选探测目标 |
+| `copy_and_expand_dflash_and_dspark_inputs_kernel` | `acbd2bb28` 改名后的现名 | **当前环境实际导出**（utils.py:69） |
+
+`acbd2bb28`（[Performance] Optimized Kernel，2026-08-14）不仅去掉了
+`_single_grid` 后缀，还将 kernel 从 per-request 串行循环重写为 grid-stride
+平铺（新增 `TILE_SIZE: tl.constexpr = 256` 默认参数；multimodal 输入下
+query slot 改由 effective_seq_len 推导，文本输入下行为不变）。
+
+**定性要点**：`acbd2bb28` 早在 08-26 基线（`80c833fb8`）内
+（`git merge-base --is-ancestor` 确认），即 **UT 的 modern 探测符号从
+构建时起就落后于环境，并非 09-07 pull 引入**。此前从未暴露，是因为
+08-26 基线下 legacy 路径可用、modern fallback 从未触发；09-07 pull 的
+pcp 断链使 legacy 失效、modern 首次触发，才暴露这一滞后。
+
+**其余 UT 通过属侥幸**：它们 import 的模块链恰好未触碰 pcp 依赖。
+当前 08-23 vllm + 09-07 vllm-ascend 组合本身就是错配状态。
+
+### 12.3 处置（已更新：modern 符号适配修复）
+
+**初判决策（2026-09-07）：保持现状**——环境不修，测试保持大声 FAIL，
+作为环境错配的可见跟踪（与 §9.4 logsumexp 处置逻辑一致）。
+
+**修订（2026-09-08）**：深入解读 revision=2 完整诊断后发现第二层根因
+（modern 探测符号过时，§12.2 下半节）可独立于环境修复——modern 模块
+import 不经过 pcp 依赖链，仅符号名需适配。据此执行**路径 C：测试侧
+modern 符号适配**，使 dflash UT 在当前错配环境下即恢复可测性：
+
+- `npu/test_prepare_dflash_inputs_kernel_downstream.py` 与
+  `..._upstream.py` 两文件同步修改：
+  - modern 探测顺序改为：无后缀 combined（现名，acbd2bb28 后）→
+    `_single_grid` combined（旧名 fallback）→ legacy `_single_grid`；
+  - 探测到任一 combined 变体时 `_modern_dflash_supports_sample_from_anchor
+    = True`（两者均带 SAMPLE_FROM_ANCHOR 参数），语义与原逻辑一致；
+  - 诊断函数 `expected_symbol` 同步改为现名。
+
+**兼容性验证（适配不改动调用逻辑的依据）**：
+
+| 检查项 | 结论 |
+|---|---|
+| modern 模块 import | 干净，不经过 pcp 链（诊断输出 `modern module=...` 行已证明） |
+| 参数签名 | 20 个位置参数与测试调用逐一对齐（utils.py:69-98 vs 测试 `_test_modern_dflash_inputs`）；`TILE_SIZE` 带默认值 256，无需显式传 |
+| launch grid | 测试用 `grid=(1,)`，grid-stride 重写后单 program 覆盖全部 tile，与原串行循环语义等价 |
+| 参考实现语义 | `_modern_dflash_inputs_ref` 的 `cache_pos = effective_seq_len + query_offset` 及 anchor/非 anchor 的 sample_indices 写法与新 kernel 逐分支一致（参考实现本就按新 kernel 编写，仅探测符号名是旧的） |
+
+**效果**：修复后 legacy 路径仍失效（pcp 未修，环境错配如实保留），
+但 modern fallback 恢复可用——dflash 从"环境 FAIL、0 kernel 被测"转为
+"实际测试 acbd2bb28 grid-stride 重写版 kernel"。节点的 pcp 错配对
+dflash UT 不再构成阻断，仅影响 legacy 探测分支。
+
+若未来仍要修环境（可选，不再必需）：
+
+| 路径 | 操作 | 影响 |
+|---|---|---|
+| A | 节点 vllm checkout 切到配套版本 `e6bfe03ad`（main2main 0828 范围终点，见 fd815467c commit message）；源码模式（+empty）checkout 即生效，无需重装 | legacy 路径恢复（speculator 版 kernel）；需重跑全套 UT 确认其他 kernel 签名未漂移（grammar/rejection/stats 等 kernel 本体在 vllm 侧，0828 可能有变） |
+| B | 测试侧把环境不兼容的 pytest.fail 改为 pytest.skip（诊断降级为 skip reason） | 已被路径 C 取代：modern 恢复后无需 skip |
+
+### 12.4 全量跑已知问题基线（2026-09-08 更新）
+
+判读全量跑日志时，以下 FAIL 为已知问题、无需重新排查：
+
+| # | 已知问题 | 涉及 | 根因定性 |
+|---|---|---|---|
+| 1 | `test_all_neg_inf_blocks` | logsumexp downstream + upstream（2 用例） | vllm kernel 裸公式 IEEE754 固有行为（§9，非精度回归） |
+| ~~2~~ | ~~dflash 环境诊断 FAIL~~ | `test_prepare_dflash_inputs_kernel_*` | **已于 09-08 修复**（§12.3 路径 C：modern 符号适配，不再阻断） |
+
+**除 #1 外，任何 FAIL 均为新问题，需排查。** 已修复待同步验证项：
+grammar 导入（§2.4）、rejection 参数（§3.4）、AutoBlockify（§10.3）、
+slot mappings（§11.3）、dflash modern 符号（§12.3）。
+验证命令：`pytest npu/test_prepare_dflash_inputs_kernel_downstream.py
+npu/test_prepare_dflash_inputs_kernel_upstream.py -v`
+（预期全部参数化用例经 modern 路径 PASS）。

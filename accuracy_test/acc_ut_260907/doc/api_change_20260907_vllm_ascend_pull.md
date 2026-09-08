@@ -601,7 +601,7 @@ dflash UT 不再构成阻断，仅影响 legacy 探测分支。
 **除 #1 外，任何 FAIL 均为新问题，需排查。** 已修复待同步验证项：
 grammar 导入（§2.4）、rejection 参数（§3.4）、AutoBlockify（§10.3）、
 slot mappings（§11.3）、dflash modern 符号（§12.3）、
-prefill inputs lookahead（§13.3）。
+prefill inputs lookahead（§13.3）、hidden states buffer 尺寸（§14）。
 验证命令：`pytest npu/test_prepare_dflash_inputs_kernel_downstream.py
 npu/test_prepare_dflash_inputs_kernel_upstream.py -v`
 （预期全部参数化用例经 modern 路径 PASS）。
@@ -684,3 +684,58 @@ LOOKAHEAD_BLOCK = triton.next_power_of_2(num_lookahead)
 **验证方式**：节点重跑
 `pytest npu/test_prepare_prefill_inputs_kernel.py -v`
 （预期 11 个原用例 PASS + 2 个新 multi-lookahead 用例 PASS，共 13）。
+
+---
+
+## 14. 变更八定性：hidden states UT 自身 buffer 尺寸 bug（非接口变更）
+
+### 14.1 现象
+
+2026-09-08 全量跑
+`npu/test_prepare_input_hidden_states_and_embeddings_kernel.py`，
+仅 1 个用例 FAIL（其余 27 个 PASS）：
+
+```
+test_prepare_input_hidden_states_and_embeddings[16-2048-3-tile_boundary-True-32-256]
+IndexError: index 304 is out of bounds for dimension 0 with size 304
+  common/prepare_input_hidden_states_and_embeddings_impl.py:88 in _ref
+```
+
+### 14.2 根因：UT 尺寸公式漏算 tile_boundary 的 bq 项（UT 自身 bug）
+
+失败点在 **CPU 参考实现**（`_ref` 先于 kernel 执行，自己先越界）：
+
+- `tile_boundary` 场景每请求 `query_len = bq + 2 = 34`（bq=32），
+  16 请求共需 **544** token；
+- buffer 尺寸公式为 `max(256, num_reqs*(nss+16)) = max(256, 16*19) = 304`，
+  注释假设"query lens ≤ ~12 或 nss+3"，**未覆盖 bq+2 项**；
+- 越界点复核：req 8 `query_start = 8*34 = 272`，
+  `dst_max = 272 + num_reprefill(1) + num_input_hs(32) - 1 = 304`
+  ——与报错 `index 304 ... size 304` 逐字吻合；
+- 该用例为 strict_ut_027 高规格新增（bq=32），首次打破尺寸假设；
+  此前通过的低 bq 用例（bq=4/16）恰未越界，属侥幸未爆。
+
+**定性**：非接口变更、非精度问题、非 09-07 pull 引入——UT 构建时即
+埋下的尺寸 bug，被新增高规格用例触发。若参考不崩，kernel 亦会向
+304+ 越界写（设备侧 UB），故必须修 UT 尺寸而非绕过。
+
+### 14.3 修复（common 实现单点改动）
+
+`common/prepare_input_hidden_states_and_embeddings_impl.py` 尺寸公式
+追加 `num_reqs * (bq + 2)` 项：
+
+```python
+num_tokens = max(
+    256,
+    num_reqs * (num_speculative_steps + 16),
+    num_reqs * (bq + 2),
+)
+```
+
+- 失败用例：`max(256, 304, 544) = 544`，恰等于总 token 数，
+  `dst_max = 543 ≤ 543` 边界闭合；
+- 其余 27 个通过用例：max 追加项只增不减，行为不变。
+
+**验证方式**：节点重跑
+`pytest npu/test_prepare_input_hidden_states_and_embeddings_kernel.py -v`
+（预期 28 个用例全 PASS）。

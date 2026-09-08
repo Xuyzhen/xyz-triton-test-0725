@@ -355,9 +355,15 @@ def test_prepare_input_hidden_states_and_embeddings(
     rt.init_device_properties_triton()
 
     max_num_reqs = max(8, num_reqs * 2)
-    # query lens go up to ~12 (mixed/with_reject) or nss+3 (max_reprefill);
-    # size the token buffer so every request fits.
-    num_tokens = max(256, num_reqs * (num_speculative_steps + 16))
+    # Query lens per scenario: no_reject <= 7, with_reject/mixed <= 11,
+    # max_reprefill = nss + 3, tile_boundary = bq + 2. Size the token buffer
+    # so every request fits; the bq + 2 term covers tile_boundary launches
+    # with large block sizes (strict_ut_027 high-spec additions, bq=32).
+    num_tokens = max(
+        256,
+        num_reqs * (num_speculative_steps + 16),
+        num_reqs * (bq + 2),
+    )
 
     inputs = _gen_inputs(
         num_reqs=num_reqs,

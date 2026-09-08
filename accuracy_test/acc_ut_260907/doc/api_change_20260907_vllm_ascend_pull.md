@@ -20,6 +20,7 @@
 | 2026-09-07 15:52 | 上游合入 `fd815467c`（main2main vllm 0828，dflash 同步） |
 | **2026-09-07 16:09:58** | **本地 pull --ff，`80c833fb8` → `78cd10dec`，变更进入本环境** |
 | 2026-09-07 16:09 之后 | 节点运行 `run_npu.sh`，grammar 测试 10 用例 FAIL（`ModuleNotFoundError`） |
+| 2026-09-07 23:01 | 深夜补跑暴露变更七：prefill inputs 签名漂移（vllm #48892，07-30 已在 vllm 侧合入），09-08 UT 侧修复（§13） |
 
 节点报错能定位到 `vllm_ascend.worker.v2.structured_outputs` 这一层，说明节点
 安装的 vllm-ascend 已是 09-07 HEAD（与共享目录代码同步）。
@@ -599,7 +600,87 @@ dflash UT 不再构成阻断，仅影响 legacy 探测分支。
 
 **除 #1 外，任何 FAIL 均为新问题，需排查。** 已修复待同步验证项：
 grammar 导入（§2.4）、rejection 参数（§3.4）、AutoBlockify（§10.3）、
-slot mappings（§11.3）、dflash modern 符号（§12.3）。
+slot mappings（§11.3）、dflash modern 符号（§12.3）、
+prefill inputs lookahead（§13.3）。
 验证命令：`pytest npu/test_prepare_dflash_inputs_kernel_downstream.py
 npu/test_prepare_dflash_inputs_kernel_upstream.py -v`
 （预期全部参数化用例经 modern 路径 PASS）。
+
+---
+
+## 13. 变更七：_prepare_prefill_inputs_kernel 新增 lookahead 参数（vllm #48892）
+
+### 13.1 现象
+
+2026-09-07 深夜补跑（stderr 时间戳 W907 23:01，晚于 §12.4 基线成文）
+`npu/test_prepare_prefill_inputs_kernel.py`，
+`TestPreparePrefillInputsKernel` 全部用例 FAIL（9 个参数化组合 +
+early_return / boundary），报错一致：
+
+```
+TypeError: dynamic_func() missing 3 required positional arguments:
+'prefill_lens_ptr', 'num_computed_tokens_ptr', and 'LOOKAHEAD_BLOCK'
+```
+
+### 13.2 根因：vllm 侧 #48892 签名扩展，UT 按旧快照调用
+
+**变更来源**：vllm `dec13a33b7`（2026-07-30 合入 main，
+#48892 "[Model Runner V2][Spec Decode] Add multi-layer MTP speculator"，
+即 §12 已知的 multi_module_mtp 同源 PR）。节点 vllm 0.28.0
+（08-23 checkout）已包含该 commit，kernel 为新签名；strict_ut 版 UT
+按 #48892 之前的签名调用。**此变更在 vllm 侧，与 09-07 的
+vllm-ascend pull 无关**。
+
+**接口具体变化**（算子位置：`vllm/v1/worker/gpu/input_batch.py:254`）：
+
+| 项 | 变更前（< #48892） | 变更后（≥ #48892） |
+|---|---|---|
+| 签名 | `(input_ids, next_prefill_tokens, idx_mapping, query_start_loc, all_token_ids, all_token_ids_stride, prefill_lens, num_computed_tokens, BLOCK_SIZE)` | 第 3/4 位**插入** `next_prefill_tokens_stride`、`num_lookahead`；`BLOCK_SIZE` 后**新增** `LOOKAHEAD_BLOCK: tl.constexpr` |
+| `next_prefill_tokens` 布局 | `[max_num_reqs]`（单 token） | `[num_lookahead, max_num_reqs]`（多 lookahead，按 stride 寻址） |
+| 越界 lookahead 语义 | 不写槽位（保留原值） | **写 0**：load mask 为 `in_lookahead & (pos < prefill_len)` 且 `other=0`，store mask 仅查 `in_lookahead` |
+
+**报错形态解释**：UT 按旧签名传 8 个位置参数，在新签名下整体左移
+错位绑定（`idx_mapping→next_prefill_tokens_stride`、
+`query_start_loc→num_lookahead`、`prefill_lens→all_token_ids_ptr` 等），
+末尾恰好剩 `prefill_lens_ptr` / `num_computed_tokens_ptr` /
+`LOOKAHEAD_BLOCK` 三个参数无实参——与报错逐字吻合，确认签名错配。
+
+**生产调用方**（同文件 `prepare_prefill_inputs()` :303）：
+
+```python
+num_lookahead = next_prefill_tokens.shape[0]
+LOOKAHEAD_BLOCK = triton.next_power_of_2(num_lookahead)
+```
+
+**波及范围核查**（套件内 4 个引用同名 kernel 的文件）：
+
+| 文件 | kernel 来源 | 是否受影响 |
+|---|---|---|
+| `npu/test_prepare_prefill_inputs_kernel.py` | vllm input_batch（本变更） | **是**（旧签名调用，本次修复） |
+| `npu/test_input_batch_prepare_prefill_inputs_kernel.py` | vllm input_batch（同 kernel） | 否（codex 版，已按新签名 + 0 填充语义编写，期望值正确） |
+| `npu/test_ar_prepare_prefill_inputs_kernel.py` | vllm AR speculator（另一同名 kernel，`spec_decode/autoregressive/speculator.py:653`） | 否（17 参数签名未变，#48892 未触碰） |
+| `npu/test_prepare_prefill_inputs_kernel_speculator.py` | 同上 | 否 |
+
+### 13.3 修复（UT 侧双签名适配，与 §11 slot mappings 同模式）
+
+`npu/test_prepare_prefill_inputs_kernel.py` 修改点：
+
+1. **签名探测**：模块级 `_HAS_LOOKAHEAD_ARGS`
+   （`"num_lookahead" in arg_names`），新旧两代 kernel 均可运行，
+   老 vllm 环境不破坏；
+2. **launch 收敛**：`_launch_kernel()` 统一探测分支，新签名分支镜像
+   生产调用方传参（`stride(0)` / `shape[0]` / `next_power_of_2`），
+   旧签名分支保持原调用；`_make_next_prefill_tokens()` 按代际生成
+   `[num_lookahead, max_num_reqs]` 或扁平 buffer；
+3. **参考实现双语义**：新代所有 in-lookahead 槽位必写（越界为 0），
+   旧代仅在 `next_pos < prefill_len` 时写单槽位；
+4. **boundary 期望修正**：`num_computed + query_len == prefill_len` 时
+   新代 kernel 写 0（非保留 -1）；inactive req 槽位不被写、保留
+   sentinel（与 codex 版 `expected_next[:, 0] = 0` 写法对齐）；
+5. **新增 `test_multi_lookahead_tokens`**（num_lookahead=3/4，旧签名
+   环境 skipif）：覆盖多 lookahead 拷贝 + 越界 0 填充 + 不活跃请求
+   保留 sentinel——#48892 新功能首次被精度 UT 覆盖。
+
+**验证方式**：节点重跑
+`pytest npu/test_prepare_prefill_inputs_kernel.py -v`
+（预期 11 个原用例 PASS + 2 个新 multi-lookahead 用例 PASS，共 13）。

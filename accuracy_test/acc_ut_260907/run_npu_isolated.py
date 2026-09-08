@@ -6,6 +6,15 @@ vector-core exception in one kernel poisons the current process device
 context, which would otherwise make unrelated tests fail when they create
 tensors. Starting a fresh pytest subprocess per test file prevents this
 cross-contamination and lets each operator be re-run individually.
+
+Suite mode (no extra args): each module runs with pytest -x, so the first
+failing/erroring case stops that module immediately and the runner moves
+on to the next one. This bounds the console noise a broken module can
+produce to a single traceback. To see every case of a module (including
+the ones after the first failure), run it directly:
+
+    pytest npu/test_xxx.py -v            # full run, not via this runner
+    bash run_npu.sh npu/test_xxx.py      # forwarded verbatim, no -x added
 """
 
 from __future__ import annotations
@@ -53,6 +62,13 @@ def main() -> int:
                 "-v",
                 "--tb=short",
                 "-ra",
+                # Suite mode only: stop this module at its first failing or
+                # erroring case, then move on to the next module. Keeps one
+                # broken module from flooding the console with a traceback
+                # per case. Full per-module runs stay available via a direct
+                # `pytest npu/test_xxx.py` or by passing args to run_npu.sh
+                # (the extra-args branch below adds no -x).
+                "-x",
             ]
             completed = subprocess.run(
                 command,

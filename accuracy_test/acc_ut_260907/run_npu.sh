@@ -5,12 +5,18 @@
 # 每个测试文件在独立子进程中运行（run_npu_isolated.py）：昇腾向量核异常
 # 会污染当前进程的设备上下文，隔离运行可避免跨文件相互影响。
 #
+# 套件模式（无参）：每个文件以 pytest -x 运行，首个用例失败/出错即停止
+# 该文件、直接进入下一个文件，避免坏文件的逐用例报错刷屏；需要完整执行
+# 某文件全部用例时，单独执行：
+#   pytest npu/test_xxx.py -v             # 直跑 pytest，不经本脚本
+#   bash run_npu.sh npu/test_xxx.py       # 透传模式，同样不加 -x
+#
 # 前置条件：已激活包含 vllm / vllm-ascend / torch_npu 的 Python 环境。
 #
 # 用法：
-#   bash run_npu.sh                          # 跑全部 NPU 侧（逐文件隔离）
-#   bash run_npu.sh npu/test_temperature.py  # 透传给 pytest 的部分运行
-#   bash run_npu.sh -k "temperature"         # 关键字过滤
+#   bash run_npu.sh                          # 跑全部 NPU 侧（逐文件隔离，首错即停）
+#   bash run_npu.sh npu/test_temperature.py  # 透传给 pytest 的部分运行（完整执行）
+#   bash run_npu.sh -k "temperature"         # 关键字过滤（完整执行）
 #
 set -euo pipefail
 

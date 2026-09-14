@@ -41,6 +41,7 @@ import torch
 # resolve `from vllm.triton_utils import tl, triton`) and device helpers.
 from accuracy_test.acc_ut_260914_f028_main0914.runtime_npu import (  # noqa: F401
     STRICT_DEVICE,
+    get_vectorcore_num,
     init_device_properties_triton,
     synchronize,
 )
@@ -202,17 +203,21 @@ def _launch(k, inputs: dict) -> torch.Tensor:
     scores_flat = inputs["scores"].contiguous().reshape(-1)
     candidates_flat = inputs["candidates"].contiguous().reshape(-1)
 
-    # Grid = (num_reqs,).  The kernel grid-strides internally so any grid
-    # size >= 1 is correct; (num_reqs,) is the simplest choice and matches
-    # the upstream speculator's launch shape.
-    k[(num_reqs,)](
+    # Match the production caller (greedy_select_path) EXACTLY:
+    #   grid = min(num_reqs, get_vectorcore_num())
+    #   num_warps left at the default (do NOT pass num_warps=1; the
+    #     single-warp launch changes the Ascend code generation for the
+    #     grid-stride while-loop with carried scalars and produces garbage
+    #     token reads at certain shapes, e.g. num_reqs=16/num_steps=4/
+    #     top_k=4).
+    num_programs = min(num_reqs, get_vectorcore_num())
+    k[(num_programs,)](
         scores_flat,
         candidates_flat,
         output,
         num_reqs,
         num_steps=num_steps,
         top_k=top_k,
-        num_warps=1,
     )
     return output
 

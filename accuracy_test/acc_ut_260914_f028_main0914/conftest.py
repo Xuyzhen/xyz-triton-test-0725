@@ -11,6 +11,19 @@ from pathlib import Path
 import pytest
 
 
+def pytest_configure(config: pytest.Config) -> None:
+    """Register custom markers to avoid PytestUnknownMarkWarning."""
+    config.addinivalue_line("markers", "gpu: GPU-side test")
+    config.addinivalue_line("markers", "npu: NPU-side test")
+    config.addinivalue_line("markers", "npu_downstream: tests the downstream (vllm-ascend) kernel")
+    config.addinivalue_line("markers", "npu_upstream_reuse: tests the upstream vLLM kernel on NPU")
+    config.addinivalue_line("markers", "accuracy_l0: bitwise-exact integer/index compute")
+    config.addinivalue_line("markers", "accuracy_l1: tolerance-based float compute")
+    config.addinivalue_line("markers", "accuracy_l2: stochastic / distributional")
+    config.addinivalue_line("markers", "deterministic: deterministic kernel")
+    config.addinivalue_line("markers", "stochastic: stochastic kernel (Gumbel sampling)")
+
+
 LEVELS = {
     # --- integer/index compute (bitwise exact) ---
     "fill_num_accepted": "accuracy_l0",

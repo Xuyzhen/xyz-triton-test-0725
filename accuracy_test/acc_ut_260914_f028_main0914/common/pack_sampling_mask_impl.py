@@ -67,11 +67,16 @@ try:
                 other=-float("inf"),
             )
             keep = (logits > -float("inf")) & (logits < float("inf")) & is_active
-            count += tl.sum(keep).to(tl.int32)
+            # NOTE: convert to int32 BEFORE tl.sum. On Ascend Triton, summing
+            # bools directly returns incorrect results (1 instead of N).
+            # The upstream replacement _compact_sampling_mask_kernel applies
+            # the same fix (keep_i32 = keep.to(tl.int32); count += tl.sum(keep_i32)).
+            keep_i32 = keep.to(tl.int32)
+            count += tl.sum(keep_i32)
 
-            keep = tl.reshape(keep.to(tl.int32), (BLOCK_SIZE // 8, 8))
+            packed = tl.reshape(keep_i32, (BLOCK_SIZE // 8, 8))
             bit_shifts = tl.arange(0, 8)[None, :]
-            packed = tl.sum(keep << bit_shifts, axis=1).to(tl.uint8)
+            packed = tl.sum(packed << bit_shifts, axis=1).to(tl.uint8)
             byte_offsets = start_idx // 8 + tl.arange(0, BLOCK_SIZE // 8)
             tl.store(
                 packed_mask_ptr + req_idx * packed_mask_row_stride + byte_offsets,

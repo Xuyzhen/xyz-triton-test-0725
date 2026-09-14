@@ -120,19 +120,30 @@ def _gen_inputs(
     ``scores`` is laid out as ``[num_reqs * num_steps, top_k, top_k]`` which,
     when flattened in row-major order, matches the kernel's flat layout
     ``scores_ptr + (req*num_steps+step)*top_k*top_k + prev_idx*top_k + i``.
+
+    Scores use small integer values (exactly representable in float32) to
+    avoid FP precision issues in the downstream kernel's
+    ``row == max_value`` comparison.  The downstream kernel uses
+    ``tl.min(tl.where(row == max_value, offsets, top_k), axis=0)`` for
+    argmax+tie-break; if ``tl.max`` returns a value that's not
+    bitwise-identical to any input element, the equality fails, ``next_idx``
+    defaults to ``top_k`` (out-of-bounds), and the kernel reads garbage.
+    Integer-valued float32 scores guarantee exact comparison.
     """
     g = torch.Generator(device="cpu").manual_seed(
         42 + seed + num_reqs * 7 + num_steps * 3 + top_k * 11
     )
     total = num_reqs * num_steps
 
-    scores = torch.randn(total, top_k, top_k, dtype=torch.float32, generator=g)
-    # Make the argmax unambiguous at each step: boost one candidate per row
-    # by +10 so ties are unlikely.  Tie-break tests use _gen_inputs_tied below.
+    # Use small integer-valued scores in [0, 9] (exactly representable in
+    # float32).  Then boost one candidate to 100 so argmax is unambiguous.
+    scores = torch.randint(0, 10, (total, top_k, top_k), generator=g).to(
+        torch.float32
+    )
     for flat in range(total):
         for prev in range(top_k):
             winner = torch.randint(0, top_k, (1,), generator=g).item()
-            scores[flat, prev, winner] += 10.0
+            scores[flat, prev, winner] = 100.0
 
     candidates = torch.randint(0, 1000, (total, top_k), dtype=torch.int64, generator=g)
 
@@ -420,8 +431,9 @@ def test_dflash2_greedy_walk_topk1(rt):
     total = num_reqs * num_steps
 
     # With top_k=1, scores shape is [total, 1, 1]; candidate id is just the
-    # single value at flat index.
-    scores = torch.randn(total, 1, 1, dtype=torch.float32, device=device)
+    # single value at flat index.  Use integer-valued score for FP-exact
+    # comparison in the kernel.
+    scores = torch.full((total, 1, 1), 1.0, dtype=torch.float32, device=device)
     candidates = torch.arange(total, dtype=torch.int64, device=device).view(total, 1)
 
     inputs = {

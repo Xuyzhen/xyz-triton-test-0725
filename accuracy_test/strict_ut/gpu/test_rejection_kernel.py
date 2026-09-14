@@ -86,7 +86,7 @@ class TestRejectionKernel:
 
     @pytest.mark.parametrize("num_reqs", [1, 2])
     @pytest.mark.parametrize("num_draft_tokens", [1, 2])
-    @pytest.mark.parametrize("vocab_size", [128, 1024])
+    @pytest.mark.parametrize("vocab_size", [128, 1024, 129280, 163840, 248320])
     def test_greedy_rejection(self, num_reqs, num_draft_tokens, vocab_size):
         """Greedy (temp=0): accept when draft matches target argmax."""
         max_num_reqs = 4

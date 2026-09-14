@@ -1,0 +1,1010 @@
+root@localhost:/home/xuyuzhen/va026_a5/xyz-triton-test-0725# bash /home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/run_npu.sh
+==============================================
+  easy_ut_026 NPU 算子精度测试
+==============================================
+torch=2.10.0+cpu  NPU 已就绪
+执行: python -m pytest accuracy_test/easy_ut_026 -v --tb=short -ra 
+/usr/local/python3.11.10/lib/python3.11/site-packages/pytest_asyncio/plugin.py:247: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+====================================================================================== test session starts =======================================================================================
+platform linux -- Python 3.11.10, pytest-8.3.2, pluggy-1.6.0 -- /usr/local/python3.11.10/bin/python
+cachedir: .pytest_cache
+rootdir: /home/xuyuzhen/va026_a5/xyz-triton-test-0725
+plugins: asyncio-1.3.0, mock-3.15.1, cov-7.1.0, xdist-3.6.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 226 items                                                                                                                                                                              
+
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[1-16-2-full_window-False-8] SKIPPED (kernel import failed)                                                        [  0%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[2-32-3-full_window-False-8] SKIPPED (kernel import failed)                                                        [  0%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[2-32-3-full_window-True-8] SKIPPED (kernel import failed)                                                         [  1%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[1-16-3-short_query-False-8] SKIPPED (kernel import failed)                                                        [  1%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[2-32-4-short_query-True-8] SKIPPED (kernel import failed)                                                         [  2%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[1-16-3-exact_window-False-8] SKIPPED (kernel import failed)                                                       [  2%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[2-32-4-exact_window-True-8] SKIPPED (kernel import failed)                                                        [  3%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[4-32-3-skip_padded-False-8] SKIPPED (kernel import failed)                                                        [  3%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[4-32-3-skip_padded-True-8] SKIPPED (kernel import failed)                                                         [  3%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[4-64-3-mixed-False-8] SKIPPED (kernel import failed)                                                              [  4%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[4-64-3-mixed-True-8] SKIPPED (kernel import failed)                                                               [  4%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[1-8-2-full_window-False-8] SKIPPED (kernel import failed)                                                         [  5%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[1-9-2-full_window-False-8] SKIPPED (kernel import failed)                                                         [  5%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[1-7-2-full_window-False-8] SKIPPED (kernel import failed)                                                         [  6%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[2-32-5-full_window-True-8] SKIPPED (kernel import failed)                                                         [  6%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_cache_inputs[2-1024-3-full_window-True-1024] SKIPPED (kernel import failed)                                                    [  7%]
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_import_error FAILED                                                                                                            [  7%]
+accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py::test_pad_trailing_draft_slots[1-1-32-no_pad-8] SKIPPED (kernel import failed)                                           [  7%]
+accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py::test_pad_trailing_draft_slots[2-4-64-no_pad-8] SKIPPED (kernel import failed)                                           [  8%]
+accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py::test_pad_trailing_draft_slots[1-1-32-full_pad-8_0] SKIPPED (kernel import failed)                                       [  8%]
+accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py::test_pad_trailing_draft_slots[2-4-64-full_pad-8] SKIPPED (kernel import failed)                                         [  9%]
+accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py::test_pad_trailing_draft_slots[1-1-32-partial_pad-8] SKIPPED (kernel import failed)                                      [  9%]
+accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py::test_pad_trailing_draft_slots[1-4-64-partial_pad-8] SKIPPED (kernel import failed)                                      [ 10%]
+accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py::test_pad_trailing_draft_slots[3-4-128-partial_pad-8] SKIPPED (kernel import failed)                                     [ 10%]
+accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py::test_pad_trailing_draft_slots[1-1-32-full_pad-8_1] SKIPPED (kernel import failed)                                       [ 11%]
+accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py::test_pad_trailing_draft_slots[4-8-256-partial_pad-8] SKIPPED (kernel import failed)                                     [ 11%]
+accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py::test_pad_trailing_draft_slots[2-8-128-partial_pad-4] SKIPPED (kernel import failed)                                     [ 11%]
+accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py::test_pad_trailing_draft_slots[2-4-1024-partial_pad-256] SKIPPED (kernel import failed)                                  [ 12%]
+accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py::test_import_error FAILED                                                                                                [ 12%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[1-4-64-2-decode_no_reject-8] SKIPPED (kernel import failed)                                     [ 13%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[1-4-64-3-decode_no_reject-8] SKIPPED (kernel import failed)                                     [ 13%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[1-4-64-2-decode_with_reject-8] SKIPPED (kernel import failed)                                   [ 14%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[2-8-128-3-decode_with_reject-8] SKIPPED (kernel import failed)                                  [ 14%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[4-8-256-4-decode_with_reject-8] SKIPPED (kernel import failed)                                  [ 15%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[1-4-64-2-chunked_prefill-8] SKIPPED (kernel import failed)                                      [ 15%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[3-8-128-4-chunked_prefill-8] SKIPPED (kernel import failed)                                     [ 15%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[4-8-256-3-mixed-8] SKIPPED (kernel import failed)                                               [ 16%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[2-8-128-2-mixed-4] SKIPPED (kernel import failed)                                               [ 16%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[1-4-64-2-tile_boundary-8] SKIPPED (kernel import failed)                                        [ 17%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[2-8-128-3-tile_boundary-8] SKIPPED (kernel import failed)                                       [ 17%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[1-4-16-2-minimal_input-8] SKIPPED (kernel import failed)                                        [ 18%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[3-8-64-3-minimal_input-8] SKIPPED (kernel import failed)                                        [ 18%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[1-4-32-2-reject_one-8] SKIPPED (kernel import failed)                                           [ 19%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[2-8-64-3-reject_one-4] SKIPPED (kernel import failed)                                           [ 19%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[1-16-64-2-decode_no_reject-8] SKIPPED (kernel import failed)                                    [ 19%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[2-16-128-3-decode_with_reject-8] SKIPPED (kernel import failed)                                 [ 20%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[2-8-128-5-decode_with_reject-8] SKIPPED (kernel import failed)                                  [ 20%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_prepare_input_buffers[2-8-4096-3-decode_no_reject-1024] SKIPPED (kernel import failed)                                [ 21%]
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_import_error FAILED                                                                                                   [ 21%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[1-16-2-no_reject-False-4-8] SKIPPED (kernel impor...) [ 22%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[2-32-3-no_reject-False-4-8] SKIPPED (kernel impor...) [ 22%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[1-16-2-with_reject-False-4-8] SKIPPED (kernel imp...) [ 23%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[2-32-3-with_reject-False-4-8] SKIPPED (kernel imp...) [ 23%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[1-16-2-no_reject-True-4-8] SKIPPED (kernel import...) [ 23%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[2-32-3-with_reject-True-4-8] SKIPPED (kernel impo...) [ 24%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[1-16-2-tile_boundary-False-4-8] SKIPPED (kernel i...) [ 24%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[2-32-3-tile_boundary-True-4-8] SKIPPED (kernel im...) [ 25%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[1-16-3-max_reprefill-False-4-8] SKIPPED (kernel i...) [ 25%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[2-32-4-max_reprefill-True-4-8] SKIPPED (kernel im...) [ 26%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[1-8-2-with_reject-False-4-8] SKIPPED (kernel impo...) [ 26%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[1-9-2-with_reject-False-4-8] SKIPPED (kernel impo...) [ 26%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[1-7-2-with_reject-False-4-8] SKIPPED (kernel impo...) [ 27%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[4-64-3-mixed-False-4-16] SKIPPED (kernel import f...) [ 27%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[4-64-3-mixed-True-4-16] SKIPPED (kernel import fa...) [ 28%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[2-32-5-with_reject-True-4-8] SKIPPED (kernel impo...) [ 28%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_prepare_input_hidden_states_and_embeddings[2-256-3-with_reject-True-16-256] SKIPPED (kernel ...) [ 29%]
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_import_error FAILED                                                                              [ 29%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-False-1-1-16] PASSED                                                  [ 30%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-False-1-4-32] PASSED                                                  [ 30%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-False-3-1-64] PASSED                                                  [ 30%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-False-3-4-128] PASSED                                                 [ 31%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-False-17-1-16] PASSED                                                 [ 31%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-False-17-16-32] PASSED                                                [ 32%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-False-64-1-64] PASSED                                                 [ 32%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-False-64-16-128] PASSED                                               [ 33%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-False-128-1-16] PASSED                                                [ 33%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-False-128-16-64] PASSED                                               [ 34%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-True-False-1-1-16] PASSED                                                   [ 34%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-True-False-1-4-32] PASSED                                                   [ 34%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-True-False-3-1-64] PASSED                                                   [ 35%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-True-False-3-4-128] PASSED                                                  [ 35%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-True-False-17-1-16] PASSED                                                  [ 36%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-True-False-17-16-32] PASSED                                                 [ 36%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-True-False-64-1-64] PASSED                                                  [ 37%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-True-False-64-16-128] PASSED                                                [ 37%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-True-False-128-1-16] PASSED                                                 [ 38%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-True-False-128-16-64] PASSED                                                [ 38%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[True-False-False-1-1-16] PASSED                                                   [ 38%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[True-False-False-1-4-32] PASSED                                                   [ 39%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[True-False-False-3-1-64] PASSED                                                   [ 39%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[True-False-False-3-4-128] PASSED                                                  [ 40%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[True-False-False-17-1-16] PASSED                                                  [ 40%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[True-False-False-17-16-32] PASSED                                                 [ 41%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[True-False-False-64-1-64] PASSED                                                  [ 41%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[True-False-False-64-16-128] PASSED                                                [ 42%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[True-False-False-128-1-16] PASSED                                                 [ 42%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[True-False-False-128-16-64] PASSED                                                [ 42%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-True-1-1-16] PASSED                                                   [ 43%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-True-1-4-32] PASSED                                                   [ 43%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-True-3-1-64] PASSED                                                   [ 44%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-True-3-4-128] PASSED                                                  [ 44%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-True-17-1-16] PASSED                                                  [ 45%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-True-17-16-32] PASSED                                                 [ 45%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-True-64-1-64] PASSED                                                  [ 46%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-True-64-16-128] PASSED                                                [ 46%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-True-128-1-16] PASSED                                                 [ 46%]
+accuracy_test/easy_ut_026/test_preprocess_mamba_align_fused_kernel.py::test_preprocess_mamba_align_fused[False-False-True-128-16-64] PASSED                                                [ 47%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[1-16-single_token-4-8] SKIPPED (kernel import failed)                                                 [ 47%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[2-32-single_token-4-8] SKIPPED (kernel import failed)                                                 [ 48%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[1-16-two_tokens-4-8] SKIPPED (kernel import failed)                                                   [ 48%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[2-32-two_tokens-4-8] SKIPPED (kernel import failed)                                                   [ 49%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[1-16-tile_boundary_q-4-8] SKIPPED (kernel import failed)                                              [ 49%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[2-32-tile_boundary_q-4-8] SKIPPED (kernel import failed)                                              [ 50%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[1-16-tile_boundary_q_plus_one-4-8] SKIPPED (kernel import failed)                                     [ 50%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[2-32-tile_boundary_q_plus_one-4-8] SKIPPED (kernel import failed)                                     [ 50%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[1-8-random-4-8] SKIPPED (kernel import failed)                                                        [ 51%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[1-9-random-4-8] SKIPPED (kernel import failed)                                                        [ 51%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[1-7-random-4-8] SKIPPED (kernel import failed)                                                        [ 52%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[4-64-random-4-8] SKIPPED (kernel import failed)                                                       [ 52%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[8-64-random-4-8] SKIPPED (kernel import failed)                                                       [ 53%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[4-32-skip_padded-4-8] SKIPPED (kernel import failed)                                                  [ 53%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[16-64-random-4-8] SKIPPED (kernel import failed)                                                      [ 53%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[4-64-random-8-16] SKIPPED (kernel import failed)                                                      [ 54%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[4-64-random-2-4] SKIPPED (kernel import failed)                                                       [ 54%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_shift_input_embeds[4-256-random-16-256] SKIPPED (kernel import failed)                                                   [ 55%]
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_import_error FAILED                                                                                                      [ 55%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[1-single_token-8] SKIPPED (kernel import failed)                                                            [ 56%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[2-single_token-8] SKIPPED (kernel import failed)                                                            [ 56%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[1-two_tokens-8] SKIPPED (kernel import failed)                                                              [ 57%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[2-two_tokens-8] SKIPPED (kernel import failed)                                                              [ 57%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[1-tile_boundary-8] SKIPPED (kernel import failed)                                                           [ 57%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[2-tile_boundary-8] SKIPPED (kernel import failed)                                                           [ 58%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[1-tile_boundary-4] SKIPPED (kernel import failed)                                                           [ 58%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[1-tile_boundary_plus_one-8] SKIPPED (kernel import failed)                                                  [ 59%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[2-tile_boundary_plus_one-8] SKIPPED (kernel import failed)                                                  [ 59%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[4-random-8] SKIPPED (kernel import failed)                                                                  [ 60%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[8-random-8] SKIPPED (kernel import failed)                                                                  [ 60%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[4-skip_padded-8] SKIPPED (kernel import failed)                                                             [ 61%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[16-random-8] SKIPPED (kernel import failed)                                                                 [ 61%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[4-random-4] SKIPPED (kernel import failed)                                                                  [ 61%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[4-random-16] SKIPPED (kernel import failed)                                                                 [ 62%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_shift_input_ids[4-random-1024] SKIPPED (kernel import failed)                                                               [ 62%]
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_import_error FAILED                                                                                                         [ 63%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_budget-1-1-1] FAILED                                                                                   [ 63%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_budget-2-2-2] FAILED                                                                                   [ 64%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_budget-1-2-3] FAILED                                                                                   [ 64%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_budget-3-2-4] FAILED                                                                                   [ 65%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_no_start-1-1-1] FAILED                                                                                 [ 65%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_no_start-2-2-2] FAILED                                                                                 [ 65%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_no_start-1-2-3] FAILED                                                                                 [ 66%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_no_start-3-2-4] FAILED                                                                                 [ 66%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_last_start_le-1-1-1] FAILED                                                                            [ 67%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_last_start_le-2-2-2] FAILED                                                                            [ 67%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_last_start_le-1-2-3] FAILED                                                                            [ 68%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_last_start_le-3-2-4] FAILED                                                                            [ 68%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_under_budget-1-1-1] FAILED                                                                             [ 69%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_under_budget-2-2-2] FAILED                                                                             [ 69%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_under_budget-1-2-3] FAILED                                                                             [ 69%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_under_budget-3-2-4] FAILED                                                                             [ 70%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_no_prefix-1-1-1] FAILED                                                                               [ 70%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_no_prefix-2-2-2] FAILED                                                                               [ 71%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_no_prefix-1-2-3] FAILED                                                                               [ 71%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_no_prefix-3-2-4] FAILED                                                                               [ 72%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_prefix_len_1-1-1-1] SKIPPED (write_prefix_len_1 requires end_len >= 2)                                [ 72%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_prefix_len_1-2-2-2] FAILED                                                                            [ 73%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_prefix_len_1-1-2-3] FAILED                                                                            [ 73%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_prefix_len_1-3-2-4] FAILED                                                                            [ 73%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_prefix_len_2-1-1-1] SKIPPED (write_prefix_len_2 requires end_len >= 3)                                [ 74%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_prefix_len_2-2-2-2] SKIPPED (write_prefix_len_2 requires end_len >= 3)                                [ 74%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_prefix_len_2-1-2-3] FAILED                                                                            [ 75%]
+accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_prefix_len_2-3-2-4] FAILED                                                                            [ 75%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_none-1-1-1-4] FAILED                                                       [ 76%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_none-2-2-2-8] FAILED                                                       [ 76%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_none-1-2-2-4] FAILED                                                       [ 76%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_none-3-2-3-1024] FAILED                                                    [ 77%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_none-2-3-3-8] FAILED                                                       [ 77%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_last_chunk-1-1-1-4] FAILED                                            [ 78%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_last_chunk-2-2-2-8] FAILED                                            [ 78%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_last_chunk-1-2-2-4] FAILED                                            [ 79%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_last_chunk-3-2-3-1024] FAILED                                         [ 79%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_last_chunk-2-3-3-8] FAILED                                            [ 80%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_diff_chunks-1-1-1-4] FAILED                                           [ 80%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_diff_chunks-2-2-2-8] FAILED                                           [ 80%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_diff_chunks-1-2-2-4] FAILED                                           [ 81%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_diff_chunks-3-2-3-1024] FAILED                                        [ 81%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_diff_chunks-2-3-3-8] FAILED                                           [ 82%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_start_only-1-1-1-4] FAILED                                                 [ 82%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_start_only-2-2-2-8] FAILED                                                 [ 83%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_start_only-1-2-2-4] FAILED                                                 [ 83%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_start_only-3-2-3-1024] FAILED                                              [ 84%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_start_only-2-3-3-8] FAILED                                                 [ 84%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_end_only-1-1-1-4] FAILED                                                   [ 84%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_end_only-2-2-2-8] FAILED                                                   [ 85%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_end_only-1-2-2-4] FAILED                                                   [ 85%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_end_only-3-2-3-1024] FAILED                                                [ 86%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_end_only-2-3-3-8] FAILED                                                   [ 86%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_boundary-1-1-1-4] FAILED                                                   [ 87%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_boundary-2-2-2-8] FAILED                                                   [ 87%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_boundary-1-2-2-4] FAILED                                                   [ 88%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_boundary-3-2-3-1024] FAILED                                                [ 88%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_boundary-2-3-3-8] FAILED                                                   [ 88%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_none-1-1-1-4] FAILED                                                       [ 89%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_none-2-2-2-8] FAILED                                                       [ 89%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_none-1-2-2-4] FAILED                                                       [ 90%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_none-3-2-3-1024] FAILED                                                    [ 90%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_none-2-3-3-8] FAILED                                                       [ 91%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_start-1-1-1-4] FAILED                                                  [ 91%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_start-2-2-2-8] FAILED                                                  [ 92%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_start-1-2-2-4] FAILED                                                  [ 92%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_start-3-2-3-1024] FAILED                                               [ 92%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_start-2-3-3-8] FAILED                                                  [ 93%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_end-1-1-1-4] FAILED                                                    [ 93%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_end-2-2-2-8] FAILED                                                    [ 94%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_end-1-2-2-4] FAILED                                                    [ 94%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_end-3-2-3-1024] FAILED                                                 [ 95%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_end-2-3-3-8] FAILED                                                    [ 95%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_both-1-1-1-4] FAILED                                                       [ 96%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_both-2-2-2-8] FAILED                                                       [ 96%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_both-1-2-2-4] FAILED                                                       [ 96%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_both-3-2-3-1024] FAILED                                                    [ 97%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_both-2-3-3-8] FAILED                                                       [ 97%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache_budget_skip[1-1-1-4] FAILED                                                     [ 98%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache_budget_skip[2-2-2-8] FAILED                                                     [ 98%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache_budget_skip[1-2-2-4] FAILED                                                     [ 99%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache_budget_skip[3-2-3-1024] FAILED                                                  [ 99%]
+accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache_budget_skip[2-3-3-8] FAILED                                                     [100%]
+
+============================================================================================ FAILURES ============================================================================================
+_______________________________________________________________________________________ test_import_error ________________________________________________________________________________________
+accuracy_test/easy_ut_026/test_cache_inputs_kernel.py:370: in test_import_error
+    pytest.fail(
+E   Failed: Failed to import _cache_inputs_kernel:
+E   Traceback (most recent call last):
+E     File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_cache_inputs_kernel.py", line 42, in <module>
+E       from vllm.v1.worker.gpu.spec_decode.multi_module_mtp.speculator import (
+E   ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.spec_decode.multi_module_mtp'
+_______________________________________________________________________________________ test_import_error ________________________________________________________________________________________
+accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py:235: in test_import_error
+    pytest.fail(
+E   Failed: Failed to import _pad_trailing_draft_slots_kernel:
+E   Traceback (most recent call last):
+E     File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py", line 35, in <module>
+E       from vllm.v1.worker.gpu.spec_decode.multi_module_mtp.speculator import (
+E   ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.spec_decode.multi_module_mtp'
+_______________________________________________________________________________________ test_import_error ________________________________________________________________________________________
+accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py:543: in test_import_error
+    pytest.fail(
+E   Failed: Failed to import _prepare_input_buffers_kernel:
+E   Traceback (most recent call last):
+E     File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py", line 54, in <module>
+E       from vllm.v1.worker.gpu.spec_decode.multi_module_mtp.speculator import (
+E   ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.spec_decode.multi_module_mtp'
+_______________________________________________________________________________________ test_import_error ________________________________________________________________________________________
+accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py:370: in test_import_error
+    pytest.fail(
+E   Failed: Failed to import _prepare_input_hidden_states_and_embeddings_kernel:
+E   Traceback (most recent call last):
+E     File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py", line 42, in <module>
+E       from vllm.v1.worker.gpu.spec_decode.multi_module_mtp.speculator import (
+E   ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.spec_decode.multi_module_mtp'
+_______________________________________________________________________________________ test_import_error ________________________________________________________________________________________
+accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py:291: in test_import_error
+    pytest.fail(
+E   Failed: Failed to import _shift_input_embeds_kernel:
+E   Traceback (most recent call last):
+E     File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py", line 44, in <module>
+E       from vllm.v1.worker.gpu.spec_decode.multi_module_mtp.speculator import (
+E   ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.spec_decode.multi_module_mtp'
+_______________________________________________________________________________________ test_import_error ________________________________________________________________________________________
+accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py:282: in test_import_error
+    pytest.fail(
+E   Failed: Failed to import _shift_input_ids_kernel:
+E   Traceback (most recent call last):
+E     File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py", line 47, in <module>
+E       from vllm.v1.worker.gpu.spec_decode.multi_module_mtp.speculator import (
+E   ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.spec_decode.multi_module_mtp'
+____________________________________________________________________________ test_thinking_budget[skip_budget-1-1-1] _____________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+____________________________________________________________________________ test_thinking_budget[skip_budget-2-2-2] _____________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+____________________________________________________________________________ test_thinking_budget[skip_budget-1-2-3] _____________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+____________________________________________________________________________ test_thinking_budget[skip_budget-3-2-4] _____________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________________ test_thinking_budget[skip_no_start-1-1-1] ____________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________________ test_thinking_budget[skip_no_start-2-2-2] ____________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________________ test_thinking_budget[skip_no_start-1-2-3] ____________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________________ test_thinking_budget[skip_no_start-3-2-4] ____________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________________ test_thinking_budget[skip_last_start_le-1-1-1] _________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________________ test_thinking_budget[skip_last_start_le-2-2-2] _________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________________ test_thinking_budget[skip_last_start_le-1-2-3] _________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________________ test_thinking_budget[skip_last_start_le-3-2-4] _________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________________ test_thinking_budget[skip_under_budget-1-1-1] __________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________________ test_thinking_budget[skip_under_budget-2-2-2] __________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________________ test_thinking_budget[skip_under_budget-1-2-3] __________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________________ test_thinking_budget[skip_under_budget-3-2-4] __________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+__________________________________________________________________________ test_thinking_budget[write_no_prefix-1-1-1] ___________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+__________________________________________________________________________ test_thinking_budget[write_no_prefix-2-2-2] ___________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+__________________________________________________________________________ test_thinking_budget[write_no_prefix-1-2-3] ___________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+__________________________________________________________________________ test_thinking_budget[write_no_prefix-3-2-4] ___________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________________ test_thinking_budget[write_prefix_len_1-2-2-2] _________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________________ test_thinking_budget[write_prefix_len_1-1-2-3] _________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________________ test_thinking_budget[write_prefix_len_1-3-2-4] _________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________________ test_thinking_budget[write_prefix_len_2-1-2-3] _________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________________ test_thinking_budget[write_prefix_len_2-3-2-4] _________________________________________________________________________
+_thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_thinking_budget_kernel.py", line 34, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_____________________________________________________________________ test_update_committed_marker_cache[cold_none-1-1-1-4] ______________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_____________________________________________________________________ test_update_committed_marker_cache[cold_none-2-2-2-8] ______________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_____________________________________________________________________ test_update_committed_marker_cache[cold_none-1-2-2-4] ______________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+____________________________________________________________________ test_update_committed_marker_cache[cold_none-3-2-3-1024] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_____________________________________________________________________ test_update_committed_marker_cache[cold_none-2-3-3-8] ______________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+________________________________________________________________ test_update_committed_marker_cache[cold_both_last_chunk-1-1-1-4] ________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+________________________________________________________________ test_update_committed_marker_cache[cold_both_last_chunk-2-2-2-8] ________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+________________________________________________________________ test_update_committed_marker_cache[cold_both_last_chunk-1-2-2-4] ________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+______________________________________________________________ test_update_committed_marker_cache[cold_both_last_chunk-3-2-3-1024] _______________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+________________________________________________________________ test_update_committed_marker_cache[cold_both_last_chunk-2-3-3-8] ________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_______________________________________________________________ test_update_committed_marker_cache[cold_both_diff_chunks-1-1-1-4] ________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_______________________________________________________________ test_update_committed_marker_cache[cold_both_diff_chunks-2-2-2-8] ________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_______________________________________________________________ test_update_committed_marker_cache[cold_both_diff_chunks-1-2-2-4] ________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+______________________________________________________________ test_update_committed_marker_cache[cold_both_diff_chunks-3-2-3-1024] ______________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_______________________________________________________________ test_update_committed_marker_cache[cold_both_diff_chunks-2-3-3-8] ________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+__________________________________________________________________ test_update_committed_marker_cache[cold_start_only-1-1-1-4] ___________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+__________________________________________________________________ test_update_committed_marker_cache[cold_start_only-2-2-2-8] ___________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+__________________________________________________________________ test_update_committed_marker_cache[cold_start_only-1-2-2-4] ___________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________ test_update_committed_marker_cache[cold_start_only-3-2-3-1024] _________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+__________________________________________________________________ test_update_committed_marker_cache[cold_start_only-2-3-3-8] ___________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________ test_update_committed_marker_cache[cold_end_only-1-1-1-4] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________ test_update_committed_marker_cache[cold_end_only-2-2-2-8] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________ test_update_committed_marker_cache[cold_end_only-1-2-2-4] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+__________________________________________________________________ test_update_committed_marker_cache[cold_end_only-3-2-3-1024] __________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________ test_update_committed_marker_cache[cold_end_only-2-3-3-8] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________ test_update_committed_marker_cache[cold_boundary-1-1-1-4] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________ test_update_committed_marker_cache[cold_boundary-2-2-2-8] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________ test_update_committed_marker_cache[cold_boundary-1-2-2-4] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+__________________________________________________________________ test_update_committed_marker_cache[cold_boundary-3-2-3-1024] __________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________ test_update_committed_marker_cache[cold_boundary-2-3-3-8] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_____________________________________________________________________ test_update_committed_marker_cache[incr_none-1-1-1-4] ______________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_____________________________________________________________________ test_update_committed_marker_cache[incr_none-2-2-2-8] ______________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_____________________________________________________________________ test_update_committed_marker_cache[incr_none-1-2-2-4] ______________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+____________________________________________________________________ test_update_committed_marker_cache[incr_none-3-2-3-1024] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_____________________________________________________________________ test_update_committed_marker_cache[incr_none-2-3-3-8] ______________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________ test_update_committed_marker_cache[incr_new_start-1-1-1-4] ___________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________ test_update_committed_marker_cache[incr_new_start-2-2-2-8] ___________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________ test_update_committed_marker_cache[incr_new_start-1-2-2-4] ___________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_________________________________________________________________ test_update_committed_marker_cache[incr_new_start-3-2-3-1024] __________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+___________________________________________________________________ test_update_committed_marker_cache[incr_new_start-2-3-3-8] ___________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+____________________________________________________________________ test_update_committed_marker_cache[incr_new_end-1-1-1-4] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+____________________________________________________________________ test_update_committed_marker_cache[incr_new_end-2-2-2-8] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+____________________________________________________________________ test_update_committed_marker_cache[incr_new_end-1-2-2-4] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+__________________________________________________________________ test_update_committed_marker_cache[incr_new_end-3-2-3-1024] ___________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+____________________________________________________________________ test_update_committed_marker_cache[incr_new_end-2-3-3-8] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_____________________________________________________________________ test_update_committed_marker_cache[incr_both-1-1-1-4] ______________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_____________________________________________________________________ test_update_committed_marker_cache[incr_both-2-2-2-8] ______________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_____________________________________________________________________ test_update_committed_marker_cache[incr_both-1-2-2-4] ______________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+____________________________________________________________________ test_update_committed_marker_cache[incr_both-3-2-3-1024] ____________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+_____________________________________________________________________ test_update_committed_marker_cache[incr_both-2-3-3-8] ______________________________________________________________________
+_update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+error=No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+traceback:
+Traceback (most recent call last):
+  File "/home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py", line 25, in <module>
+    from vllm.v1.worker.gpu.sample.thinking_budget import (
+ModuleNotFoundError: No module named 'vllm.v1.worker.gpu.sample.thinking_budget'
+____________________________________________________________________ test_update_committed_marker_cache_budget_skip[1-1-1-4] _____________________________________________________________________
+_update_committed_marker_cache_kernel import failed
+____________________________________________________________________ test_update_committed_marker_cache_budget_skip[2-2-2-8] _____________________________________________________________________
+_update_committed_marker_cache_kernel import failed
+____________________________________________________________________ test_update_committed_marker_cache_budget_skip[1-2-2-4] _____________________________________________________________________
+_update_committed_marker_cache_kernel import failed
+___________________________________________________________________ test_update_committed_marker_cache_budget_skip[3-2-3-1024] ___________________________________________________________________
+_update_committed_marker_cache_kernel import failed
+____________________________________________________________________ test_update_committed_marker_cache_budget_skip[2-3-3-8] _____________________________________________________________________
+_update_committed_marker_cache_kernel import failed
+======================================================================================== warnings summary ========================================================================================
+../../../../usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.11.10/lib/python3.11/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+accuracy_test/easy_ut_026/conftest.py:14
+  /home/xuyuzhen/va026_a5/xyz-triton-test-0725/accuracy_test/easy_ut_026/conftest.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.deterministic - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    item.add_marker(pytest.mark.deterministic)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================================================================== short test summary info =====================================================================================
+SKIPPED [16] accuracy_test/easy_ut_026/test_cache_inputs_kernel.py:280: kernel import failed
+SKIPPED [11] accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py:174: kernel import failed
+SKIPPED [19] accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py:438: kernel import failed
+SKIPPED [17] accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py:281: kernel import failed
+SKIPPED [18] accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py:214: kernel import failed
+SKIPPED [16] accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py:213: kernel import failed
+SKIPPED [1] accuracy_test/easy_ut_026/test_thinking_budget_kernel.py:484: write_prefix_len_1 requires end_len >= 2
+SKIPPED [2] accuracy_test/easy_ut_026/test_thinking_budget_kernel.py:482: write_prefix_len_2 requires end_len >= 3
+FAILED accuracy_test/easy_ut_026/test_cache_inputs_kernel.py::test_import_error - Failed: Failed to import _cache_inputs_kernel:
+FAILED accuracy_test/easy_ut_026/test_pad_trailing_draft_slots_kernel.py::test_import_error - Failed: Failed to import _pad_trailing_draft_slots_kernel:
+FAILED accuracy_test/easy_ut_026/test_prepare_input_buffers_kernel.py::test_import_error - Failed: Failed to import _prepare_input_buffers_kernel:
+FAILED accuracy_test/easy_ut_026/test_prepare_input_hidden_states_and_embeddings_kernel.py::test_import_error - Failed: Failed to import _prepare_input_hidden_states_and_embeddings_kernel:
+FAILED accuracy_test/easy_ut_026/test_shift_input_embeds_kernel.py::test_import_error - Failed: Failed to import _shift_input_embeds_kernel:
+FAILED accuracy_test/easy_ut_026/test_shift_input_ids_kernel.py::test_import_error - Failed: Failed to import _shift_input_ids_kernel:
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_budget-1-1-1] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_budget-2-2-2] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_budget-1-2-3] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_budget-3-2-4] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_no_start-1-1-1] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_no_start-2-2-2] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_no_start-1-2-3] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_no_start-3-2-4] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_last_start_le-1-1-1] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_last_start_le-2-2-2] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_last_start_le-1-2-3] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_last_start_le-3-2-4] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_under_budget-1-1-1] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_under_budget-2-2-2] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_under_budget-1-2-3] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[skip_under_budget-3-2-4] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_no_prefix-1-1-1] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_no_prefix-2-2-2] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_no_prefix-1-2-3] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_no_prefix-3-2-4] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_prefix_len_1-2-2-2] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_prefix_len_1-1-2-3] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_prefix_len_1-3-2-4] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_prefix_len_2-1-2-3] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_thinking_budget_kernel.py::test_thinking_budget[write_prefix_len_2-3-2-4] - Failed: _thinking_budget_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_none-1-1-1-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_none-2-2-2-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_none-1-2-2-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_none-3-2-3-1024] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_none-2-3-3-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_last_chunk-1-1-1-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_last_chunk-2-2-2-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_last_chunk-1-2-2-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_last_chunk-3-2-3-1024] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_last_chunk-2-3-3-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_diff_chunks-1-1-1-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_diff_chunks-2-2-2-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_diff_chunks-1-2-2-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_diff_chunks-3-2-3-1024] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_both_diff_chunks-2-3-3-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_start_only-1-1-1-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_start_only-2-2-2-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_start_only-1-2-2-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_start_only-3-2-3-1024] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_start_only-2-3-3-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_end_only-1-1-1-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_end_only-2-2-2-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_end_only-1-2-2-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_end_only-3-2-3-1024] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_end_only-2-3-3-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_boundary-1-1-1-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_boundary-2-2-2-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_boundary-1-2-2-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_boundary-3-2-3-1024] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[cold_boundary-2-3-3-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_none-1-1-1-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_none-2-2-2-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_none-1-2-2-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_none-3-2-3-1024] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_none-2-3-3-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_start-1-1-1-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_start-2-2-2-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_start-1-2-2-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_start-3-2-3-1024] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_start-2-3-3-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_end-1-1-1-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_end-2-2-2-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_end-1-2-2-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_end-3-2-3-1024] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_new_end-2-3-3-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_both-1-1-1-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_both-2-2-2-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_both-1-2-2-4] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_both-3-2-3-1024] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache[incr_both-2-3-3-8] - Failed: _update_committed_marker_cache_kernel import failed; this is not a precision failure and no kernel was tested.
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache_budget_skip[1-1-1-4] - Failed: _update_committed_marker_cache_kernel import failed
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache_budget_skip[2-2-2-8] - Failed: _update_committed_marker_cache_kernel import failed
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache_budget_skip[1-2-2-4] - Failed: _update_committed_marker_cache_kernel import failed
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache_budget_skip[3-2-3-1024] - Failed: _update_committed_marker_cache_kernel import failed
+FAILED accuracy_test/easy_ut_026/test_update_committed_marker_cache_kernel.py::test_update_committed_marker_cache_budget_skip[2-3-3-8] - Failed: _update_committed_marker_cache_kernel import failed
+==================================================================== 86 failed, 40 passed, 100 skipped, 15 warnings in 44.30s

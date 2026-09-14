@@ -206,6 +206,11 @@ class TestComputeBlockStatsKernel:
                     msg=f"req {ri}, step {step}: cumulative_log_p mismatch"
                 )
 
+    @pytest.mark.parametrize("vocab_size", [129280, 163840, 248320])
+    def test_model_vocab_shape(self, vocab_size):
+        """Cover production multi-block reductions and tail blocks."""
+        self.test_cumulative_log_p(1, 1, vocab_size)
+
 
 def _global_logsumexp_cpu(
     local_max: torch.Tensor,

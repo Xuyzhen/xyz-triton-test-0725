@@ -52,6 +52,13 @@ def test_compute_local_residual_mass(vocab_size):
     sentinel = -777.0
     output = torch.full((num_logits, num_blocks), sentinel, dtype=torch.float32, device=DEVICE)
 
+    # New (block-verification era) kernel signature inserts draft_sampled_ptr
+    # ([num_logits] token ids; < 0 marks a -1 placeholder that skips the row)
+    # right after draft_local_sumexp_stride, and appends vocab_num_blocks as
+    # the last positional argument. Provide non-negative token ids so no row
+    # takes the placeholder early-return, keeping the expected-value semantics.
+    draft_sampled = torch.zeros(num_logits, dtype=torch.int64, device=DEVICE)
+
     _compute_local_residual_mass_kernel[(num_logits, num_blocks)](
         output,
         output.stride(0),
@@ -69,6 +76,7 @@ def test_compute_local_residual_mass(vocab_size):
         draft_max.stride(0),
         draft_sumexp,
         draft_sumexp.stride(0),
+        draft_sampled,
         expanded_idx,
         expanded_pos,
         temperature,

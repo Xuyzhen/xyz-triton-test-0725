@@ -1,0 +1,134 @@
+[
+ {
+  "date": "2026-08-28",
+  "sha": "6953f266922e3ec2c33a04db4febb00e15893cec",
+  "run_id": 33186668495,
+  "job_id": 99003143578,
+  "job_concl": "failure",
+  "tps": null,
+  "tps_src": null,
+  "err_hints": [
+   "asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagr",
+   "FAILED[INFO] Model cache cleared",
+   "FAILED tests/e2e/nightly/single_node/models/scripts/test_single_node.py::test_single_node[Kimi-K2.6-W4A8-i"
+  ]
+ },
+ {
+  "date": "2026-08-30",
+  "sha": "e6a133f710c54e84cefcd29be46678c50008e8ea",
+  "run_id": 33320515446,
+  "job_id": 99330378832,
+  "job_concl": "failure",
+  "tps": 421.2087,
+  "tps_src": "logs"
+ },
+ {
+  "date": "2026-08-31",
+  "sha": "218644dc9b2158c1518cfd899c1860e1c2d8146e",
+  "run_id": 33410221539,
+  "job_id": 99672943437,
+  "job_concl": "failure",
+  "tps": 1387.1764,
+  "tps_src": "logs"
+ },
+ {
+  "date": "2026-09-01",
+  "sha": "30f54b5c341f015bcc124022e62156d3e5ef5919",
+  "run_id": 33527643422,
+  "job_id": 100061505358,
+  "job_concl": "failure",
+  "tps": 1301.1426,
+  "tps_src": "logs"
+ },
+ {
+  "date": "2026-09-02",
+  "sha": "817e23b51fff5d043d863b0c0063fcc1ffa97858",
+  "run_id": 33650570608,
+  "job_id": null,
+  "job_concl": "NO_SN_K26",
+  "tps": null,
+  "tps_src": null
+ },
+ {
+  "date": "2026-09-03",
+  "sha": "3546357838389aa7201d9b44e234f831e98b2fd4",
+  "run_id": 33774477753,
+  "job_id": 100842091193,
+  "job_concl": "failure",
+  "tps": 1313.4755,
+  "tps_src": "logs"
+ },
+ {
+  "date": "2026-09-04",
+  "sha": "748acedfea31b795e507f9c8175585f824328d8c",
+  "run_id": 33891266526,
+  "job_id": 101212181911,
+  "job_concl": "failure",
+  "tps": 1383.267,
+  "tps_src": "logs"
+ },
+ {
+  "date": "2026-09-06",
+  "sha": "219a7e7efd0b5363be0d5cc198995e9417b2de13",
+  "run_id": 34043280161,
+  "job_id": 101576912752,
+  "job_concl": "failure",
+  "tps": 1315.89,
+  "tps_src": "logs"
+ },
+ {
+  "date": "2026-09-07",
+  "sha": "e89f87ddb594e7eece265ebcf42b03bff845bd90",
+  "run_id": 34139883239,
+  "job_id": 101809434864,
+  "job_concl": "failure",
+  "tps": null,
+  "tps_src": null,
+  "err_hints": []
+ },
+ {
+  "date": "2026-09-08",
+  "sha": "f23a1f2ad6aedea74889510438d420be119c6156",
+  "run_id": 34246756642,
+  "job_id": 102277752690,
+  "job_concl": "failure",
+  "tps": 1285.019,
+  "tps_src": "logs"
+ },
+ {
+  "date": "2026-09-09",
+  "sha": "63a9e329068902c7f4121887d7f9a4acea8c221f",
+  "run_id": 34372289942,
+  "job_id": 102668642434,
+  "job_concl": "failure",
+  "tps": 1235.8445,
+  "tps_src": "logs"
+ },
+ {
+  "date": "2026-09-10",
+  "sha": "c5055c8086d56ea1b2714b0f555ba67edd05e945",
+  "run_id": 34497673764,
+  "job_id": 103095515766,
+  "job_concl": "failure",
+  "tps": 1311.8344,
+  "tps_src": "logs"
+ },
+ {
+  "date": "2026-09-11",
+  "sha": "c843f75aff45050fd4958dc4f24ac7e54a472df4",
+  "run_id": 34617973934,
+  "job_id": 103365009803,
+  "job_concl": "cancelled",
+  "tps": null,
+  "tps_src": null
+ },
+ {
+  "date": "2026-09-13",
+  "sha": "660c4582aa580ce98edc9b681bb6ff6d03153575",
+  "run_id": 34766527833,
+  "job_id": 103804661853,
+  "job_concl": "failure",
+  "tps": 1297.7584,
+  "tps_src": "logs"
+ }
+]

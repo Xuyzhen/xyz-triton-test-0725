@@ -1,0 +1,126 @@
+=== XROUND START Sun Sep 13 09:29:42 CST 2026 ===
+plan: 24 points x 3 rounds (R1 fwd, R2 rev, R3 fwd)
+r1 a1affe4d3 | TPS=904.7932 | TPOT=26.1 ms | succ=128 | start=666s | load=50.78 50.68 44.49
+r1 63b0a64f3 | TPS=1430.1875 | TPOT=19.4 ms | succ=128 | start=606s | load=50.14 54.89 50.34
+r1 2080fffa6 | TPS=1444.0695 | TPOT=19.6 ms | succ=128 | start=606s | load=48.02 57.10 54.10
+r1 1f3418a1a | TPS=1305.4669 | TPOT=20.6 ms | succ=128 | start=666s | load=43.62 49.85 51.82
+r1 923e372b9 | TPS=1179.3899 | TPOT=23.2 ms | succ=128 | start=606s | load=41.10 54.19 54.09
+r1 45e0634c1 | TPS=1431.6936 | TPOT=19.6 ms | succ=128 | start=606s | load=51.87 60.92 60.55
+r1 2825e368b | TPS=1326.3379 | TPOT=19.9 ms | succ=128 | start=605s | load=50.95 56.93 58.77
+r1 86bca2f14 | TPS=1317.8364 | TPOT=21.0 ms | succ=128 | start=606s | load=54.11 54.71 55.24
+r1 2d5e56e06 | TPS=1323.2437 | TPOT=20.7 ms | succ=128 | start=576s | load=44.74 53.18 54.92
+r1 42e039a90 | TPS=1182.147 | TPOT=23.2 ms | succ=128 | start=606s | load=42.48 48.53 53.07
+r1 222677fc7 | TPS=1190.3508 | TPOT=23.1 ms | succ=128 | start=576s | load=51.07 53.84 54.37
+r1 d1ce8a1c4 | TPS=1291.8361 | TPOT=20.7 ms | succ=128 | start=605s | load=50.73 51.13 52.15
+r1 827a11d3e | TPS=1437.1897 | TPOT=19.5 ms | succ=128 | start=606s | load=52.81 57.15 56.35
+r1 d303011b3 | TPS=1353.5624 | TPOT=19.1 ms | succ=128 | start=605s | load=54.67 58.35 57.33
+r1 a7997713e | TPS=1404.9788 | TPOT=19.8 ms | succ=128 | start=606s | load=44.44 50.55 53.53
+r1 748acedfe | TPS=1368.1129 | TPOT=20.4 ms | succ=128 | start=575s | load=52.20 53.37 53.23
+r1 8d838ee86 | TPS=1269.9691 | TPOT=20.7 ms | succ=128 | start=605s | load=42.45 49.41 51.66
+r1 e5b903620 | TPS=1087.4853 | TPOT=25.5 ms | succ=128 | start=607s | load=47.07 53.87 53.74
+r1 6ca174b47 | TPS=1474.2593 | TPOT=19.1 ms | succ=128 | start=606s | load=44.08 49.01 51.48
+r1 1c3e49e9a | TPS=1201.6336 | TPOT=23.1 ms | succ=128 | start=636s | load=53.16 55.38 53.58
+r1 c30092741 | TPS=1329.7182 | TPOT=21.0 ms | succ=128 | start=606s | load=43.02 58.56 59.18
+r1 b1c91857c | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-13-14:39:20 (PID:869064, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r1 9ccc290b7 | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-13-14:40:23 (PID:869212, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r1 f23a1f2ad | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-13-14:41:25 (PID:869359, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r2 f23a1f2ad | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-13-14:42:28 (PID:869506, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r2 9ccc290b7 | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-13-14:43:31 (PID:869654, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r2 b1c91857c | SERVE_FAIL(died=1) wait=31s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-13-14:44:34 (PID:869802, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r2 c30092741 | TPS=1385.986 | TPOT=19.6 ms | succ=128 | start=636s | load=50.06 50.35 50.65
+r2 1c3e49e9a | TPS=1392.2694 | TPOT=19.8 ms | succ=128 | start=605s | load=49.76 53.22 52.11
+r2 6ca174b47 | TPS=1483.5818 | TPOT=19.0 ms | succ=128 | start=605s | load=44.49 49.01 50.73
+r2 e5b903620 | TPS=1182.5346 | TPOT=23.1 ms | succ=128 | start=605s | load=49.75 53.21 52.50
+r2 8d838ee86 | TPS=1296.0983 | TPOT=21.1 ms | succ=128 | start=606s | load=40.72 49.37 51.40
+r2 748acedfe | TPS=1390.5973 | TPOT=19.4 ms | succ=128 | start=575s | load=50.77 56.81 54.09
+r2 a7997713e | TPS=1416.3479 | TPOT=19.8 ms | succ=128 | start=575s | load=52.58 60.34 58.77
+r2 d303011b3 | TPS=1466.7008 | TPOT=18.9 ms | succ=128 | start=606s | load=55.16 56.52 57.26
+r2 827a11d3e | TPS=1303.2493 | TPOT=20.7 ms | succ=128 | start=605s | load=42.82 51.37 53.90
+r2 d1ce8a1c4 | TPS=1340.0734 | TPOT=19.8 ms | succ=128 | start=575s | load=44.63 51.71 53.36
+r1 b1c91857c | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-13-19:11:12 (PID:388127, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r1 9ccc290b7 | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-13-19:12:15 (PID:388275, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r1 f23a1f2ad | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-13-19:13:19 (PID:388423, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r2 f23a1f2ad | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-13-19:14:22 (PID:388571, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r2 9ccc290b7 | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-13-19:15:25 (PID:388717, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r2 b1c91857c | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-13-19:16:28 (PID:388865, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r2 222677fc7 | TPS=1418.2516 | TPOT=19.2 ms | succ=128 | start=606s | load=47.78 49.17 52.70
+r2 42e039a90 | TPS=1294.6291 | TPOT=20.9 ms | succ=128 | start=575s | load=51.36 57.35 57.31
+r2 2d5e56e06 | TPS=1409.8927 | TPOT=19.7 ms | succ=128 | start=605s | load=55.18 60.25 59.58
+r2 86bca2f14 | TPS=1397.258 | TPOT=19.6 ms | succ=128 | start=575s | load=47.60 58.16 66.05
+r2 2825e368b | TPS=1241.6409 | TPOT=23.1 ms | succ=128 | start=606s | load=51.76 53.02 57.77
+r2 45e0634c1 | TPS=1407.27 | TPOT=19.5 ms | succ=128 | start=606s | load=50.20 53.77 55.38
+r2 923e372b9 | TPS=1223.3416 | TPOT=23.1 ms | succ=128 | start=605s | load=44.20 52.54 53.73
+r2 1f3418a1a | TPS=1353.4071 | TPOT=20.8 ms | succ=128 | start=605s | load=48.18 51.53 52.60
+r2 2080fffa6 | TPS=1441.825 | TPOT=19.4 ms | succ=128 | start=605s | load=54.99 57.71 55.04
+r2 63b0a64f3 | TPS=1259.9507 | TPOT=22.7 ms | succ=128 | start=606s | load=51.94 59.63 58.80
+r2 a1affe4d3 | TPS=950.7357 | TPOT=25.0 ms | succ=128 | start=576s | load=56.19 60.95 59.96
+r3 a1affe4d3 | TPS=988.5869 | TPOT=24.8 ms | succ=128 | start=605s | load=54.30 53.93 56.44
+r3 63b0a64f3 | TPS=1322.1159 | TPOT=21.3 ms | succ=128 | start=606s | load=44.08 50.50 53.40
+r3 2080fffa6 | TPS=1425.0313 | TPOT=19.8 ms | succ=128 | start=606s | load=64.99 54.18 52.36
+r3 1f3418a1a | TPS=1447.8595 | TPOT=19.2 ms | succ=128 | start=576s | load=43.55 52.41 52.92
+r3 923e372b9 | TPS=1280.6697 | TPOT=21.1 ms | succ=128 | start=605s | load=48.84 51.01 51.85
+r3 45e0634c1 | TPS=1358.193 | TPOT=20.2 ms | succ=128 | start=605s | load=51.70 59.23 59.19
+r3 2825e368b | TPS=1233.4215 | TPOT=23.2 ms | succ=128 | start=575s | load=50.03 56.26 57.76
+r3 86bca2f14 | TPS=1412.882 | TPOT=19.2 ms | succ=128 | start=606s | load=47.51 52.96 55.06
+r3 2d5e56e06 | TPS=1356.9049 | TPOT=19.2 ms | succ=128 | start=575s | load=59.49 56.64 55.17
+r3 42e039a90 | TPS=1433.5365 | TPOT=19.4 ms | succ=128 | start=605s | load=50.95 53.11 53.12
+r3 222677fc7 | TPS=1142.8763 | TPOT=25.3 ms | succ=128 | start=575s | load=43.40 50.60 51.51
+r3 d1ce8a1c4 | TPS=1463.4477 | TPOT=19.1 ms | succ=128 | start=606s | load=50.79 56.12 55.10
+r3 827a11d3e | TPS=1423.5993 | TPOT=19.8 ms | succ=128 | start=575s | load=57.66 59.42 56.21
+r3 d303011b3 | TPS=1207.6423 | TPOT=23.0 ms | succ=128 | start=605s | load=57.97 59.71 58.17
+r3 a7997713e | TPS=1363.1674 | TPOT=20.8 ms | succ=128 | start=605s | load=49.61 56.02 57.55
+r3 748acedfe | TPS=1387.8485 | TPOT=19.3 ms | succ=128 | start=575s | load=43.38 51.97 54.50
+r3 8d838ee86 | TPS=1391.4206 | TPOT=19.3 ms | succ=128 | start=576s | load=46.55 52.85 54.29
+r3 e5b903620 | TPS=1029.9979 | TPOT=27.8 ms | succ=128 | start=575s | load=42.68 47.87 50.46
+r3 6ca174b47 | TPS=1051.138 | TPOT=27.7 ms | succ=128 | start=606s | load=48.24 49.92 51.46
+r3 1c3e49e9a | TPS=1376.4134 | TPOT=19.4 ms | succ=128 | start=606s | load=49.73 53.29 52.11
+r3 c30092741 | TPS=1160.6353 | TPOT=23.1 ms | succ=128 | start=606s | load=55.78 61.03 57.79
+r3 b1c91857c | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-14-02:39:52 (PID:3834221, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r3 9ccc290b7 | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-14-02:40:54 (PID:3834371, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+r3 f23a1f2ad | SERVE_FAIL(died=1) wait=30s
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'VllmConfig' has no attribute '_get_v1_model_runner_unsupported_features'. Did you mean: '_get_v2_model_runner_unsupported_features'?
+[ERROR] 2026-09-14-02:41:57 (PID:3834519, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+=== XROUND DONE Mon Sep 14 02:42:49 CST 2026 ===

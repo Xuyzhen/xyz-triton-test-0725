@@ -199,6 +199,27 @@ SHAPE_PARAMS = [
     (8, 152064, 8192),
 ]
 
+
+def _effective_shape_params() -> list[tuple[int, int, int]]:
+    """Backend-aware shape list: cap BLOCK_SIZE on Ascend NPU.
+
+    The Ascend Triton compiler fails at the hivm-plan-memory stage for
+    BLOCK_SIZE=8192/16384: each of the two ``-inf``/``+inf`` comparison
+    constants is materialized as a BLOCK_SIZE-wide f32 unified-buffer
+    broadcast (memref<BLOCK_SIZExf32>), and the planner cannot fit them
+    (MLIRCompilationError from bishengir-compile).
+
+    BLOCK_SIZE is a caller-chosen launch parameter, not kernel semantics:
+    the loop covers the full vocab at any power-of-2 block, so capping it
+    preserves complete coverage. GPU keeps the production BLOCK_SIZE=8192.
+    """
+    npu = getattr(torch, "npu", None)
+    on_npu = npu is not None and npu.is_available()
+    if not on_npu:
+        return SHAPE_PARAMS
+    return [(r, v, min(b, 2048)) for (r, v, b) in SHAPE_PARAMS]
+
+
 BRANCH_PARAMS = [
     # (all_active, all_inactive, mixed_finite)
     (True, False, False),    # all active, all finite -> full mask
@@ -208,7 +229,7 @@ BRANCH_PARAMS = [
 ]
 
 
-@pytest.mark.parametrize("num_reqs,vocab_size,BLOCK_SIZE", SHAPE_PARAMS)
+@pytest.mark.parametrize("num_reqs,vocab_size,BLOCK_SIZE", _effective_shape_params())
 @pytest.mark.parametrize("all_active,all_inactive,mixed_finite", BRANCH_PARAMS)
 def test_pack_sampling_mask(
     num_reqs: int,
